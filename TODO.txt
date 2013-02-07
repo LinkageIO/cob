@@ -1,0 +1,9 @@
+TODO:
+
+Keyword Enrichment - can you do some sort of pagerank thing with the keywords?
+
+Export Features - edges and such
+
+Visual Properties
+
+
