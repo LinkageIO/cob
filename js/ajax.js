@@ -57,6 +57,11 @@ Ajax.prototype.snd_msg = function(msg, response, force_send){
                     Ajax.request_stack.splice(0,1);        
                     wrapper(msg,req.responseText);
             }
+            else if(req.readyState == 4 && req.status==500){
+                    Ajax.request_stack.splice(0,1)
+                    hideGrow();
+                    new Message("Uh oh! Something bad happened!")
+            }
     }
     Ajax.request_stack.push(req);
     req.send(msg);

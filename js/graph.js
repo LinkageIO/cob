@@ -1,5 +1,5 @@
 ////////////////////////////////////////
-//////		Cytoscape	///////
+//////		   Cytoscape	     ///////
 ///////////////////////////////////////
 /* Set options for cytoscape object */
 options = {
@@ -254,6 +254,7 @@ Graph.prototype.initialize_cytoscape = function(ret_ajax){
         graph.menu.show();
 		graph.vis.visualStyleBypass(graph.bypass);
         try{
+            graph.table.clear_table();
             graph.table.import_network(nm);
             graph.menu.footer_nodes(graph.vis.nodes().length);
             graph.menu.footer_edges(graph.vis.edges().length);
