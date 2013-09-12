@@ -666,22 +666,38 @@ class cytoweb{
             }
         $this->JSON_out = json_encode($genes);
     }
-    private function binom($n,$x){
-        $bc = 1.0;
-        for($i = 0; $i < $x; ++$i){
-            $bc = ($bc*($n-$i))/($i+1);
+
+
+    private function binom($n,$k){
+        if($k < 0 || $k > $n){ return 0; }
+        if($k > $n-$k){$k = $n - $k;}
+        $c = 1.0;
+        for($i = 1; $i <= $k; $i++){
+            $c = $c * ($n - ($k-$i));
+            $c = floor($c / $i);
         }
-        return $bc;
+        return $c;
     }
     // Based on the wikipedia definition for hypergeometric dist
-    // this calculates the P(X = k)
+    // k : # of white marbles drawn
     // n : # marbles draws w/o replacement
+    // K : number of white marbles
     // N : total marbles in urn
-    // m : number of white marbles
-    private function pmf_hypergeometric($k,$N,$m,$n){
-        $y = $this->binom($m,$k)*$this->binom($N-$m,$n-$k)/$this->binom($N,$n); 
-        return $y;
+    private function pmf_hypergeometric($k,$N,$K,$n){
+        $p = ($this->binom($K,$k)*$this->binom($N-$K,$n-$k))/$this->binom($N,$n); 
+        return $p;
     }
+    // Function calculated P(X >= k) 
+    private function cdf_hypergeometric($k,$N,$K,$n){
+        $cdf = 0;
+        // We want P(X>=k)
+        foreach(range(0,$k-1) as $j){
+            $p = $this->pmf_hypergeometric($k,$N,$K,$n);
+            if(!is_nan($p)){$cdf += $p;}
+        } 
+        return 1-$cdf;
+    } 
+
     private function GO_enrichment($hash){
         $total_genes = 25288; // TAKEN FROM THE DATABASE (Number of genes that have GO annotations)
         $go_term_count_in_network = array();
@@ -729,14 +745,11 @@ class cytoweb{
                 continue;
             }
             //calculate the hypergeometric function
-            $cdf = 0;
-            foreach(range(0,(count($gene_id_array)-1)) as $j){
-                $cdf+=$this->pmf_hypergeometric($j,$total_genes,$go_term_count_total[$go_term_id],$input_gene_ids_count);
-            }
+            $pval = $this->pmf_hypergeometric(count($gene_id_array)-1, $total_genes, $go_term_count_total[$go_term_id],$input_gene_ids_count);
             $common_genes = array();
             $go_id = '';
             $go_desc = '';
-            if((1-$cdf) < .05){
+            if(($pval) < .05  || 1){
                 $this->_make_query("SELECT term_name, term_short_desc, term_long_desc, term_space
                             FROM mzn_go_terms WHERE term_id = ?",
                             array($go_term_id)
@@ -752,7 +765,7 @@ class cytoweb{
                 }
                 else{$this->_error('Bad Query'); exit;}
                 $this->add_json_array(
-                                    array(    'pval'      => sprintf("%.5f",(1-$cdf)),
+                                    array(    'pval'      => sprintf("%.5f",(1-$pval)),
                                               'common'    => count($gene_id_array),
                                               'total'     => $go_term_count_total[$go_term_id],
                                               'go_id'     => $go_id,
