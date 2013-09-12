@@ -43,7 +43,7 @@ class cytoweb{
 	/*Just set up the database connection*/
 	/* THIS CODE GETS EXECUTED EVERYTIME WE CREATE A NEW OBJECT*/
 	function cytoweb(){
-		$this->dbase = 'zmexp';
+		$this->dbase = chop(file_get_contents("./sensitive/db_dbase.txt"));
 		$this->host = chop(file_get_contents("./sensitive/db_host.txt"));
 		$this->usr = chop(file_get_contents("./sensitive/db_user.txt"));
 		$this->pwd = chop(file_get_contents("./sensitive/db_password.txt"));
