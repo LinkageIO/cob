@@ -774,6 +774,7 @@ Menu.prototype.add_layout_to_tab = function(tab_num){
                 options : opt,
             }
         this.graph.vis.layout(new_layout);
+        this.graph.vis.update_visual_style(this.graph.style)
     }
     var caller = this;
     drop_down.onchange = function(){change_layout.apply(caller,[drop_down])}

@@ -310,14 +310,11 @@ class cytoweb{
             }
 		}
         // Get all the gene info for the queries and the neighbors
-        $this->_make_query('SELECT name.gene_id, gene_name, common_name, x, y, chromosome, chromo_start, chromo_end,
-                            arab_name
+        $this->_make_query('SELECT name.gene_id, gene_name, common_name, x, y, chromosome, chromo_start, chromo_end
                             FROM mzn_gene_name name
                             LEFT OUTER JOIN mzn_gene_common ON common_id = name.gene_id
                             LEFT OUTER JOIN mzn_gene_coordinates on mzn_gene_coordinates.gene_id = name.gene_id
                             LEFT OUTER JOIN mzn_gene_loci on mzn_gene_loci.gene_id = name.gene_id
-                            LEFT OUTER JOIN mzn_arab_orthologs ON mzn_arab_orthologs.gene_id = name.gene_id
-                            LEFT OUTER JOIN mzn_arab_gene ON mzn_arab_orthologs.arab_id = mzn_arab_gene.arab_id
                             WHERE name.gene_id IN (?)', array(implode(',',$all_neighbors))
         );
 		while($row = mysql_fetch_array($this->ok_query, MYSQL_ASSOC)){
@@ -332,7 +329,7 @@ class cytoweb{
                         "common" => $row['common_name'],
                         "GRMZ" => $row['gene_name'],
                         "loci" => $row["chromosome"].":".$row["chromo_start"]."..".$row["chromo_end"],
-                        "arab" => $row["arab_name"],
+                        //"arab" => $row["arab_name"],
                         "render" => "yes",
                     )
                 );
@@ -344,7 +341,7 @@ class cytoweb{
                         "common" => $row['common_name'],
                         "GRMZ" => $row['gene_name'],
                         "loci" => $row["chromosome"].":".$row["chromo_start"]."..".$row["chromo_end"],
-                        "arab" => $row["arab_name"],
+                        //"arab" => $row["arab_name"],
                         "render" => "yes",
                     )
                 );
@@ -358,7 +355,7 @@ class cytoweb{
                         "common" => $row['common_name'],
                         "GRMZ" => $row['gene_name'],
                         "loci" => $row["chromosome"].":".$row["chromo_start"]."..".$row["chromo_end"],
-                        "arab" => $row["arab_name"],
+                        //"arab" => $row["arab_name"],
                         "render" => "no",
                     )
                 );

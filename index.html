@@ -284,6 +284,12 @@ function initialize_page(){
                             <input type="button" id='clear_annotations' onclick='graph.clear_annotations()' value="Clear Annotations"/></br></br>
                             <input type="button" id='remove_highlighted_nodes' onclick='graph.remove_highlighted_nodes()' value="Remove Highlighted Nodes"/>
                         </div>
+                        <div class='bar'>
+                            <span class="title">Visual Style</span>
+                            <span class='info' >Node Size:  </span><input type="text" onblur='graph.style.nodes.size=this.value;'/></br>
+                            <span class='info' >Label Size: </span><input type="text" onblur='graph.style.nodes.labelFontSize=this.value;'/></br></br>
+                            <input type="button" onclick="graph.update_visual_style()" value="Update Style"/> 
+                        </div>
                     </div>
                     <div class='tab' id='tab_help'>
 						<div class='bar'>
