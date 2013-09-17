@@ -35,7 +35,7 @@ Ajax.prototype.snd_msg = function(msg, response, force_send){
     }
     else{
         wrapper = function(msg,txt){
-            cache[msg] = txt;
+            //cache[msg] = txt;
             response(txt);
         }
     }
