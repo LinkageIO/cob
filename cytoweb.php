@@ -858,7 +858,8 @@ class cytoweb{
         }
         if(in_array('arab',$details)){
             array_push($columns,"arab_name","type_name","short_desc","curator_desc","comp_desc");
-            array_push($joins," LEFT OUTER JOIN mzn_arab_gene arab ON grmz.gene_id = arab.arab_id",
+            array_push($joins,"LEFT OUTER JOIN mzn_arab_orthologs orth ON grmz.gene_id = orth.gene_id",
+                        " LEFT OUTER JOIN mzn_arab_gene arab ON orth.arab_id = arab.arab_id",
                         " LEFT OUTER JOIN mzn_arab_gene_types type ON arab.type_id = type.type_id", 
                         " LEFT OUTER JOIN mzn_arab_short_desc short ON arab.short_id = short.short_id ",
                         " LEFT OUTER JOIN mzn_arab_curator_desc cur ON arab.curated_id = cur.curator_id ",
