@@ -32,6 +32,6 @@ redirect HTTP traffic from apache by including the following as an Apache virtua
 </VirtualHost *:80>
 ```
 
-Then you can visit (for instance): www.csbio.cs.umn.edu/cob
+Then you can visit (for instance): http://csbio.cs.umn.edu/cob,
 Just make sure to swap out for your own servername (this ones mine ;)
 
