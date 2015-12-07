@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<link rel="shortcut icon" href="Camoco/static/images/favicon.ico" />
+<script type="text/javascript">
+
+</script>
+<title>COB -- the co-expression browser</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<link rel='stylesheet' type='text/css'  href="camoco/static/css/main.css">
+
+<!-- COB Dependencies -->
+<script src='http://underscorejs.org/underscore-min.js'></script>
+<script src='http://backbonejs.org/backbone-min.js'></script>
+
+<!-- Loaf COB -->
+<script src='camoco/static/js/cob.js'></script>
+
+<!-- CDNS -->
+<script src="http://marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
+<script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.1.1/cytoscape-cola.js"></script>
+
+<!-- DATA TABLES CDN -->
+<link rel='stylesheet' type='text/css'  href="camoco/static/css/jquery.dataTables.css">
+<script src="//cdn.datatables.net/1.10.9/js/jquery.dataTables.min.js"></script>
+<script src="camoco/static/js/lib/datatables/jquery.scrollTo.js"></script>
+<script src="camoco/static/js/lib/datatables/dataTables.fixedColumns.js"></script>
+
+<link rel='stylesheet' type='text/css' href="camoco/static/js/jQuery-contextMenu/src/jquery.contextMenu.css">
+<script type="text/javascript" src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="//cdn.jsdelivr.net/jquery.ui-contextmenu/1.7.0/jquery.ui-contextmenu.min.js"></script>
+
+<script type="text/javascript">
+<!--
+
+////////////////////////////////////
+//////		HTML methods     	////
+////////////////////////////////////
+
+$(document).ready(function(){
+    // Initialize COB
+    window.cob = new COB({ 'div': $('#cob') })
+});
+
+-->
+</script>
+</head>
+<body>
+    <div id='cob'></div>
+</body>
+</html>
