@@ -82,8 +82,8 @@
                 'background-color': '#144566',
                 'border-width': 1,
                 'border-color': '#000',
-                'height' : 'mapData(locality,0,100,5,50)',
-                'width' : 'mapData(locality,0,100,5,50)',
+                'height' : 'mapData(locality,0,1,5,50)',
+                'width' : 'mapData(locality,0,1,5,50)',
                 'content':'data(id)',
                 'text-halign':'right',
                 'font-size' : '12pt',
@@ -329,7 +329,7 @@
         this.menu.get_tab("Dataset").add_table({
             "name" : 'OntologyTable',
             "header" : ['Ontology','Description'],
-            "ajax":"camoco/available_datasets/GWAS",
+            "ajax":"cob/available_datasets/GWAS",
             'sScrollY': this.menu.params.div.innerHeight()/4
         })
         this.menu.get_tab('Dataset').add_table({
@@ -340,7 +340,7 @@
         this.menu.get_tab('Network').add_table({
             "name":'NetworkTable',
             "header":['Network','Description'],
-            "ajax":"camoco/available_datasets/Expr",
+            "ajax":"cob/available_datasets/Expr",
             'sScrollY':this.menu.params.div.innerHeight()/4
         })
 
@@ -364,7 +364,7 @@
         // Register top level events
         $('#cob .OntologyTable tbody').on('click','tr', function() {
             var name = $('td',this).eq(0).text();
-            cob.menu.get_tab('Dataset').TermTable.clear().ajax.url("camoco/Ontology/Terms/"+name).load().draw()
+            cob.menu.get_tab('Dataset').TermTable.clear().ajax.url("cob/Ontology/Terms/"+name).load().draw()
             cob.menu.LoadedOntology = name
             $('#cob .OntologyTable .selected').toggleClass('selected')
             $(this).toggleClass('selected')
@@ -380,7 +380,7 @@
             $('#cob .NetworkTable .selected').toggleClass('selected')
             $(this).toggleClass('selected')
             cob.menu.LoadedNetwork = $('td',this).eq(0).text();
-            $.getJSON('camoco/COB/'+cob.menu.LoadedNetwork+'/'+cob.menu.LoadedOntology+'/'+cob.menu.LoadedTerm)
+            $.getJSON('cob/COB/'+cob.menu.LoadedNetwork+'/'+cob.menu.LoadedOntology+'/'+cob.menu.LoadedTerm)
                 .done(function(data){
                     a = data
                     console.log('loading data')
@@ -467,7 +467,7 @@
             }
             try{
                 // Fetch ajax
-                $.getJSON("camoco/Annotations/"
+                $.getJSON("cob/Annotations/"
                     +cob.menu.LoadedNetwork
                     +"/"+cob.menu.LoadedOntology
                     +"/"+cob.menu.LoadedTerm+"?genes="
