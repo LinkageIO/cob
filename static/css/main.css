@@ -42,7 +42,7 @@ body {
 #cob .menu {
     width: 30%;
     position: absolute;
-    background: url('../../static/images/tilate.png') repeat;
+    background: url('../images/tilate.png') repeat;
     height: 100%;
     overflow-x: hidden;
 }

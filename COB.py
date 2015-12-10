@@ -3,8 +3,10 @@ import logging
 import camoco as co
 import sys
 import json
-from math import isinf
 import numpy as np
+
+from math import isinf
+from itertools import chain
 
 # Take a huge swig from the flask 
 from flask import Flask, url_for, jsonify, request, send_from_directory, render_template
@@ -84,8 +86,9 @@ def Ontology_Terms(term_name):
             (term.id,
              term.desc,
              len(term.loci),
-             len(ZM.candidate_genes(term.effective_loci(window_size=50000)))
-                ) 
+             len(ZM.candidate_genes(
+                term.effective_loci(window_size=50000)))
+             ) 
             for term in co.GWAS(term_name).iter_terms()]
     })
 
@@ -125,44 +128,40 @@ def COB_network(network_name,ontology,term):
     cob = networks[network_name]
     term = co.GWAS(ontology)[term]
     nodes = []
-    seen = set()
-    effective_loci = term.effective_loci(window_size=100000)
+    parents = set()
+    effective_loci = term.effective_loci(window_size=50000)
     candidate_genes = cob.refgen.candidate_genes(
-        effective_loci,flank_limit=10,chain=False
+        effective_loci,
+        flank_limit=2,
+        chain=True,
+        include_parent_locus=True
     )
-    locality = cob.locality(
-        set([gene for genes in candidate_genes \
-            for gene in genes]
+    locality = cob.locality(candidate_genes)
+    for gene in candidate_genes:
+        try:
+            local_degree = locality.ix[gene.id]['local']
+            global_degree = locality.ix[gene.id]['global']
+        except KeyError as e:
+            local_degree = 0
+        gene_locality = local_degree / global_degree
+        if np.isnan(gene_locality):
+            gene_locality = 0
+        nodes.append(
+                {'data':{
+                    'id':str(gene.id), 
+                    'ldegree':int(local_degree), 
+                    'locality':float(gene_locality),
+                    'gdegree':int(global_degree),
+                    'parent':str(gene.attr['parent_locus'])
+                }}  
         )
-    )
-    for snp,genes in zip(effective_loci,candidate_genes):
-        for gene in [gene for genes in candidate_genes for gene in genes]:
-            if gene.id not in seen:
-                try:
-                    local_degree = locality.ix[gene.id]['local']
-                    global_degree = locality.ix[gene.id]['global']
-                except KeyError as e:
-                    local_degree = 0
-                gene_locality = local_degree / global_degree
-                if np.isnan(gene_locality):
-                    gene_locality = 0
-                nodes.append(
-                        {'data':{
-                            'id':str(gene.id), 
-                            'degree':int(local_degree), 
-                            'locality':float(gene_locality),
-                            'snp':str(snp.summary()),
-                            'gdegree':int(global_degree) 
-                        }}  
-                )
-            seen.add(gene.id)
+        parents.add(str(gene.attr['parent_locus']))
+    # Add parents first
+    for p in parents:
+        nodes.insert(0,{'data':{'id':p}})
+
     # Now do the edges
-    subnet = cob.subnetwork(
-        cob.refgen.candidate_genes(
-            term.effective_loci(window_size=100000),
-            flank_limit=10
-        )
-    )
+    subnet = cob.subnetwork(candidate_genes)
     subnet.reset_index(inplace=True)
     net['nodes'] = nodes
     net['edges'] = [
