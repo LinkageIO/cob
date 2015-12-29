@@ -158,7 +158,7 @@ def COB_network(network_name,ontology,term):
         parents.add(str(gene.attr['parent_locus']))
     # Add parents first
     for p in parents:
-        nodes.insert(0,{'data':{'id':p}})
+        nodes.insert(0,{'data':{'id':p},'classes':'snp'})
 
     # Now do the edges
     subnet = cob.subnetwork(candidate_genes)

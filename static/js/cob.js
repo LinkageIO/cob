@@ -137,6 +137,12 @@
                     'font-size' : '12pt',
                     'min-zoomed-font-size': 1
                 })
+                .selector('.snp').css({
+                    'width' : 20,
+                    'height' : 20,
+                    'background-color':'#E0E0E0',
+                    'text-halign':'center'
+                })
                 .selector(':selected')
                 .css({
                     'border-width': 7,
@@ -159,8 +165,7 @@
                     'curve-style': 'haystack' // fast edges!
                 }),
             // Layout Algorithm
-            layout: { name : 'grid'
-               /* 
+            layout: { 
                   name: 'concentric',
                   fit: true, // whether to fit the viewport to the graph
                   padding: 10, // the padding on fit
@@ -184,7 +189,6 @@
                   animationEasing: undefined, // easing of animation if enabled
                   ready: function(){console.log('Concentric layout ready.')}, // callback on layoutready
                   stop: function(){console.log('Concentric layout stop.')} // callback on layoutstop
-                */
             },
             ready : function(){
                 console.log('Cytoscape Web, ready to rock!')
