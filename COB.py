@@ -14,6 +14,7 @@ app = Flask(__name__)
 
 # Generate in-memory Network and RefGen Object
 networks = {x:co.COB(x) for x in ['ZmRoot']}
+print(networks)
 ZM = co.RefGen('Zm5bFGS')
 
 # Set up the logging file
