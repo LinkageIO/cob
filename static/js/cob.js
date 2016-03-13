@@ -93,6 +93,9 @@ function tableMaker(section){
   return;
 }
 
+/*--------------------------------
+         Graph Constructor
+---------------------------------*/
 function buildGraph(data){
   cy = window.cy = cytoscape({
     container: $('#cy'),
