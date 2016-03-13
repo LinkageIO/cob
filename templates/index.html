@@ -2,63 +2,154 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-
   <script type="text/javascript"></script>
-  <title>COex Browser</title>
+  <title>CoEx Browser</title>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
-  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-  <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-  <script src="//cdn.jsdelivr.net/jquery.scrollto/2.1.2/jquery.scrollTo.min.js"></script>
-
-    <!-- Cytoscape and Extensions -->
-  <script src="http://cytoscape.github.io/cytoscape.js/api/cytoscape.js-latest/cytoscape.min.js"></script>
-  <script src="http://marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+  
+  <!-- Cytoscape and Extensions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.6/cytoscape.min.js"></script>
+  <!--<script src="http://marvl.infotech.monash.edu/webcola/cola.v3.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cola/1.1.1/cytoscape-cola.js"></script>
-
-  <!-- DataTables -->
-  <link rel='stylesheet' type='text/css'  href="//cdn.datatables.net/1.10.10/css/jquery.dataTables.min.css">
-  <script src="//cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+  -->
 
   <!-- Bootstrap-->
-    <!-- JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
-    integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
-    crossorigin="anonymous"></script>
-    <!-- CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
-    integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <!-- Optional Theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
-    integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  <!-- JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+  integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+  crossorigin="anonymous"></script>
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+  integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <!-- Optional Theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+  integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
-  <!-- COB Dependencies -->
+  <!-- DataTables -->
+  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
+  <script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
+  <script src="https://cdn.datatables.net/scroller/1.4.1/js/dataTables.scroller.min.js"></script>
+  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/scroller/1.4.1/css/scroller.bootstrap.min.css">
+  <script src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
+  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/select/1.1.2/css/select.bootstrap.min.css">
+  
+  <!-- COB Dependencies 
   <script src='http://underscorejs.org/underscore-min.js'></script>
-  <script src='http://backbonejs.org/backbone-min.js'></script>
+  <script src='http://backbonejs.org/backbone-min.js'></script> -->
 
   <!-- Loaf COB -->
-  <script>var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');console.log($SCRIPT_ROOT);</script>
-  <script>$.getScript($SCRIPT_ROOT + 'static/js/cob.js');</script>
-  <script>$('<link/>', {
-      rel: 'shortcut icon',
-      href: ($SCRIPT_ROOT + 'static/images/favicon.ico')
-    }).appendTo('head');</script>
-  <script>$('<link/>', {
-      rel: 'stylesheet', type: 'text/css',
-      href: ($SCRIPT_ROOT + 'static/css/main.css')
-    }).appendTo('head');</script>
+  <script src='static/js/cob.js'></script>
+  <script src="static/js/polywas-layout.js"></script>
+  <script src="static/js/graph.js"></script>
+  <script>
+    var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
+    console.log($SCRIPT_ROOT);
+    $('<link/>', {
+      rel: 'shortcut icon', 
+      href: ($SCRIPT_ROOT + 'static/favicon.ico')
+    }).appendTo('head');
+    /*$('<link/>', {
+        rel: 'stylesheet', type: 'text/css',
+        href: ($SCRIPT_ROOT + 'static/css/main.css')
+      }).appendTo('head');*/
+    var CurrentOntology = "";
+    var CurrentTerm = "";
+    var CurrentNetwork = "";
+    $('#OntologyTable').DataTable();
+    $('#TermTable').DataTable();
+    $('#NetworkTable').DataTable();
+  </script>
   
-  <!-- COB Render Trigger -->
+  <style>
+    html,body {
+      height: 100%;
+    }
+    #cyCol {
+      height: 100%;
+    }
+    #cy {
+       width: 100%;
+       height: 100%;
+       position: absolute;
+       left: 0;
+       top: 0;
+       z-index: 999;
+      }
+  </style>
+  
+  <!-- Dataset Aquisition Trigger -->
   <script type="text/javascript">$(document).ready(function(){
-        // Initialize COB
-        window.cob = new COB({ 'div': $('#cob') })
-    });</script>
+    tableMaker('Ontology');
+    
+  });</script>
 </head>
 
 <!-- Actual Body -->
 <body>
-    <div id='cob'></div>
+<div class="container-fluid">
+  <!-- Selection Column -->
+  <div id="cob" class="col-md-4">
+    <h1>CoEx Browser</h1>
+    
+    <!-- Section For Ontology Selection -->
+    <div id="Ontology">
+      <h2>Ontology</h2>
+      <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
+          <thead>
+            <tr>
+              <th>Ontology</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+    </div>
+    
+    <!-- Section For Term Selection -->
+    <div id="Term">
+      <h2>Term</h2>
+      <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Desc</th>
+              <th>Num SNPs</th>
+              <th>Num Genes</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+    </div>
+    
+    <!-- Section For Network Selection -->
+    <div id="Network">
+      <h2>Network</h2>
+      <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
+          <thead>
+            <tr>
+              <th>Network</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    
+  </div>
+  
+  <!-- Box for Cytoscape Column -->
+  
+  <div id='cyCol' class='col-md-8' height='100%'>
+    <div id='cy'></div>
+    <h2 id='cyWait' class=''>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
+  </div>
+  
+</div>
 </body>
 </html>

@@ -16,6 +16,7 @@ app = Flask(__name__)
 networks = {x:co.COB(x) for x in ['ZmRoot']}
 print(networks)
 ZM = co.RefGen('Zm5bFGS')
+print('Loaded RefGen');
 
 # Set up the logging file
 handler = logging.FileHandler('COBErrors.log')
@@ -31,7 +32,7 @@ app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def index():
-    return render_template("index.html")
+    return send_from_directory('templates', 'index.html')
 
 @app.route('/static/<path:path>')
 def send_js(path):
@@ -43,6 +44,7 @@ def all_available_datasets():
  
 @app.route("/available_datasets/<path:type>")
 def available_datasets(type=None,*args):
+    print('Got a avail datasets request');
     return jsonify({ 
         "data" : list(
             co.available_datasets(type)[
