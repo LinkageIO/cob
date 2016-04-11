@@ -118,7 +118,7 @@ function buildGraph(data){
          }
        },
        {
-        selector: '[type = "locus"]',
+        selector: '[type = "chrom"]',
         css: {
           'background-color': 'black',
           'content': 'data(id)',
@@ -129,6 +129,19 @@ function buildGraph(data){
           'text-background-opacity': '1',
           'text-background-shape': 'roundrectangle',
         }
+      },
+      {
+       selector: '[type = "snp"]',
+       css: {
+         'background-color': 'black',
+         'content': 'data(id)',
+         'color': 'white',
+         'text-valign': 'center',
+         'text-halign': 'center',
+         'text-background-color': 'black',
+         'text-background-opacity': '1',
+         'text-background-shape': 'roundrectangle',
+       }
       },
        {
          selector: 'edge',

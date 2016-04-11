@@ -77,6 +77,7 @@ def COB_network(network_name,ontology,term):
     term = co.GWAS(ontology)[term]
     nodes = []
     parents = set()
+    chroms = dict()
     effective_loci = term.effective_loci(window_size=50000)
     candidate_genes = cob.refgen.candidate_genes(
         effective_loci,
@@ -100,7 +101,7 @@ def COB_network(network_name,ontology,term):
             {'data':{
                 'id': str(gene.id),
                 'type': 'gene',
-                'locus': str(gene.attr['parent_locus']),
+                'snp': str(gene.attr['parent_locus']),
                 'chrom': parent_list[2],
                 'start': str(gene.start),
                 'end': str(gene.end),
@@ -109,18 +110,34 @@ def COB_network(network_name,ontology,term):
                 'gdegree':int(global_degree)
             }})
         parents.add(str(gene.attr['parent_locus']))
+        if int(parent_list[2]) in chroms:
+            if gene.end > chroms[int(parent_list[2])]:
+                chroms[int(parent_list[2])] = gene.end
+        else:
+            chroms[int(parent_list[2])] = gene.end
     # Add parents first
     for p in parents:
         parent_list = re.split('<|>|:|-', p)
         parent = {
             'id': p,
-            'type': 'locus',
+            'type': 'snp',
             'chrom': parent_list[2],
             'start': parent_list[3],
             'end': parent_list[4],
         }
         nodes.insert(0,{'data':parent,'classes':'snp'})
-        
+    
+    # Add chrmosomes to the nodes
+    for k,v in chroms.items():
+        chrom = {
+          'id': str(k),
+          'type': 'chrom',
+          'chrom': str(k),
+          'start': str(0),
+          'end': str(v),
+        }
+        nodes.insert(0,{'data':chrom})
+    
     # Now do the edges
     subnet = cob.subnetwork(candidate_genes)
     subnet.reset_index(inplace=True)

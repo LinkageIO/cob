@@ -10,8 +10,8 @@ var register = function(cytoscape){
   var defaults = {
     padding: 30, // padding around the layout
     boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-    locusPadding: 7.5, //Ammount of padding at the end of the locus lines (in degrees)
-
+    locusPadding: 5, //Ammount of padding at the end of the locus lines (in degrees)
+    useChromosomes: false,
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -35,10 +35,27 @@ var register = function(cytoscape){
 
     // Finding and splitting up the different element types
     var nodes = eles.nodes();
-    var loci = nodes.filter('[type = "locus"]').sort(options.sort);
+    var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
+    var snps = nodes.filter('[type = "snp"]').sort(options.sort);
     var genes = nodes.filter('[type = "gene"]').sort(options.sort);
     var coex = eles.edges();
-
+    
+    // Decide whether to snps or chromosomes
+    var useChrom = options.useChromosomes;
+    var loci = undefined;
+    var par = '';
+    if((snps.length > 20) || useChrom){
+      useChrom = true;
+      var loci = chrom;
+      var par = 'chrom';
+      console.log('Chose Chromosomes');
+    }
+    else{
+      useChrom = false;
+      var par = 'snp';
+      var loci = snps;
+      console.log('Chose SNPs');
+    }
     // Find the Bounding Box and the Center
     var bb = options.boundingBox || cy.extent();
     if(bb.x2 === undefined){bb.x2 = bb.x1 + bb.w;}
@@ -50,8 +67,8 @@ var register = function(cytoscape){
     // Set up the circle in which to place the locusuences
     var circum = 2*Math.PI;
     var radius = (Math.min(bb.h, bb.w)/2)-options.padding;
-
-    // Find how many radians each locusuence gets
+    
+    // Find how many radians each locus gets
     var locusCount = loci.length;
     var dtheta = circum/locusCount;
 
@@ -103,7 +120,7 @@ var register = function(cytoscape){
     // ===============
     // Make Loci Lines
     // ===============
-    cy.style().selector('[type = "locus"]').style({
+    cy.style().selector('[type = "'+par+'"]').style({
       'shape': 'polygon',
       'width': function(ele){return ele.data('len');},
       'height': function(ele){return ele.data('len');},
@@ -120,7 +137,7 @@ var register = function(cytoscape){
     var orphanGenes = [];
     genes.layoutPositions(this, options, (function(i, ele){
       // Find information about the parent
-      var parent = loci.filter(('[id = "'+ele.data('locus')+'"]'));
+      var parent = loci.filter(('[id = "'+ele.data(par)+'"]'));
       // Put orphan genes in the middle of the graph
       if(parent.length !== 1){
         orphanGenes[orphanGenes.length] = ele.data('id');
@@ -181,7 +198,7 @@ if( typeof cytoscape !== 'undefined' ){register(cytoscape);}})();
 // Helper function that, given theta, returns the polygon points for a line oriented
 // in that direction in relation to the origin (0,0) of the unit circle
 var getLinePolygon = function(theta, radWidth){
-  var radWidth = radWidth || 0.015;
+  var radWidth = radWidth || 0.05;
   var ax = Math.cos(theta+(radWidth/2)); var ay = Math.sin(theta+(radWidth/2));
   var bx = Math.cos(theta-(radWidth/2)); var by = Math.sin(theta-(radWidth/2));
   var cx = -ax; var cy = -ay;
