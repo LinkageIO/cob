@@ -75,6 +75,7 @@ def COB_network(network_name,ontology,term):
     net = {}
     cob = networks[network_name]
     term = co.GWAS(ontology)[term]
+    print('Found the ontology')
     nodes = []
     parents = set()
     chroms = dict()
@@ -85,7 +86,9 @@ def COB_network(network_name,ontology,term):
         chain=True,
         include_parent_locus=True
     )
+    print('FOund the candidate genes')
     locality = cob.locality(candidate_genes)
+    print('Found Degree')
     for gene in candidate_genes:
         try:
             local_degree = locality.ix[gene.id]['local']
