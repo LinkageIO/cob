@@ -133,14 +133,10 @@ function buildGraph(data){
       {
        selector: '[type = "snp"]',
        css: {
-         'background-color': 'black',
-         'content': 'data(id)',
-         'color': 'white',
-         'text-valign': 'center',
-         'text-halign': 'center',
-         'text-background-color': 'black',
-         'text-background-opacity': '1',
-         'text-background-shape': 'roundrectangle',
+         'shape': 'ellipse',
+         'width': '20',
+         'height': '20',
+         'background-color': 'orange'
        }
       },
        {
