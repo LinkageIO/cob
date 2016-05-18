@@ -8,11 +8,12 @@ var register = function(cytoscape){
 
   // Default Layout Options
   var defaults = {
-    padding: 100, // padding around the layout
+    padding: 200, // padding around the layout
     boundingBox: undefined, // constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
     chromPadding: 5, //Ammount of padding at the end of the chrom lines (in degrees)
     useChromosomes: false,
-    nodeHeight: 20,
+    nodeHeight: 15,
+    geneOffset: 20,
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -88,7 +89,6 @@ var register = function(cytoscape){
       var chromLen = ele.data('end')-ele.data('start');
       var pxLen = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
       var BPperPX = chromLen/pxLen;
-      console.log(BPperPX);
 
       // Add some information in the node concerning it's position
       ele.data({
@@ -145,87 +145,128 @@ var register = function(cytoscape){
     
     // Make new nodes from these
     var snpNodes = [];
+    var idNum = -1;
+    var snpToGroup = {};
     var curNode = null;
-    var lastPos = null;
-    var lastChrom = null;
+    var lastPos = 0;
     var totDist = 0;
-    var min = null;
-    var max = null;
+    var first = true;
     snpData.forEach(function(currentValue, index, array){
         totDist = totDist + (currentValue.pos - lastPos);
         var parent = chrom.filter(('[id = "'+currentValue.chrom+'"]'));
         // Need to start a new node
-        if((currentValue.chrom !== lastChrom) || (totDist >= (options.nodeHeight*parent.data('BPperPX')))){
-            // Set the final values and push the last node
-            if(curNode !== null){
-                curNode.data.start = min;
-                curNode.data.end = max;
-                snpNodes.push(curNode);}
+        if(first || (currentValue.chrom !== curNode.data.chrom) || (totDist >= (options.nodeHeight*parent.data('BPperPX')))){
+            // Push the last node
+            if(curNode !== null){snpNodes.push(curNode);}
+            else{first = false;}
+            
             // Set the new intial values
-            min = currentValue.start;
-            max = currentValue.end;
+            idNum = idNum + 1;
             lastPos = currentValue.pos;
-            lastChrom = currentValue.chrom;
             totDist = 0;
             curNode = {group: 'nodes', data:{
-                id: index,
+                id: ('SNPG:' + idNum.toString()),
                 type: 'snp',
-                chrom: lastChrom,
-                start: min,
-                end: max,
+                nGenes: 1,
+                chrom: currentValue.chrom,
+                start: currentValue.start,
+                end: currentValue.end,
                 snps: [currentValue.id]}};
+            snpToGroup[currentValue.id] = curNode.data.id;
         }
         else{
-            if(curNode.data.start < min){min = curNode.data.start;}
-            if(curNode.data.end > max){max = curNode.data.end;}
+            if(currentValue.start < curNode.data.start){
+                curNode.data.start = currentValue.start;}
+            if(currentValue.end > curNode.data.end){
+                curNode.data.end = currentValue.end;}
             lastPos = currentValue.pos;
-            lastChrom = currentValue.chrom;
             curNode.data.snps.push(currentValue.id);
+            snpToGroup[currentValue.id] = curNode.data.id;
         }
     });
-    curNode.data.start = min;
-    curNode.data.end = max;
+    // Push the last built node
     snpNodes.push(curNode);
-    console.log(snpNodes);
+
+    // Remove the raw SNPs from the graph and add our fresh ones
     cy.remove(snps);
     snps = cy.add(snpNodes);
     
     // =================
     // Position the snps
     // =================
-    var orphanSnps = [];
     snps.layoutPositions(this, options, (function(i, ele){
       // Find information about the parent
-      var parent = chrom.filter(('[id = "'+ele.data('chrom')+'"]'));
-      // Put orphan snps in the middle of the graph
-      if(parent.length !== 1){
-        orphanSnps[orphanSnps.length] = ele.data('id');
-        return {x:center.x, y:center.y};
-      }
-      var parPos = parent.data('pxStart');
-      var delta = parent.data('delta');
+      var chromObj = chrom.filter(('[id = "'+ele.data('chrom')+'"]'));
+      
+      // Get some data from the chromosome
+      var chromPos = chromObj.data('pxStart');
+      var delta = chromObj.data('delta');
 
       // Find the start and end position of snps
       var start = ele.data('start');
       var end = ele.data('end');
       
       // Find the position of the snps based on all the data
-      return {
-        x: ((((start*delta.x)+(end*delta.x))/2)+parPos.x),
-        y: ((((start*delta.y)+(end*delta.y))/2)+parPos.y),
-      };
+      var x = Math.round((((start*delta.x)+(end*delta.x))/2)+chromPos.x);
+      var y = Math.round((((start*delta.y)+(end*delta.y))/2)+chromPos.y);
+      
+      // Save these to the object
+      ele.data('x', x);
+      ele.data('y', y);
+      return {x: x, y: y};
     }));
-
-    // Throw up an alert if there are orphan snps
-    try{if(orphanSnps.length > 0){
-      throw "You have snps with either more or less than one parent chrom, they are in the middle of the graph, please fix this for correct formatting. The affected genes are:\n";}}
+    
+    // ==================
+    // Position the genes
+    // ==================
+    // Sort them by Degree
+    genes = genes.sort(function(a,b){
+        var ad = a.degree();
+        var bd = b.degree();
+        if(ad < bd){return 1;}
+        else if(ad > bd){return -1;}
+        else{return 0;}
+    });
+    
+    // Lay them out
+    var orphanGenes = [];
+    genes.layoutPositions(this, options, (function(i, ele){
+        // Get the obj of the parent SNP group
+        var snpObj = snps.filter(('[id = "'+ snpToGroup[ele.data('snp')] +'"]'));
+        
+        // Put orphan snps in the middle of the graph
+        if(snpObj.length !== 1){
+          orphanGenes[orphanGenes.length] = [ele.data('id'),ele.data('snp'),ele.data('newSNP')];
+          return {x:center.x, y:center.y};
+        }
+        
+        // Get data from the SNP
+        var snpX = snpObj.data('x')-center.x;
+        var snpY = snpObj.data('y')-center.y;
+        var rad = Math.sqrt((snpX*snpX)+(snpY*snpY));
+        var theta = Math.atan2(snpY,snpX);
+        var n = snpObj.data('nGenes');
+        snpObj.data('nGenes', (n+1));
+        
+        // Compute the positions and return it
+        var x = Math.round(((rad+(n*options.geneOffset))*Math.cos(theta))+center.x);
+        var y = Math.round(((rad+(n*options.geneOffset))*Math.sin(theta))+center.y);
+        return {x: x, y: y};
+    }));
+    
+    // Throw up an alert if there are orphan genes
+    try{if(orphanGenes.length > 0){
+      throw "You have genes with either more or less than one parent snp, they are in the middle of the graph, please fix this for correct formatting. The affected genes are:\n";}}
     catch(err){
-      var snpStr = '';
-      for(var i=0; i < orphanSnps.length; i++){
-        snpStr += orphanSnps[i] + '\n';}
-      window.alert(err + snpStr);
+      var geneStr = '';
+      for(var i=0; i < orphanGenes.length; i++){
+        geneStr += orphanGenes[i][0] + '   ' + orphanGenes[i][1] + '   ' + orphanGenes[i][2] + '\n';}
+      window.alert(err + geneStr);
     }
 
+    // ====================
+    // Finished the Layout!
+    // ====================
     // Trigger layoutready when each node has had its position set at least once
     layout.one('layoutready', options.ready);
     layout.trigger('layoutready');
