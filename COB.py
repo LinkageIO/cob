@@ -15,9 +15,23 @@ app = Flask(__name__)
 
 # Generate in-memory Network and RefGen Object
 networks = {x:co.COB(x) for x in ['ZmRoot']}
-print(networks)
+print('Availible Networks: ' + str(networks))
 ZM = co.RefGen('Zm5bFGS')
-print('Loaded RefGen');
+print('Loaded RefGen: ' + str(ZM));
+
+# Generate in Memory Avalible GWAS datasets list
+gwas_sets = {"data" : list(co.available_datasets('GWAS')[
+            ['Name','Description']].itertuples(index=False))}
+print('Availible GWAS Ontologies: ' + str(gwas_sets));
+
+# Generate in memory term lists
+terms = {}
+for ont in gwas_sets['data']:
+    terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
+             len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
+            for term in co.GWAS(ont[0]).iter_terms()]
+    }
+    print('Avalible Terms: ' + str(terms))
 
 # Set up the logging file
 handler = logging.FileHandler('COBErrors.log')
@@ -47,27 +61,16 @@ def all_available_datasets():
 # Route for sending the avalible datasets and networks
 @app.route("/available_datasets/<path:type>")
 def available_datasets(type=None,*args):
-    return jsonify({ 
-        "data" : list(
-            co.available_datasets(type)[
-                ['Name','Description']
-            ].itertuples(index=False))
-        }
-    )
+    if(type == 'GWAS'):
+        return jsonify(gwas_sets)
+    else:
+        return jsonify({"data" : list(co.available_datasets(type)[
+                    ['Name','Description']].itertuples(index=False))})
 
 # Route for finding and sending the available terms
 @app.route("/Ontology/Terms/<path:term_name>")
 def Ontology_Terms(term_name):
-    return jsonify({
-        'data': [ 
-            (term.id,
-             term.desc,
-             len(term.loci),
-             len(ZM.candidate_genes(
-                term.effective_loci(window_size=50000)))
-             ) 
-            for term in co.GWAS(term_name).iter_terms()]
-    })
+    return jsonify(terms[term_name])
 
 # Route for sending the CoEx Network Data for graphing
 @app.route("/COB/<network_name>/<ontology>/<term>")
