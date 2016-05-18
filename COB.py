@@ -13,9 +13,10 @@ from itertools import chain
 from flask import Flask, url_for, jsonify, request, send_from_directory
 app = Flask(__name__)
 
-# Generate in-memory Network and RefGen Object
-networks = {x:co.COB(x) for x in ['ZmRoot']}
-print('Availible Networks: ' + str(networks))
+# Networks to load
+network_names = ['ZmRoot']
+
+# Generate in-memory RefGen Object
 ZM = co.RefGen('Zm5bFGS')
 print('Loaded RefGen: ' + str(ZM));
 
@@ -29,9 +30,13 @@ terms = {}
 for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
              len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
-            for term in co.GWAS(ont[0]).iter_terms()]
-    }
+            for term in co.GWAS(ont[0]).iter_terms()]}
     print('Avalible Terms: ' + str(terms))
+
+# Generate network list based on allowed list and load them into memory
+networks = {x:co.COB(x) for x in network_names}
+network_list = {'data': [[net.name, net.description] for name,net in networks.items()]}
+print('Availible Networks: ' + str(networks))
 
 # Set up the logging file
 handler = logging.FileHandler('COBErrors.log')
@@ -63,6 +68,8 @@ def all_available_datasets():
 def available_datasets(type=None,*args):
     if(type == 'GWAS'):
         return jsonify(gwas_sets)
+    elif(type == 'Expr'):
+        return jsonify(network_list)
     else:
         return jsonify({"data" : list(co.available_datasets(type)[
                     ['Name','Description']].itertuples(index=False))})
