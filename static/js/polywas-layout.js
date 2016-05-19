@@ -2,18 +2,20 @@
 var register = function(cytoscape){
   if(!cytoscape){return;} // Can't Register if Cytoscape is Unspecified
 
-  var isString = function(o){ return typeof o === typeof ''; };
-  var isNumber = function(o){ return typeof o === typeof 0; };
-  var isObject = function(o){ return o != null && typeof o === typeof {}; };
+  //var isString = function(o){ return typeof o === typeof ''; };
+  //var isNumber = function(o){ return typeof o === typeof 0; };
+  //var isObject = function(o){ return o != null && typeof o === typeof {}; };
 
   // Default Layout Options
   var defaults = {
-    padding: 200, // padding around the layout
+    padding: 100, // padding around the layout
     boundingBox: undefined, // constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
-    chromPadding: 5, //Ammount of padding at the end of the chrom lines (in degrees)
-    useChromosomes: false,
-    nodeHeight: 15,
-    geneOffset: 20,
+    chromPadding: 5, //Ammount of padding at the end of the chrom lines in degrees (I think?)
+    nodeHeight: 5, // Diameter of the SNP nodes
+    geneOffset: 5, // Distance between stacked genes
+    radWidth: 0.025, // Thickness of the chromosomes lines
+    minEdgeScore: 4.0, // Minimum edge score to be rendered (3.0 is min val)
+    minNodeDegree: 1, // Minimum local degree for a node to be rendered
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -38,10 +40,22 @@ var register = function(cytoscape){
     // Finding and splitting up the different element types
     var nodes = eles.nodes();
     var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
-    var snps = nodes.filter('[type = "snp"]').sort(options.sort);
-    var genes = nodes.filter('[type = "gene"]').sort(options.sort);
-    var coex = eles.edges();
-
+    var snps = nodes.filter('[type = "snp"]');
+    var genes = nodes.filter('[type = "gene"]');
+    console.log('Pulled Chromosomes, SNPs, and Nodes');
+    
+    // Get rid of genes that are not above the threshold
+    genes = genes.difference(genes.filter(function(i, ele){
+        if(parseInt(ele.data('ldegree')) < options.minNodeDegree){return true;}
+        else{return false;}}).remove());
+    console.log('Filtered Genes');
+    
+    // Get rid of edges that are not above the threshold
+    eles.edges().filter(function(i, ele){
+        if(parseFloat(ele.data('score')) < options.minEdgeScore){return true;}
+        else{return false;}}).remove();
+    console.log('Filtered Edges');
+    
     // Find the Bounding Box and the Center
     var bb = options.boundingBox || cy.extent();
     if(bb.x2 === undefined){bb.x2 = bb.x1 + bb.w;}
@@ -104,7 +118,8 @@ var register = function(cytoscape){
       });
       return ele.data('mid');
     }));
-
+    console.log('Placed Chromosomes');
+    
     // =====================
     // Make Chromosome Lines
     // =====================
@@ -115,11 +130,12 @@ var register = function(cytoscape){
       'shape-polygon-points': function(ele){
           var theta = (ele.data('theta')-(Math.PI/2));
           // Calls helper function (at bottom) for getting the polygon points
-          return getLinePolygon(theta);
+          return getLinePolygon(theta, options.radWidth);
       },
     }).update();
     chrom.lock();
-
+    console.log('Styled Chromosome Polygons');
+    
     // ================
     // Combine the snps
     // ================
@@ -132,6 +148,7 @@ var register = function(cytoscape){
         var end =  parseInt(currentValue.data('end'))
         snpData.push({id: id, chrom: chrom, start: start, end: end, pos: ((start + end)/2)});
     });
+    console.log('Extracted SNP Data to Dict');
     
     // Sort that data by chromasome and position
     snpData.sort(function(a,b){
@@ -142,6 +159,7 @@ var register = function(cytoscape){
             else if(a.pos > b.pos){return 1;}
             else{return 0;}
     }});
+    console.log('Sorted SNPs');
     
     // Make new nodes from these
     var snpNodes = [];
@@ -186,10 +204,12 @@ var register = function(cytoscape){
     });
     // Push the last built node
     snpNodes.push(curNode);
-
+    console.log('Built new SNPs');
+    
     // Remove the raw SNPs from the graph and add our fresh ones
     cy.remove(snps);
     snps = cy.add(snpNodes);
+    console.log('Replaced SNPs');
     
     // =================
     // Position the snps
@@ -215,6 +235,8 @@ var register = function(cytoscape){
       ele.data('y', y);
       return {x: x, y: y};
     }));
+    snps.lock();
+    console.log('Placed SNPs');
     
     // ==================
     // Position the genes
@@ -227,6 +249,7 @@ var register = function(cytoscape){
         else if(ad > bd){return -1;}
         else{return 0;}
     });
+    console.log('Sorted the Genes');
     
     // Lay them out
     var orphanGenes = [];
@@ -244,7 +267,7 @@ var register = function(cytoscape){
         var snpX = snpObj.data('x')-center.x;
         var snpY = snpObj.data('y')-center.y;
         var rad = Math.sqrt((snpX*snpX)+(snpY*snpY));
-        var theta = Math.atan2(snpY,snpX);
+        var theta = Math.atan2(snpY,snpX);//Math.PI/2;
         var n = snpObj.data('nGenes');
         snpObj.data('nGenes', (n+1));
         
@@ -263,7 +286,8 @@ var register = function(cytoscape){
         geneStr += orphanGenes[i][0] + '   ' + orphanGenes[i][1] + '   ' + orphanGenes[i][2] + '\n';}
       window.alert(err + geneStr);
     }
-
+    console.log('Placed the Genes');
+    
     // ====================
     // Finished the Layout!
     // ====================
@@ -298,7 +322,6 @@ if( typeof cytoscape !== 'undefined' ){register(cytoscape);}})();
 // Helper function that, given theta, returns the polygon points for a line oriented
 // in that direction in relation to the origin (0,0) of the unit circle
 var getLinePolygon = function(theta, radWidth){
-  var radWidth = radWidth || 0.05;
   var ax = Math.cos(theta+(radWidth/2)); var ay = Math.sin(theta+(radWidth/2));
   var bx = Math.cos(theta-(radWidth/2)); var by = Math.sin(theta-(radWidth/2));
   var cx = -ax; var cy = -ay;
