@@ -115,32 +115,34 @@ function buildGraph(data){
            'text-halign': 'center',
            'background-color': '#62c',
            'shape': 'circle',
+           'height': '15',
+           'width': '15',
+           'font-size': '8',
          }
        },
        {
         selector: '[type = "chrom"]',
         css: {
-          'background-color': 'black',
+          'z-index': '2',
+          'background-color': 'green',
           'content': 'data(id)',
-          'color': 'white',
+          'color': 'black',
           'text-valign': 'center',
           'text-halign': 'center',
-          'text-background-color': 'black',
+          'text-background-color': 'green',
           'text-background-opacity': '1',
           'text-background-shape': 'roundrectangle',
+          'font-size': '15',
         }
       },
       {
        selector: '[type = "snp"]',
        css: {
-         'background-color': 'black',
-         'content': 'data(id)',
-         'color': 'white',
-         'text-valign': 'center',
-         'text-halign': 'center',
-         'text-background-color': 'black',
-         'text-background-opacity': '1',
-         'text-background-shape': 'roundrectangle',
+         'z-index': '1',
+         'shape': 'circle',
+         'height': '15',
+         'width': '15',
+         'background-color': 'orange',
        }
       },
        {
