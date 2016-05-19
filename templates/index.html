@@ -31,9 +31,9 @@
   <script src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
   <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/select/1.1.2/css/select.bootstrap.min.css">
 
-  <!-- Loaf COB -->
+  <!-- Loaf COB 
   <script src="static/js/cob.js"></script>
-  <script src="static/js/polywas-layout.js"></script>
+  <script src="static/js/polywas-layout.js"></script> -->
   <script>
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
     $('<link/>', {
@@ -47,6 +47,13 @@
     $('#OntologyTable').DataTable();
     $('#TermTable').DataTable();
     $('#NetworkTable').DataTable();
+    $(document).ready(function(){
+        $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
+            $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
+                tableMaker('Ontology');
+            });
+        });
+    });
   </script>
   
   <style>
@@ -73,9 +80,6 @@
       z-index: 999;
       }
   </style>
-  
-  <!-- Dataset Aquisition Trigger -->
-  <script type="text/javascript">$(document).ready(function(){tableMaker('Ontology');});</script>
 </head>
 
 <!-- Actual Body -->
