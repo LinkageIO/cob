@@ -2,10 +2,6 @@
 var register = function(cytoscape){
   if(!cytoscape){return;} // Can't Register if Cytoscape is Unspecified
 
-  //var isString = function(o){ return typeof o === typeof ''; };
-  //var isNumber = function(o){ return typeof o === typeof 0; };
-  //var isObject = function(o){ return o != null && typeof o === typeof {}; };
-
   // Default Layout Options
   var defaults = {
     padding: 100, // padding around the layout
@@ -14,7 +10,7 @@ var register = function(cytoscape){
     nodeHeight: 5, // Diameter of the SNP nodes
     geneOffset: 5, // Distance between stacked genes
     radWidth: 0.025, // Thickness of the chromosomes lines
-    minEdgeScore: 4.0, // Minimum edge score to be rendered (3.0 is min val)
+    minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
@@ -36,7 +32,7 @@ var register = function(cytoscape){
     var cy = options.cy; // The whole environment
     var eles = options.eles; // elements to consider in the layout
     var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians around chromuences
-
+    
     // Finding and splitting up the different element types
     var nodes = eles.nodes();
     var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
@@ -184,7 +180,7 @@ var register = function(cytoscape){
             totDist = 0;
             curNode = {group: 'nodes', data:{
                 id: ('SNPG:' + idNum.toString()),
-                type: 'snp',
+                type: 'snpG',
                 nGenes: 1,
                 chrom: currentValue.chrom,
                 start: currentValue.start,
@@ -231,8 +227,11 @@ var register = function(cytoscape){
       var y = Math.round((((start*delta.y)+(end*delta.y))/2)+chromPos.y);
       
       // Save these to the object
+      var theta = Math.atan2((y-center.y),(x-center.x));
       ele.data('x', x);
       ele.data('y', y);
+      ele.data('coefX', (Math.cos(theta)*options.geneOffset));
+      ele.data('coefY', (Math.sin(theta)*options.geneOffset));
       return {x: x, y: y};
     }));
     snps.lock();
@@ -259,22 +258,20 @@ var register = function(cytoscape){
         
         // Put orphan snps in the middle of the graph
         if(snpObj.length !== 1){
-          orphanGenes[orphanGenes.length] = [ele.data('id'),ele.data('snp'),ele.data('newSNP')];
+          orphanGenes[orphanGenes.length] = [ele.data('id'),ele.data('snp'),snpToGroup[ele.data('snp')]];
           return {x:center.x, y:center.y};
         }
         
         // Get data from the SNP
-        var snpX = snpObj.data('x')-center.x;
-        var snpY = snpObj.data('y')-center.y;
-        var rad = Math.sqrt((snpX*snpX)+(snpY*snpY));
-        var theta = Math.atan2(snpY,snpX);//Math.PI/2;
+        var snpX = snpObj.data('x');
+        var snpY = snpObj.data('y');
+        var coefX = snpObj.data('coefX');
+        var coefY = snpObj.data('coefY');
         var n = snpObj.data('nGenes');
         snpObj.data('nGenes', (n+1));
         
         // Compute the positions and return it
-        var x = Math.round(((rad+(n*options.geneOffset))*Math.cos(theta))+center.x);
-        var y = Math.round(((rad+(n*options.geneOffset))*Math.sin(theta))+center.y);
-        return {x: x, y: y};
+        return {x: Math.round((n*coefX)+snpX), y: Math.round((n*coefY)+snpY)};
     }));
     
     // Throw up an alert if there are orphan genes

@@ -110,6 +110,10 @@ function tableMaker(section){
          Graph Constructor
 ---------------------------------*/
 function buildGraph(data){
+  // Save request data for full graph rebuild
+  cyDataCache = data;
+  
+  // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
     
@@ -125,6 +129,8 @@ function buildGraph(data){
     
     layout: {
       name: 'polywas',
+      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
+      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
     },
     style: [
         {
@@ -143,7 +149,7 @@ function buildGraph(data){
          }
        },
        {
-        selector: '[type = "snp"]',
+        selector: '[type = "snpG"]',
         css: {
           'z-index': '2',
           'shape': 'circle',
@@ -182,3 +188,14 @@ function buildGraph(data){
      edges: data.edges,
   }});
 }
+
+/*--------------------------------
+         Update Graph
+---------------------------------*/
+$("#updateButton").click(function(){
+    // Check to see if there is an exitant graph
+    if(cy == null){return;}
+    else{cy.destroy();}
+    buildGraph(cyDataCache);
+    return;
+});
