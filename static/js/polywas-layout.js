@@ -7,8 +7,8 @@ var register = function(cytoscape){
     padding: 100, // padding around the layout
     boundingBox: undefined, // constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
     chromPadding: 5, //Ammount of padding at the end of the chrom lines in degrees (I think?)
-    nodeHeight: 5, // Diameter of the SNP nodes
-    geneOffset: 5, // Distance between stacked genes
+    nodeHeight: 10, // Diameter of the SNP nodes
+    geneOffset: 10, // Distance between stacked genes
     radWidth: 0.025, // Thickness of the chromosomes lines
     minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered

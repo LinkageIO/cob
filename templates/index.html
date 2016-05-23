@@ -88,67 +88,95 @@
 
 <div id='cob' class='container'>
   <div id='cobHead' class='bg-primary well-sm'><h1>CoEx Browser</h1></div>
-  <!-- Section For parameter adjustment -->
-  <div id='Graph Params' class="form-group">
-      <form class="form-inline" id="graphParams">
-          <label class="" for="nodeCutoff">Min Node Degree</label>
-          <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
-          <label class="" for="edgeCutoff">Min Edge Score</label>
-          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
-          <input type="button" class="btn btn-primary" id="updateButton" value="Update">
-      </form>
-  </div>
+
+<div>
+  <ul class="nav nav-tabs" role="tablist" id="navTabs">
+    <li role="presentation" class="active"><a href="#networks" aria-controls="networks" role="tab" data-toggle="tab">Network</a></li>
+    <li role="presentation"><a aria-controls="genes" href="#genes" role="tab" data-toggle="tab">Genes</a></li>
+  </ul>
   
-  <!-- Section For Ontology Selection -->
-  <div id="Ontology">
-    <h2>Ontology</h2>
-      <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
-      <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
-        <thead>
-          <tr>
-            <th>Ontology</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-  </div>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="networks">
+    <!-- Section For Ontology Selection -->
+      <div id="Ontology">
+        <h2>Ontology</h2>
+          <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
+          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
+            <thead>
+              <tr>
+                <th>Ontology</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+      </div>
+      
+      <!-- Section For Term Selection -->
+      <div id="Term">
+        <h2>Term</h2>
+          <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
+          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Desc</th>
+                <th>Num SNPs</th>
+                <th>Num Genes</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+      </div>
+      
+      <!-- Section For Network Selection -->
+      <div id="Network">
+        <h2>Network</h2>
+        <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
+          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
+            <thead>
+              <tr>
+                <th>Network</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
   
-  <!-- Section For Term Selection -->
-  <div id="Term">
-    <h2>Term</h2>
-      <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
-      <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Desc</th>
-            <th>Num SNPs</th>
-            <th>Num Genes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-  </div>
-  
-  <!-- Section For Network Selection -->
-  <div id="Network">
-    <h2>Network</h2>
-    <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
-      <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
-        <thead>
-          <tr>
-            <th>Network</th>
-            <th>Description</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div role="tabpanel" class="tab-pane" id="genes">
+        <!-- Section For parameter adjustment -->
+        <div id='Graph Params' class="form-group">
+            <form class="form-inline" id="graphParams">
+                <label class="" for="nodeCutoff">Min Node Degree</label>
+                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
+                <label class="" for="edgeCutoff">Min Edge Score</label>
+                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+                <input type="button" class="btn btn-primary" id="updateButton" value="Update">
+            </form>
+        </div>
+        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="GeneTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Chrom</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>SNP</th>
+              <th>Local Degree</th>
+              <th>Global Degree</th>
+              <th>Locality</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+  </div>
 </div>
-  
-<!-- Box for Cytoscape Column -->
-<h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
-<div id='cy' class='container'></div>
-</body>
-</html>
+  <!-- Box for Cytoscape Column -->
+  <h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
+  <div id='cy' class='container'></div>
+  </body>
+  </html>

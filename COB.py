@@ -23,7 +23,6 @@ print('Loaded RefGen: ' + str(ZM));
 # Generate in Memory Avalible GWAS datasets list
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
-print('Availible GWAS Ontologies: ' + str(gwas_sets));
 
 # Generate in memory term lists
 terms = {}
@@ -31,7 +30,6 @@ for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
              len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
             for term in co.GWAS(ont[0]).iter_terms()]}
-    print('Avalible Terms: ' + str(terms))
 
 # Generate network list based on allowed list and load them into memory
 networks = {x:co.COB(x) for x in network_names}
@@ -174,14 +172,20 @@ def fix_val(val):
         return val
 
 '''
-# Gene Stuff, on ice for now
+# Gene Stuff, being thawed
 @app.route('/Annotations/<network_name>/<ontology_name>/<term_name>',
         methods=['GET','POST'])
-def Annotations(network_name,ontology_name,term_name):
+def Annotations(network,ontology,term):
     # Retrieve SNPs from 
-    cob = networks[network_name]
-    term = co.GWAS(ontology_name)[term_name]
-    genes = cob.refgen.from_ids(request.args.get('genes').split(','))
+    cob = networks[network]
+    term = co.GWAS(ontology)[term]
+    effective_loci = term.effective_loci(window_size=50000)
+    candidate_genes = cob.refgen.candidate_genes(
+        effective_loci,
+        flank_limit=2,
+        chain=True,
+        include_parent_locus=False
+    )
     try:
         gene_annots = co.Annotation('ZMFunc')[genes]
     except ValueError as e:

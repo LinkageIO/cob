@@ -53,14 +53,29 @@ $('#NetworkTable tbody').on('click','tr',function(){
     $('#cyWait').addClass('hidden');
     $('#cy').removeClass('hidden');
     
+    // Get Netwrok Data and build graph
     $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm).done(function(data){
             console.log('Recieved Data from Server, sending to cytoscape.');
             buildGraph(data);
+            //buildGeneTable(data);
         })
         .fail(function(data){
             console.log("Something went wrong with the data.")
-        })
+        });
+    
+    // Get Gene Annotations and build gene table
+    $('#navTabs a[href="#genes"]').tab('show');
+    
 })});
+
+// Update Graph with new params
+$('#updateButton').click(function(){
+    // Check to see if there is an exitant graph
+    if(cy == null){return;}
+    else{cy.destroy();}
+    buildGraph(cyDataCache);
+    return;
+});
 
 /*--------------------------------
          Table Constructor
@@ -153,8 +168,8 @@ function buildGraph(data){
         css: {
           'z-index': '2',
           'shape': 'circle',
-          'height': '5',
-          'width': '5',
+          'height': '10',
+          'width': '10',
           'background-color': 'orange',
         }
        },
@@ -164,8 +179,8 @@ function buildGraph(data){
            'z-index': '1',
            'background-color': '#62c',
            'shape': 'circle',
-           'height': '5',
-           'width': '5',
+           'height': '10',
+           'width': '10',
            //'content': 'data(id)',
            //'color': 'black',
            //'text-valign': 'center',
@@ -187,15 +202,50 @@ function buildGraph(data){
      nodes: data.nodes,
      edges: data.edges,
   }});
+  
+  // Use gene data to set up gene reference tablefunction(currentValue, index, array){
+  var geneData = [];
+  data.nodes.forEach(function(currentValue, index, array){
+    console.log(currentValue);
+    
+    
+  });
+
 }
 
 /*--------------------------------
-         Update Graph
+      Gene Table Constructor
 ---------------------------------*/
-$("#updateButton").click(function(){
-    // Check to see if there is an exitant graph
-    if(cy == null){return;}
-    else{cy.destroy();}
-    buildGraph(cyDataCache);
-    return;
-});
+function buildGeneTable(data){
+  // Pull in the saved data
+  
+  /*// Remove the data wait message
+  $('#'+section+'Wait').addClass("hidden");
+  
+  // Make sure the table is visible
+  $('#'+section+'Table').removeClass("hidden");
+  
+  // Clean up the old table
+  $('#'+section+'Table').DataTable().destroy();
+  
+  // Uses DataTables to build a pretty table
+  $('#'+section+'Table').DataTable(
+      {
+      "ajax": address,
+      "autoWidth": true, 
+      "bPaginate": false,
+      "bJQueryUI": false,
+      "bScrollCollapse": true,
+      "bAutoWidth": true,
+      "info": true,
+      "order": [[0,'asc']],
+      "processing" : true,
+      "sScrollXInner": "100%",
+      "sScrollX": '100%',
+      "sScrollY": $('#cob').innerHeight()/4,
+      "select": true,
+      "searching": true,
+      "stripe": true,
+    });*/
+  return;
+}
