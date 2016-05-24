@@ -226,10 +226,11 @@ function buildGraph(data){
   $('#GeneTable tbody').on('click','tr', function(){
     nodeSelect($('td', this).eq(0).text());
   });
-  
-  console.log(cy.edges());
 }
 
+/*--------------------------------
+      Node Selection Algorithm
+---------------------------------*/
 function nodeSelect(gene_id){
   // Get the node object
   var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
