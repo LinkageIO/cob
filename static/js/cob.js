@@ -63,7 +63,7 @@ $('#NetworkTable tbody').on('click','tr',function(){
             console.log("Something went wrong with the data.")
         });
     
-    // Get Gene Annotations and build gene table
+    // Switch to Gene Data Tab
     $('#navTabs a[href="#genes"]').tab('show');
     
 })});
@@ -73,7 +73,12 @@ $('#updateButton').click(function(){
     // Check to see if there is an exitant graph
     if(cy == null){return;}
     else{cy.destroy();}
+    
+    // Run the algorithm again with the new parameters
     buildGraph(cyDataCache);
+
+    // Switch to Gene Data Tab
+    $('#navTabs a[href="#genes"]').tab('show');
     return;
 });
 
@@ -113,7 +118,7 @@ function tableMaker(section){
       "processing" : true,
       "sScrollXInner": '100%',
       "sScrollX": '100%',
-      "sScrollY": $(window).height()/4,
+      "sScrollY": ($(window).height()/4)-50,
       "select": true,
       "searching": true,
       "stripe": true,
