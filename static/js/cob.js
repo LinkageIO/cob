@@ -213,21 +213,30 @@ function buildGraph(data){
   
   // Set up the node tap listener
   cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
-    // Reset and then highlight the neighbours, edges, and self
-    cy.nodes().toggleClass('highlighted', false);
-    cy.nodes().toggleClass('neighbors', false);
-    evt.cyTarget.toggleClass('highlighted', true);
-    evt.cyTarget.neighborhood().toggleClass('neighbors', true);
-    
-    // Select the clicked gene in the table
-    $('#GeneTable').DataTable().rows('*').deselect();
-    $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).select().scrollTo();
+    nodeSelect(evt.cyTarget.data('id'));
   });
   
   // Set up the table tap listener
+  $('#GeneTable tbody').on('click','tr', function(){
+    nodeSelect($('td', this).eq(0).text());
+  });
+}
+
+function nodeSelect(gene_id){
+  // Get the node object
+  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
   
+  // Reset and then highlight the neighbours, edges, and self
+  cy.nodes().toggleClass('highlighted', false);
+  cy.nodes().toggleClass('neighbors', false);
+  gene_node.toggleClass('highlighted', true);
+  gene_node.neighborhood().toggleClass('neighbors', true);
   
+  // Select the clicked gene in the table
+  $('#GeneTable').DataTable().rows('*').deselect();
+  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
   
+  return;
 }
 
 /*--------------------------------
