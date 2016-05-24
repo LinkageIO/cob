@@ -1,5 +1,5 @@
 /*--------------------------------
-         Event Listeners
+      Table Event Listeners
 ---------------------------------*/
 $(document).ready(function(){
 // A row on the Ontology Table is selected
@@ -68,6 +68,9 @@ $('#NetworkTable tbody').on('click','tr',function(){
     
 })});
 
+/*--------------------------------
+     Parameter Event Listener
+---------------------------------*/
 // Update Graph with new params
 $('#updateButton').click(function(){
     // Check to see if there is an exitant graph
@@ -131,6 +134,9 @@ function tableMaker(section){
          Graph Constructor
 ---------------------------------*/
 function buildGraph(data){
+  // Hide the gene table
+  $('#GeneTable').addClass("hidden");
+  
   // Save request data for full graph rebuild
   cyDataCache = data;
   
@@ -139,12 +145,11 @@ function buildGraph(data){
     container: $('#cy'),
     
     // Interaction Options
-    boxSelectionEnabled: false,
+    boxSelectionEnabled: true,
     autounselectify: false,
     
     // Rendering Options
     hideEdgesOnViewport: false,
-    hideLabelsOnViewport: true,
     textureOnViewport: true,
     wheelSensitivity: 0.5,
     
@@ -154,64 +159,84 @@ function buildGraph(data){
       minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
     },
     style: [
-        {
-         selector: '[type = "chrom"]',
+        {selector: '[type = "chrom"]',
          css: {
-           'z-index': '3',
-           'background-color': 'green',
+           'z-index': '2',
+           'background-color': 'DarkSlateGrey',
            'content': 'data(id)',
-           'color': 'black',
+           'color': 'white',
            'text-valign': 'center',
            'text-halign': 'center',
-           'text-background-color': 'green',
+           'text-background-color': 'DarkSlateGrey',
            'text-background-opacity': '1',
            'text-background-shape': 'roundrectangle',
            'font-size': '10',
-         }
-       },
-       {
-        selector: '[type = "snpG"]',
+         }},
+       {selector: '[type = "snpG"]',
         css: {
-          'z-index': '2',
+          'z-index': '1',
           'shape': 'circle',
           'height': '10',
           'width': '10',
-          'background-color': 'orange',
-        }
-       },
-       {
-         selector: '[type = "gene"]',
+          'background-color': 'DimGrey',
+        }},
+       {selector: '[type = "gene"]',
          style: {
-           'z-index': '1',
-           'background-color': '#62c',
+           'background-color': 'DarkMagenta',
            'shape': 'circle',
            'height': '10',
            'width': '10',
-           //'content': 'data(id)',
-           //'color': 'black',
-           //'text-valign': 'center',
-           //'text-halign': 'center',
-           //'font-size': '5',
-         }
-       },
-       {
-         selector: 'edge',
+         }},
+       {selector: 'edge',
          css: {
            'curve-style': 'unbundled-bezier',
            'width': '1',
            'opacity': '0.5',
            'line-color': 'grey'
-         }
-       }
+         }},
+       {selector: '.neighbors',
+         css: {
+           'background-color': 'orange',
+       }},
+       {selector: '.highlighted',
+         css: {
+           'background-color': 'red',
+         }},
      ],
    elements: {
      nodes: data.nodes,
      edges: data.edges,
   }});
   
+  // Run the gene table builder
+  buildGeneTable(cy.nodes().filter('[type = "gene"]'));
+  
+  // Set up the node tap listener
+  cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
+    // Reset and then highlight the neighbours, edges, and self
+    cy.nodes().toggleClass('highlighted', false);
+    cy.nodes().toggleClass('neighbors', false);
+    evt.cyTarget.toggleClass('highlighted', true);
+    evt.cyTarget.neighborhood().toggleClass('neighbors', true);
+    
+    // Select the clicked gene in the table
+    $('#GeneTable').DataTable().rows('*').deselect();
+    $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).select().scrollTo();
+  });
+  
+  // Set up the table tap listener
+  
+  
+  
+}
+
+/*--------------------------------
+      Gene Table Constructor
+---------------------------------*/
+function buildGeneTable(nodes){
   // Format the node data for the DataTable
   var geneData = [];
-  cy.nodes().filter('[type = "gene"]').forEach(function(currentValue, index, array){
+  nodes.forEach(function(currentValue, index, array){
     geneData.push({
         'ID': currentValue.data('id'),
         'Chrom': currentValue.data('chrom'),
@@ -224,30 +249,29 @@ function buildGraph(data){
       });
   });
   
-  // Clean up the old table
-  $('#GeneTable').DataTable().destroy();
-  
   // Make sure the table is visible
   $('#GeneTable').removeClass("hidden");
+  
+  // Clean up the old table
+  $('#GeneTable').DataTable().destroy();
   
   // Uses DataTables to build a pretty table
   $('#GeneTable').DataTable(
       {
       "data": geneData,
-      "autoWidth": true, 
-      "bPaginate": false,
-      "bJQueryUI": false,
-      "bScrollCollapse": true,
-      "bAutoWidth": true,
+      "autoWidth": true,
+      "paging": true,
+      "paginate": false,
+      "scrollCollapse": true,
       "dom": '<"GeneTitle">frtip',
       "order": [[0,'asc']],
-      "processing" : true,
-      "sScrollXInner": "100%",
-      "sScrollX": '100%',
-      "sScrollY": $(window).height()-300,
+      "rowId": 'ID',
+      "scrollXInner": "100%",
+      "scrollX": "100%",
+      "scrollY": $(window).height()-300,
       "select": true,
+      "scroller": true,
       "searching": true,
-      "stripe": true,
       "columns": [
         {data: 'ID'},
         {data: 'Chrom'},
@@ -259,4 +283,6 @@ function buildGraph(data){
         {data: 'Locality'}]
     });
   $("div.GeneTitle").html('Gene Data');
+  
+  return;
 }
