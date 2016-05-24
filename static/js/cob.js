@@ -202,6 +202,12 @@ function buildGraph(data){
          css: {
            'background-color': 'red',
          }},
+       {selector: '.highlightedEdge',
+         css: {
+           'line-color': 'gold',
+           'width': '2',
+           'opacity': '1',
+         }},
      ],
    elements: {
      nodes: data.nodes,
@@ -220,6 +226,8 @@ function buildGraph(data){
   $('#GeneTable tbody').on('click','tr', function(){
     nodeSelect($('td', this).eq(0).text());
   });
+  
+  console.log(cy.edges());
 }
 
 function nodeSelect(gene_id){
@@ -229,8 +237,10 @@ function nodeSelect(gene_id){
   // Reset and then highlight the neighbours, edges, and self
   cy.nodes().toggleClass('highlighted', false);
   cy.nodes().toggleClass('neighbors', false);
+  cy.edges().toggleClass('highlightedEdge', false);
   gene_node.toggleClass('highlighted', true);
   gene_node.neighborhood().toggleClass('neighbors', true);
+  gene_node.connectedEdges().toggleClass('highlightedEdge', true);
   
   // Select the clicked gene in the table
   $('#GeneTable').DataTable().rows('*').deselect();
