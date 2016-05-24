@@ -108,16 +108,17 @@ function tableMaker(section){
       "bJQueryUI": false,
       "bScrollCollapse": true,
       "bAutoWidth": true,
-      "info": true,
+      "dom": '<"'+section+'Title">frtip',
       "order": [[0,'asc']],
       "processing" : true,
-      "sScrollXInner": "100%",
+      "sScrollXInner": '100%',
       "sScrollX": '100%',
-      "sScrollY": $('#cob').innerHeight()/4,
+      "sScrollY": $(window).height()/4,
       "select": true,
       "searching": true,
       "stripe": true,
     });
+  $("div."+section+"Title").html(section);
   return;
 }
 
@@ -203,49 +204,54 @@ function buildGraph(data){
      edges: data.edges,
   }});
   
-  // Use gene data to set up gene reference tablefunction(currentValue, index, array){
+  // Format the node data for the DataTable
   var geneData = [];
-  data.nodes.forEach(function(currentValue, index, array){
-    console.log(currentValue);
-    
-    
+  cy.nodes().filter('[type = "gene"]').forEach(function(currentValue, index, array){
+    geneData.push({
+        'ID': currentValue.data('id'),
+        'Chrom': currentValue.data('chrom'),
+        'Start': currentValue.data('start'),
+        'End': currentValue.data('end'),
+        'SNP': currentValue.data('snp'),
+        'Local Degree': currentValue.data('ldegree'),
+        'Global Degree': currentValue.data('gdegree'),
+        'Locality': currentValue.data('locality')
+      });
   });
-
-}
-
-/*--------------------------------
-      Gene Table Constructor
----------------------------------*/
-function buildGeneTable(data){
-  // Pull in the saved data
-  
-  /*// Remove the data wait message
-  $('#'+section+'Wait').addClass("hidden");
-  
-  // Make sure the table is visible
-  $('#'+section+'Table').removeClass("hidden");
   
   // Clean up the old table
-  $('#'+section+'Table').DataTable().destroy();
+  $('#GeneTable').DataTable().destroy();
+  
+  // Make sure the table is visible
+  $('#GeneTable').removeClass("hidden");
   
   // Uses DataTables to build a pretty table
-  $('#'+section+'Table').DataTable(
+  $('#GeneTable').DataTable(
       {
-      "ajax": address,
+      "data": geneData,
       "autoWidth": true, 
       "bPaginate": false,
       "bJQueryUI": false,
       "bScrollCollapse": true,
       "bAutoWidth": true,
-      "info": true,
+      "dom": '<"GeneTitle">frtip',
       "order": [[0,'asc']],
       "processing" : true,
       "sScrollXInner": "100%",
       "sScrollX": '100%',
-      "sScrollY": $('#cob').innerHeight()/4,
+      "sScrollY": $(window).height()-300,
       "select": true,
       "searching": true,
       "stripe": true,
-    });*/
-  return;
+      "columns": [
+        {data: 'ID'},
+        {data: 'Chrom'},
+        {data: 'Start'},
+        {data: 'End'},
+        {data: 'SNP'},
+        {data: 'Local Degree'},
+        {data: 'Global Degree'},
+        {data: 'Locality'}]
+    });
+  $("div.GeneTitle").html('Gene Data');
 }

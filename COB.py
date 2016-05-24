@@ -172,7 +172,10 @@ def fix_val(val):
         return val
 
 '''
-# Gene Stuff, being thawed
+# Gene Stuff, deprecated in favor of pulling info out of node
+# Kept for reference in getting paramaters we may want that aren't
+# currently included in the node data
+
 @app.route('/Annotations/<network_name>/<ontology_name>/<term_name>',
         methods=['GET','POST'])
 def Annotations(network,ontology,term):

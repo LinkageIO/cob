@@ -26,9 +26,9 @@
   integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
   <!-- DataTables -->
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css">
-  <script src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
+  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
+  <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
   <script src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
   <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/select/1.1.2/css/select.bootstrap.min.css">
 
@@ -78,28 +78,36 @@
       left: 33%;
       top: 0;
       z-index: 999;
-      }
+    }
+    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle {
+      float: left;
+      font-size: x-large;
+    }
   </style>
 </head>
 
 <!-- Actual Body -->
 <body>
 <!-- Selection Column -->
-
 <div id='cob' class='container'>
   <div id='cobHead' class='bg-primary well-sm'><h1>CoEx Browser</h1></div>
 
 <div>
+  <!-- Tab List -->
   <ul class="nav nav-tabs" role="tablist" id="navTabs">
     <li role="presentation" class="active"><a href="#networks" aria-controls="networks" role="tab" data-toggle="tab">Network</a></li>
+    <li role="presentation"><a aria-controls="params" href="#params" role="tab" data-toggle="tab">Parameters</a></li>
     <li role="presentation"><a aria-controls="genes" href="#genes" role="tab" data-toggle="tab">Genes</a></li>
   </ul>
   
+  <!-- Section for all of the Tab Content -->
   <div class="tab-content">
+    
+    <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="networks">
+      
     <!-- Section For Ontology Selection -->
-      <div id="Ontology">
-        <h2>Ontology</h2>
+      <br><div id="Ontology">
           <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
           <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
             <thead>
@@ -113,8 +121,7 @@
       </div>
       
       <!-- Section For Term Selection -->
-      <div id="Term">
-        <h2>Term</h2>
+      <br><div id="Term">
           <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
           <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
             <thead>
@@ -130,8 +137,7 @@
       </div>
       
       <!-- Section For Network Selection -->
-      <div id="Network">
-        <h2>Network</h2>
+      <br><div id="Network">
         <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
           <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
             <thead>
@@ -144,9 +150,10 @@
           </table>
         </div>
       </div>
-  
-      <div role="tabpanel" class="tab-pane" id="genes">
-        <!-- Section For parameter adjustment -->
+      <!-- End Network Selection Tab -->
+      
+      <!-- Parameter Adjustment Tab -->
+      <div role="tabpanel" class="tab-pane" id="params"><br>
         <div id='Graph Params' class="form-group">
             <form class="form-inline" id="graphParams">
                 <label class="" for="nodeCutoff">Min Node Degree</label>
@@ -156,6 +163,11 @@
                 <input type="button" class="btn btn-primary" id="updateButton" value="Update">
             </form>
         </div>
+      </div>
+      <!-- End Parameter Adjustment Tab -->
+      
+      <!-- Gene Table Tab -->
+      <div role="tabpanel" class="tab-pane" id="genes"><br>
         <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="GeneTable">
           <thead>
             <tr>
@@ -172,11 +184,13 @@
           <tbody></tbody>
         </table>
       </div>
+      <!-- End Gene Table Tab -->
+      
     </div>
   </div>
 </div>
-  <!-- Box for Cytoscape Column -->
-  <h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
-  <div id='cy' class='container'></div>
-  </body>
-  </html>
+<!-- Box for Cytoscape Column -->
+<h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
+<div id='cy' class='container'></div>
+</body>
+</html>
