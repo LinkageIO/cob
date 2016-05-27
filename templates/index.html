@@ -7,10 +7,10 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+  <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
   
   <!-- Cytoscape and Extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.6/cytoscape.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
 
   <!-- Bootstrap-->
   <!-- JavaScript -->
@@ -24,14 +24,9 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
   integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
-  <!-- DataTables -->
-  <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
-  <script src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/select/1.1.2/css/select.bootstrap.min.css">
-  <script src="https://cdn.datatables.net/scroller/1.4.2/js/dataTables.scroller.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/scroller/1.4.2/css/scroller.dataTables.min.css">
+  <!-- DataTables, found using their package builder -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.js"></script>
   
 
   <!-- Loaf COB -->
@@ -138,7 +133,7 @@
     <!-- Section For Ontology Selection -->
       <br><div id="Ontology">
           <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
+          <table class="table table-hover hidden" id="OntologyTable">
             <thead>
               <tr>
                 <th>Ontology</th>
@@ -152,13 +147,13 @@
       <!-- Section For Term Selection -->
       <br><div id="Term">
           <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
+          <table class="table table-hover hidden" id="TermTable">
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Desc</th>
-                <th>Num SNPs</th>
-                <th>Num Genes</th>
+                <th>SNPs</th>
+                <th>Genes</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -168,7 +163,7 @@
       <!-- Section For Network Selection -->
       <br><div id="Network">
         <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
+          <table class="table table-hover hidden" id="NetworkTable">
             <thead>
               <tr>
                 <th>Network</th>
@@ -197,7 +192,7 @@
       
       <!-- Gene Table Tab -->
       <div role="tabpanel" class="tab-pane" id="genes"><br>
-        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="GeneTable">
+        <table class="table table-hover hidden" id="GeneTable">
           <thead>
             <tr>
               <th>ID</th>

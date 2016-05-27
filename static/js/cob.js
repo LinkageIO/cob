@@ -9,13 +9,13 @@ $('#OntologyTable tbody').on('click','tr', function(){
   
   // Clean up the old Term Table
   CurrentTerm = '';
+  $('#TermTable').DataTable().destroy();
   $('#TermTable').addClass('hidden');
   $('#TermWait').removeClass('hidden');
-  $('#TermTable').DataTable().clear();
   
   // Clean up the Network Table
   CurrentNetwork = '';
-  $('#NetworkTable').DataTable().clear();
+  $('#NetworkTable').DataTable().destroy();
   $('#NetworkTable').addClass('hidden');
   
   // Clean up the graph
@@ -102,20 +102,16 @@ function tableMaker(section){
   $('#'+section+'Table').DataTable(
       {
       "ajax": address,
-      "autoWidth": true, 
+      "bAutoWidth": false, 
       "bPaginate": false,
       "bJQueryUI": false,
-      "bScrollCollapse": true,
-      "bAutoWidth": true,
-      "dom": '<"'+section+'Title">frtip',
+      "scrollCollapse": true,
+      "dom": '<"'+section+'Title">ft',
       "order": [[0,'asc']],
       "processing" : true,
-      "sScrollXInner": '100%',
-      "sScrollX": '100%',
-      "sScrollY": ($(window).height()/4)-50,
+      "scrollY": ($(window).height()/4)-50,
       "select": true,
       "searching": true,
-      "stripe": true,
     });
   $("div."+section+"Title").html(section);
   return;
