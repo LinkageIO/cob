@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<!--Justin is the greatest!-->
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
   <script type="text/javascript"></script>
@@ -42,14 +41,20 @@
       rel: 'shortcut icon', 
       href: ($SCRIPT_ROOT + 'static/favicon.ico')
     }).appendTo('head');
+    
+    // Set some global variables for reference
     var CurrentOntology = "";
     var CurrentTerm = "";
     var CurrentNetwork = "";
     var cy = null;
     var cyDataCache = null;
+    
+    // Make them all data tables
     $('#OntologyTable').DataTable();
     $('#TermTable').DataTable();
     $('#NetworkTable').DataTable();
+    
+    // Load in the core scripts
     $(document).ready(function(){
         $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
             $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
@@ -94,6 +99,25 @@
 
 <!-- Actual Body -->
 <body>
+  
+<!-- Modal -->
+<style></style>
+<div class="modal fade" id="cytoWait" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h4 class="modal-title"><b>Please Wait For Layout</b></h4></div>
+        <div class="modal-body" id="geneStatus">
+          <div id="geneMsg">
+            <p>We are now getting the node data and running the layout algorithm.</p>
+            
+            For bigger networks this can take a few seconds so please be patient, 
+            the page goes unresponsive while processing the layout.
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+
 <!-- Selection Column -->
 <div id='cob' class='container'>
   <div id='cobHead' class='bg-primary well-sm'><h1>CoEx Browser</h1></div>
@@ -111,7 +135,7 @@
     
     <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="networks">
-      
+
     <!-- Section For Ontology Selection -->
       <br><div id="Ontology">
           <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
@@ -161,11 +185,11 @@
       <!-- Parameter Adjustment Tab -->
       <div role="tabpanel" class="tab-pane" id="params"><br>
         <div id='Graph Params' class="form-group">
-            <form class="form-inline" id="graphParams">
+            <form class="" id="graphParams">
                 <label class="" for="nodeCutoff">Min Node Degree</label>
-                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
+                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+"><br>
                 <label class="" for="edgeCutoff">Min Edge Score</label>
-                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*"><br>
                 <input type="button" class="btn btn-primary" id="updateButton" value="Update">
             </form>
         </div>
@@ -185,6 +209,11 @@
               <th>Local Degree</th>
               <th>Global Degree</th>
               <th>Locality</th>
+              <th>Num Intervening</th>
+              <th>Rank Intervening</th>
+              <th>Num Siblings</th>
+              <!--<th>Parent Iterations</th>
+              <th>Parent Avg Effect</th>-->
             </tr>
           </thead>
           <tbody></tbody>

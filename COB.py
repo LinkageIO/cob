@@ -87,14 +87,23 @@ def COB_network(network_name,ontology,term):
     parents = set()
     chroms = dict()
     effective_loci = term.effective_loci(window_size=50000)
-    candidate_genes = cob.refgen.candidate_genes(
-        effective_loci,
-        flank_limit=2,
-        chain=True,
-        include_parent_locus=True
-    )
+    try:
+        candidate_genes = cob.refgen.candidate_genes(
+            effective_loci,
+            flank_limit=2,
+            chain=True,
+            include_parent_locus=True,
+            #include_parent_attrs=['numIterations', 'avgEffectSize'],
+            include_num_intervening=True,
+            include_rank_intervening=True,
+            include_num_siblings=True
+        )
+    except:
+        print('Cand Gene Error: ' + str(sys.exc_info()))
+        raise
     locality = cob.locality(candidate_genes)
     for gene in candidate_genes:
+        #print(gene.attr)
         try:
             local_degree = locality.ix[gene.id]['local']
             global_degree = locality.ix[gene.id]['global']
@@ -105,6 +114,10 @@ def COB_network(network_name,ontology,term):
             gene_locality = 0
         parent_id = str(gene.attr['parent_locus'])
         parent_list = re.split('<|>|:|-', parent_id)
+        try:
+            num_interv = str(gene.attr['num_intervening'])
+        except KeyError as e:
+            num_interv = 'NAN'
         nodes.append(
             {'data':{
                 'id': str(gene.id),
@@ -113,9 +126,14 @@ def COB_network(network_name,ontology,term):
                 'chrom': parent_list[2],
                 'start': str(gene.start),
                 'end': str(gene.end),
-                'ldegree':int(local_degree), 
-                'locality':float(gene_locality),
-                'gdegree':int(global_degree)
+                'ldegree': int(local_degree), 
+                'locality': float(gene_locality),
+                'gdegree': int(global_degree),
+                'num_intervening': num_interv,
+                'rank_intervening': str(gene.attr['intervening_rank']),
+                'num_siblings': str(gene.attr['num_siblings']),
+                #'parent_num_iterations': str(gene.attr['parent_numIterations']),
+                #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
             }})
         parents.add(str(gene.attr['parent_locus']))
         if int(parent_list[2]) in chroms:
@@ -171,44 +189,3 @@ def fix_val(val):
     else:
         return val
 
-'''
-# Gene Stuff, deprecated in favor of pulling info out of node
-# Kept for reference in getting paramaters we may want that aren't
-# currently included in the node data
-
-@app.route('/Annotations/<network_name>/<ontology_name>/<term_name>',
-        methods=['GET','POST'])
-def Annotations(network,ontology,term):
-    # Retrieve SNPs from 
-    cob = networks[network]
-    term = co.GWAS(ontology)[term]
-    effective_loci = term.effective_loci(window_size=50000)
-    candidate_genes = cob.refgen.candidate_genes(
-        effective_loci,
-        flank_limit=2,
-        chain=True,
-        include_parent_locus=False
-    )
-    try:
-        gene_annots = co.Annotation('ZMFunc')[genes]
-    except ValueError as e:
-        return jsonify({})
-    for net in networks.values():
-        gene_annots.insert(
-            5,'In {}'.format(net.name),
-            ['true' if gene in net else 'false' for gene in genes]
-        )
-    gene_annots.insert(
-        5,'Term SNPs',
-        ["\n".join([snp.summary() for snp in \
-            sorted(term.flanking_snps(gene))]) for gene in genes]
-    )
-    gene_annots.insert(
-        5,'Global Degree',
-        [str(cob.global_degree(gene)) for gene in genes]
-    )
-    return jsonify({
-        'data' : list(gene_annots.itertuples(index=True)),
-        'header' : ['Gene'] + list(gene_annots.columns.values)
-    })
-'''

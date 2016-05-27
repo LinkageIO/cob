@@ -45,43 +45,34 @@ $('#TermTable tbody').on('click','tr', function(){
 $('#NetworkTable tbody').on('click','tr',function(){
     // Highlight the current line
     CurrentNetwork = $('td',this).eq(0).text();
-    
-    // Delete the old graph
-    if(cy != null){cy.destroy();}
 
     // Unhide the graph
     $('#cyWait').addClass('hidden');
     $('#cy').removeClass('hidden');
     
-    // Get Netwrok Data and build graph
-    $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm).done(function(data){
-            console.log('Recieved Data from Server, sending to cytoscape.');
-            buildGraph(data);
-            //buildGeneTable(data);
-        })
-        .fail(function(data){
-            console.log("Something went wrong with the data.")
-        });
-    
-    // Switch to Gene Data Tab
-    $('#navTabs a[href="#genes"]').tab('show');
-    
-})});
+    // Get Netwrok Data and build graph after the wait dialog is up
+    $("#cytoWait").one('shown.bs.modal', function(){
+      $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm).done(function(data){
+        console.log('Recieved Data');
+        cyDataCache = data;
+        buildGraph();
+      });
+    });
+    $("#cytoWait").modal('show');
+  });
+});
 
 /*--------------------------------
      Parameter Event Listener
 ---------------------------------*/
 // Update Graph with new params
-$('#updateButton').click(function(){
-    // Check to see if there is an exitant graph
+$('#updateButton').click(function (){
+    // If there isn't a graph, it can't be updated
     if(cy == null){return;}
-    else{cy.destroy();}
     
-    // Run the algorithm again with the new parameters
-    buildGraph(cyDataCache);
-
-    // Switch to Gene Data Tab
-    $('#navTabs a[href="#genes"]').tab('show');
+    // Otherwise pull up the wait dialog and run the algrithm
+    $("#cytoWait").one('shown.bs.modal', function(){buildGraph();});
+    $("#cytoWait").modal('show');
     return;
 });
 
@@ -133,13 +124,55 @@ function tableMaker(section){
 /*--------------------------------
          Graph Constructor
 ---------------------------------*/
-function buildGraph(data){
+function buildGraph(){
+  // Check to see if there is an exitant graph
+  if(cy != null){cy.destroy();}
+  
   // Hide the gene table
   $('#GeneTable').addClass("hidden");
   
-  // Save request data for full graph rebuild
-  cyDataCache = data;
+  // Run the layout
+  initCytoscape(cyDataCache);
   
+  // Switch to Gene Data Tab
+  $('#navTabs a[href="#genes"]').tab('show');
+  
+  // Run the gene table builder
+  buildGeneTable(cy.nodes().filter('[type = "gene"]'));
+  
+  // Set up the tap listeners
+  setTapListeners();
+  
+  // Hide the wait dialog
+  $("#cytoWait").modal('hide');
+}
+
+/*--------------------------------
+      Node Selection Algorithm
+---------------------------------*/
+function nodeSelect(gene_id){
+  // Get the node object
+  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
+  
+  // Reset and then highlight the neighbours, edges, and self
+  cy.nodes().toggleClass('highlighted', false);
+  cy.nodes().toggleClass('neighbors', false);
+  cy.edges().toggleClass('highlightedEdge', false);
+  gene_node.toggleClass('highlighted', true);
+  gene_node.neighborhood().toggleClass('neighbors', true);
+  gene_node.connectedEdges().toggleClass('highlightedEdge', true);
+  
+  // Select the clicked gene in the table
+  $('#GeneTable').DataTable().rows('*').deselect();
+  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
+  
+  return;
+}
+
+/*--------------------------------
+      Cytoscape Constructor
+---------------------------------*/
+function initCytoscape(data){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -213,41 +246,6 @@ function buildGraph(data){
      nodes: data.nodes,
      edges: data.edges,
   }});
-  
-  // Run the gene table builder
-  buildGeneTable(cy.nodes().filter('[type = "gene"]'));
-  
-  // Set up the node tap listener
-  cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
-    nodeSelect(evt.cyTarget.data('id'));
-  });
-  
-  // Set up the table tap listener
-  $('#GeneTable tbody').on('click','tr', function(){
-    nodeSelect($('td', this).eq(0).text());
-  });
-}
-
-/*--------------------------------
-      Node Selection Algorithm
----------------------------------*/
-function nodeSelect(gene_id){
-  // Get the node object
-  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
-  
-  // Reset and then highlight the neighbours, edges, and self
-  cy.nodes().toggleClass('highlighted', false);
-  cy.nodes().toggleClass('neighbors', false);
-  cy.edges().toggleClass('highlightedEdge', false);
-  gene_node.toggleClass('highlighted', true);
-  gene_node.neighborhood().toggleClass('neighbors', true);
-  gene_node.connectedEdges().toggleClass('highlightedEdge', true);
-  
-  // Select the clicked gene in the table
-  $('#GeneTable').DataTable().rows('*').deselect();
-  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
-  
-  return;
 }
 
 /*--------------------------------
@@ -257,16 +255,7 @@ function buildGeneTable(nodes){
   // Format the node data for the DataTable
   var geneData = [];
   nodes.forEach(function(currentValue, index, array){
-    geneData.push({
-        'ID': currentValue.data('id'),
-        'Chrom': currentValue.data('chrom'),
-        'Start': currentValue.data('start'),
-        'End': currentValue.data('end'),
-        'SNP': currentValue.data('snp'),
-        'Local Degree': currentValue.data('ldegree'),
-        'Global Degree': currentValue.data('gdegree'),
-        'Locality': currentValue.data('locality')
-      });
+    geneData.push(currentValue.data());
   });
   
   // Make sure the table is visible
@@ -281,11 +270,11 @@ function buildGeneTable(nodes){
       "data": geneData,
       "autoWidth": true,
       "paging": true,
-      "paginate": false,
+      "paginate": true,
       "scrollCollapse": true,
       "dom": '<"GeneTitle">frtip',
       "order": [[0,'asc']],
-      "rowId": 'ID',
+      "rowId": 'id',
       "scrollXInner": "100%",
       "scrollX": "100%",
       "scrollY": $(window).height()-300,
@@ -293,16 +282,38 @@ function buildGeneTable(nodes){
       "scroller": true,
       "searching": true,
       "columns": [
-        {data: 'ID'},
-        {data: 'Chrom'},
-        {data: 'Start'},
-        {data: 'End'},
-        {data: 'SNP'},
-        {data: 'Local Degree'},
-        {data: 'Global Degree'},
-        {data: 'Locality'}]
+        {data: 'id'},
+        {data: 'chrom'},
+        {data: 'start'},
+        {data: 'end'},
+        {data: 'snp'},
+        {data: 'ldegree'},
+        {data: 'gdegree'},
+        {data: 'locality'},
+        {data: 'num_intervening'},
+        {data: 'rank_intervening'},
+        {data: 'num_siblings'},
+        //{data: 'parent_num_iterations'},
+        //{data: 'parent_avg_effect_size'},
+      ]
     });
   $("div.GeneTitle").html('Gene Data');
   
   return;
 }
+
+/*--------------------------------
+      Listener Constructor
+---------------------------------*/
+function setTapListeners(){
+  // Set up the node tap listener
+  cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
+    nodeSelect(evt.cyTarget.data('id'));
+  });
+  
+  // Set up the table tap listener
+  $('#GeneTable tbody').on('click','tr', function(){
+    nodeSelect($('td', this).eq(0).text());
+  });
+}
+
