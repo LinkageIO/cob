@@ -148,8 +148,8 @@ var register = function(cytoscape){
       var n = snpInfo['n']
       snpInfo['n'] += 1;
       return {
-        x: ((n*snpInfo['coef']['x'])+snpInfo['pos']['x']),
-        y: ((n*snpInfo['coef']['y'])+snpInfo['pos']['y'])
+        x: Math.round((n*snpInfo['coef']['x'])+snpInfo['pos']['x']),
+        y: Math.round((n*snpInfo['coef']['y'])+snpInfo['pos']['y'])
       };
     });
     console.log('Placed the Genes');

@@ -15,8 +15,8 @@ $('#OntologyTable tbody').on('click','tr', function(){
   
   // Clean up the Network Table
   CurrentNetwork = '';
-  $('#NetworkTable').addClass('hidden');
   $('#NetworkTable').DataTable().clear();
+  $('#NetworkTable').addClass('hidden');
   
   // Clean up the graph
   $('#cy').addClass('hidden');
@@ -137,36 +137,14 @@ function buildGraph(){
   // Switch to Gene Data Tab
   $('#navTabs a[href="#genes"]').tab('show');
   
+  // Hide the wait dialog
+  $("#cytoWait").modal('hide');
+  
   // Run the gene table builder
   buildGeneTable(cy.nodes().filter('[type = "gene"]'));
   
   // Set up the tap listeners
   setTapListeners();
-  
-  // Hide the wait dialog
-  $("#cytoWait").modal('hide');
-}
-
-/*--------------------------------
-      Node Selection Algorithm
----------------------------------*/
-function nodeSelect(gene_id){
-  // Get the node object
-  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
-  
-  // Reset and then highlight the neighbours, edges, and self
-  cy.nodes().toggleClass('highlighted', false);
-  cy.nodes().toggleClass('neighbors', false);
-  cy.edges().toggleClass('highlightedEdge', false);
-  gene_node.toggleClass('highlighted', true);
-  gene_node.neighborhood().toggleClass('neighbors', true);
-  gene_node.connectedEdges().toggleClass('highlightedEdge', true);
-  
-  // Select the clicked gene in the table
-  $('#GeneTable').DataTable().rows('*').deselect();
-  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
-  
-  return;
 }
 
 /*--------------------------------
@@ -190,6 +168,8 @@ function initCytoscape(data){
       name: 'polywas',
       minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
       minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
+      nodeHeight: 10,
+      geneOffset: 10,
     },
     style: [
         {selector: '[type = "chrom"]',
@@ -317,3 +297,26 @@ function setTapListeners(){
   });
 }
 
+/*--------------------------------
+      Node Selection Algorithm
+---------------------------------*/
+function nodeSelect(gene_id){
+  // Get the node object
+  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
+  
+  // Reset and then highlight the neighbours, edges, and self
+  cy.batch(function(){
+    cy.nodes().toggleClass('highlighted', false);
+    cy.nodes().toggleClass('neighbors', false);
+    cy.edges().toggleClass('highlightedEdge', false);
+    gene_node.toggleClass('highlighted', true);
+    gene_node.neighborhood().toggleClass('neighbors', true);
+    gene_node.connectedEdges().toggleClass('highlightedEdge', true);
+  });
+  
+  // Select the clicked gene in the table
+  $('#GeneTable').DataTable().rows('*').deselect();
+  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
+  
+  return;
+}
