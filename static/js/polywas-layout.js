@@ -32,29 +32,34 @@ var register = function(cytoscape){
     var options = this.options;
     var cy = options.cy; // The whole environment
     var eles = options.eles; // elements to consider in the layout
+    var nodes = eles.nodes();
     var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians around chromuences
     var geneOffset = options.geneOffset;
     var radWidth = options.radWidth;
     var minNodeDegree = options.minNodeDegree;
     var minEdgeScore = options.minEdgeScore;
     
+    // Clean up things from previous layout
+    cy.reset();
+    nodes.filter('[type = "snpG"]').remove();
+    eles.style({'display': 'element'});
+    
     // Finding and splitting up the different element types
-    var nodes = eles.nodes();
     var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
     var snps = nodes.filter('[type = "snp"]');
     var genes = nodes.filter('[type = "gene"]');
     console.log('Pulled Chromosomes, SNPs, and Nodes');
     
-    // Get rid of genes that are not above the threshold
+    // Hide genes that are not above the threshold
     genes = genes.difference(genes.filter(function(i, ele){
         return (parseInt(ele.data('ldegree')) < minNodeDegree);
-      }).remove());
+      }).style({'display': 'none'}));
     console.log('Filtered Genes');
     
-    // Get rid of edges that are not above the threshold
+    // Hide edges that are not above the threshold
     eles.edges().filter(function(i, ele){
         return (parseFloat(ele.data('score')) < minEdgeScore);
-      }).remove();
+      }).style({'display': 'none'});
     console.log('Filtered Edges');
     
     // Find the Bounding Box and the Center
@@ -111,7 +116,7 @@ var register = function(cytoscape){
     console.log('Made new nodes');
     
     // Remove the raw SNPs from the graph
-    cy.remove(snps);
+    snps.style({'display': 'none'})
     console.log('Removed old snps');
     
     // Add our fresh nodes

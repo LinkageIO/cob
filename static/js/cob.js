@@ -55,8 +55,19 @@ $('#NetworkTable tbody').on('click','tr',function(){
     $("#cytoWait").one('shown.bs.modal', function(){
       $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm).done(function(data){
         console.log('Recieved Data');
-        cyDataCache = data;
-        buildGraph();
+        // Set up a run the builder function
+        if(cy != null){cy.destroy();}
+        initCytoscape(data);
+
+        // Do DOM Manipulations
+        $('#navTabs a[href="#genes"]').tab('show');
+        $("#cytoWait").modal('hide');
+        
+        // Run the gene table builder
+        buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+        
+        // Set up the tap listeners
+        setTapListeners();
       });
     });
     $("#cytoWait").modal('show');
@@ -72,7 +83,27 @@ $('#updateButton').click(function (){
     if(cy == null){return;}
     
     // Otherwise pull up the wait dialog and run the algrithm
-    $("#cytoWait").one('shown.bs.modal', function(){buildGraph();});
+    $("#cytoWait").one('shown.bs.modal', function(){
+      // Clean up selected elements 
+      cy.nodes().toggleClass('highlighted', false).toggleClass('neighbors', false);
+      cy.edges().toggleClass('highlightedEdge', false);
+      
+      // Run the layout
+      cy.layout({
+        name: 'polywas',
+        minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
+        minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
+        nodeHeight: 10,
+        geneOffset: 10
+      });
+      
+      // Do DOM manipulations
+      $('#navTabs a[href="#genes"]').tab('show');
+      $("#cytoWait").modal('hide');
+      
+      // Run the gene table builder
+      buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+    });
     $("#cytoWait").modal('show');
     return;
 });
@@ -116,32 +147,6 @@ function tableMaker(section){
     });
   $("div."+section+"Title").html(section);
   return;
-}
-
-/*--------------------------------
-         Graph Constructor
----------------------------------*/
-function buildGraph(){
-  // Check to see if there is an exitant graph
-  if(cy != null){cy.destroy();}
-  
-  // Hide the gene table
-  $('#GeneTable').addClass("hidden");
-  
-  // Run the layout
-  initCytoscape(cyDataCache);
-  
-  // Switch to Gene Data Tab
-  $('#navTabs a[href="#genes"]').tab('show');
-  
-  // Hide the wait dialog
-  $("#cytoWait").modal('hide');
-  
-  // Run the gene table builder
-  buildGeneTable(cy.nodes().filter('[type = "gene"]'));
-  
-  // Set up the tap listeners
-  setTapListeners();
 }
 
 /*--------------------------------
@@ -235,10 +240,8 @@ function buildGeneTable(nodes){
     geneData.push(currentValue.data());
   });
   
-  // Make sure the table is visible
-  $('#GeneTable').removeClass("hidden");
-  
   // Clean up the old table
+  $('#GeneTable').removeClass("hidden");
   $('#GeneTable').DataTable().destroy();
   
   // Uses DataTables to build a pretty table
