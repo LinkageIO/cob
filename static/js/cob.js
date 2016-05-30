@@ -77,36 +77,44 @@ $('#NetworkTable tbody').on('click','tr',function(){
 /*--------------------------------
      Parameter Event Listener
 ---------------------------------*/
-// Update Graph with new params
-$('#updateButton').click(function (){
-    // If there isn't a graph, it can't be updated
-    if(cy == null){return;}
-    
-    // Otherwise pull up the wait dialog and run the algrithm
-    $("#cytoWait").one('shown.bs.modal', function(){
-      // Clean up selected elements 
-      cy.nodes().toggleClass('highlighted', false).toggleClass('neighbors', false);
-      cy.edges().toggleClass('highlightedEdge', false);
-      
-      // Run the layout
-      cy.layout({
-        name: 'polywas',
-        minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
-        minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
-        nodeHeight: 10,
-        geneOffset: 10
-      });
-      
-      // Do DOM manipulations
-      $('#navTabs a[href="#genes"]').tab('show');
-      $("#cytoWait").modal('hide');
-      
-      // Run the gene table builder
-      buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
-    });
-    $("#cytoWait").modal('show');
-    return;
+// Listener for update button
+$('#updateButton').click(updateGraph);
+
+// Listener for pressing enter in parameter fields
+$("#graphParams").keypress(function(evt){
+  if(evt.which == 13){evt.preventDefault();updateGraph();}
 });
+
+// Update Graph with new params
+function updateGraph(){
+  // If there isn't a graph, it can't be updated
+  if(cy == null){return;}
+
+  // Otherwise pull up the wait dialog and run the algrithm
+  $("#cytoWait").one('shown.bs.modal', function(){
+    // Clean up selected elements 
+    cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
+    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+    
+    // Run the layout
+    cy.layout({
+      name: 'polywas',
+      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
+      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
+      nodeHeight: 10,
+      geneOffset: 10
+    });
+    
+    // Do DOM manipulations
+    $('#navTabs a[href="#genes"]').tab('show');
+    $("#cytoWait").modal('hide');
+    
+    // Run the gene table builder
+    buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+  });
+  $("#cytoWait").modal('show');
+  return;
+}
 
 /*--------------------------------
          Table Constructor
