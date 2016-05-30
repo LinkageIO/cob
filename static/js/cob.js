@@ -17,6 +17,7 @@ $('#OntologyTable tbody').on('click','tr', function(){
   CurrentNetwork = '';
   $('#NetworkTable').DataTable().destroy();
   $('#NetworkTable').addClass('hidden');
+  $('#NetworkWait').removeClass('hidden');
   
   // Clean up the graph
   $('#cy').addClass('hidden');
@@ -244,7 +245,6 @@ function buildGeneTable(nodes){
   $('#GeneTable').DataTable(
       {
       "data": geneData,
-      "autoWidth": true,
       "paging": true,
       "paginate": true,
       "scrollCollapse": true,
@@ -284,35 +284,56 @@ function buildGeneTable(nodes){
 function setTapListeners(){
   // Set up the node tap listener
   cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
-    nodeSelect(evt.cyTarget.data('id'));
+    nodeSelect(evt.cyTarget.data('id'), evt['originalEvent']['ctrlKey']);
   });
   
   // Set up the table tap listener
-  $('#GeneTable tbody').on('click','tr', function(){
-    nodeSelect($('td', this).eq(0).text());
+  $('#GeneTable tbody').on('click','tr', function(evt){
+    nodeSelect($('td', this).eq(0).text(), evt['ctrlKey']);
   });
 }
 
 /*--------------------------------
       Node Selection Algorithm
 ---------------------------------*/
-function nodeSelect(gene_id){
-  // Get the node object
+function nodeSelect(gene_id, ctrlKey){
+  // Get the node object and whether it is currently highlighted 
   var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
+  var isHigh = gene_node.hasClass('highlighted');
   
-  // Reset and then highlight the neighbours, edges, and self
+  // Run all the graph mods as a batch
   cy.batch(function(){
-    cy.nodes().toggleClass('highlighted', false);
-    cy.nodes().toggleClass('neighbors', false);
-    cy.edges().toggleClass('highlightedEdge', false);
-    gene_node.toggleClass('highlighted', true);
-    gene_node.neighborhood().toggleClass('neighbors', true);
-    gene_node.connectedEdges().toggleClass('highlightedEdge', true);
+    // If the control key wasn't pressed, deselect everything
+    if(!ctrlKey && !isHigh){
+      cy.nodes().filter('.highlighted').toggleClass('highlighted', false);
+      cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
+      cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+      $('#GeneTable').DataTable().rows('.selected').deselect();
+    }
+    
+    // If the control key is pressed but the node was selected, deselect it
+    else if(isHigh){
+      // Get rid of the highlighted node
+      gene_node.toggleClass('highlighted', false);
+      
+      // Deselect all neighbors, then reselect the ones not associated with this node
+      cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
+      cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
+      
+      // Deselect all edges, then reselect the ones not associated with this node
+      cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+      cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
+
+      $('#GeneTable').DataTable().row('#'+gene_id).deselect();
+    }
+    
+    // If it wasn't highlighted previously, select it
+    if(!isHigh){
+      gene_node.toggleClass('highlighted', true);
+      gene_node.neighborhood().toggleClass('neighbors', true);
+      gene_node.connectedEdges().toggleClass('highlightedEdge', true);
+      $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
+    }
   });
-  
-  // Select the clicked gene in the table
-  $('#GeneTable').DataTable().rows('*').deselect();
-  $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
-  
   return;
 }
