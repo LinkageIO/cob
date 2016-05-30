@@ -303,37 +303,31 @@ function nodeSelect(gene_id, ctrlKey){
   
   // Run all the graph mods as a batch
   cy.batch(function(){
-    // If the control key wasn't pressed, deselect everything
-    if(!ctrlKey && !isHigh){
+    // Deselect all neighbors and edges
+    cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
+    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+    
+    // If the control key wasn't pressed, deselect all nodes
+    if(!ctrlKey){
       cy.nodes().filter('.highlighted').toggleClass('highlighted', false);
-      cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
-      cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
       $('#GeneTable').DataTable().rows('.selected').deselect();
     }
     
-    // If the control key is pressed but the node was selected, deselect it
-    else if(isHigh){
-      // Get rid of the highlighted node
+    // If the control key is pressed, and it is higlighted just deselect this node
+    if(isHigh && ctrlKey){
       gene_node.toggleClass('highlighted', false);
-      
-      // Deselect all neighbors, then reselect the ones not associated with this node
-      cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
-      cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
-      
-      // Deselect all edges, then reselect the ones not associated with this node
-      cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
-      cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
-
       $('#GeneTable').DataTable().row('#'+gene_id).deselect();
     }
     
     // If it wasn't highlighted previously, select it
     if(!isHigh){
       gene_node.toggleClass('highlighted', true);
-      gene_node.neighborhood().toggleClass('neighbors', true);
-      gene_node.connectedEdges().toggleClass('highlightedEdge', true);
       $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
     }
+    
+    // Reselect all necessary edges and neighbors
+    cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
+    cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
   });
   return;
 }
