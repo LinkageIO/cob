@@ -4,11 +4,11 @@ var register = function(cytoscape){
 
   // Default Layout Options
   var defaults = {
-    padding: 100, // padding around the layout
-    boundingBox: undefined, // constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
-    chromPadding: 5, //Ammount of padding at the end of the chrom lines in degrees (I think?)
-    nodeHeight: 10, // Diameter of the SNP nodes
-    geneOffset: 10, // Distance between stacked genes
+    padding: 100, // Padding around the layout
+    boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
+    chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
+    nodeHeight: 30, // Diameter of the SNP nodes
+    geneOffset: 30, // Distance between stacked genes
     radWidth: 0.025, // Thickness of the chromosomes lines
     minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered
@@ -33,7 +33,7 @@ var register = function(cytoscape){
     var cy = options.cy; // The whole environment
     var eles = options.eles; // elements to consider in the layout
     var nodes = eles.nodes();
-    var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians around chromuences
+    var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians
     var geneOffset = options.geneOffset;
     var radWidth = options.radWidth;
     var minNodeDegree = options.minNodeDegree;
