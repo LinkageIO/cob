@@ -1,7 +1,6 @@
 /*--------------------------------
       Table Event Listeners
 ---------------------------------*/
-$(document).ready(function(){
 // A row on the Ontology Table is selected
 $('#OntologyTable tbody').on('click','tr', function(){
   // Save the selected row
@@ -71,12 +70,11 @@ $('#NetworkTable tbody').on('click','tr',function(){
       });
     });
     $("#cytoWait").modal('show');
-  });
 });
 
-/*--------------------------------
-     Parameter Event Listener
----------------------------------*/
+/*------------------------------------------
+     Parameter Update Event Listeners
+------------------------------------------*/
 // Listener for update button
 $('#updateButton').click(updateGraph);
 

@@ -43,11 +43,6 @@
     var CurrentNetwork = "";
     var cy = null;
     
-    // Make them all data tables
-    $('#OntologyTable').DataTable();
-    $('#TermTable').DataTable();
-    $('#NetworkTable').DataTable();
-    
     // Load in the core scripts
     $(document).ready(function(){
         $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){

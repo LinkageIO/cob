@@ -1,4 +1,4 @@
-;(function(){ 'use strict';
+;(function(){'use strict';
 var register = function(cytoscape){
   if(!cytoscape){return;} // Can't Register if Cytoscape is Unspecified
 
@@ -48,19 +48,16 @@ var register = function(cytoscape){
     var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
     var snps = nodes.filter('[type = "snp"]');
     var genes = nodes.filter('[type = "gene"]');
-    console.log('Pulled Chromosomes, SNPs, and Nodes');
     
     // Hide genes that are not above the threshold
     genes = genes.difference(genes.filter(function(i, ele){
         return (parseInt(ele.data('ldegree')) < minNodeDegree);
       }).style({'display': 'none'}));
-    console.log('Filtered Genes');
     
     // Hide edges that are not above the threshold
     eles.edges().filter(function(i, ele){
         return (parseFloat(ele.data('score')) < minEdgeScore);
       }).style({'display': 'none'});
-    console.log('Filtered Edges');
     
     // Find the Bounding Box and the Center
     var bb = options.boundingBox || cy.extent();
@@ -79,6 +76,7 @@ var register = function(cytoscape){
     var dtheta = circum/chromCount;
 
     // Start the actual laying out
+    console.log('Set metadata and filtered.');
     layout.trigger('layoutstart');
 
     // ======================
@@ -91,8 +89,7 @@ var register = function(cytoscape){
       chromData[ele.data('id')] = res;
       return res.pos;
     }).lock();
-    console.log('Placed Chromosomes');
-    
+
     // Set the style for each chromosome to make them into the line
     cy.style().selector('[type = "chrom"]').style({
       'shape': 'polygon',
@@ -101,27 +98,23 @@ var register = function(cytoscape){
       'shape-polygon-points': function(ele){
           return getLinePolygon((ele.data('theta')-(Math.PI/2)), radWidth);}
     }).update();
-    console.log('Styled Chromosome Polygons');
+    console.log('Placed Chromosomes');
 
     // ===============
     // Handle the SNPs
     // ===============
     // Extract the data from the SNPS
     var snpData = getSNPData(snps);
-      console.log('Prepped SNPs for combination');
       
     // Make new snps
     var res = combineSNPS(cy, snpData, options.nodeHeight, genes, snps, chromData);
     var snpToGroup = res['map'];
-    console.log('Made new nodes');
     
     // Remove the raw SNPs from the graph
-    snps.style({'display': 'none'})
-    console.log('Removed old snps');
+    snps.style({'display': 'none'});
     
     // Add our fresh nodes
     snps = cy.add(res['nodes']);
-    console.log('Added the new SNPs');
     
     // Position the new snps
     snpData = {};
@@ -145,7 +138,6 @@ var register = function(cytoscape){
         else if(ad > bd){return -1;}
         else{return 0;}
     });
-    console.log('Sorted the Genes');
     
     // Lay them out based on the data about snps
     genes.layoutPositions(layout, layout.options, function(i, ele){
@@ -169,6 +161,9 @@ var register = function(cytoscape){
     // Trigger layoutstop when the layout stops (e.g. finishes)
     layout.one('layoutstop', options.stop);
     layout.trigger('layoutstop');
+    
+    // Done
+    console.log('Finished Layout');
     return this;
   };
 
