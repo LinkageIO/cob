@@ -1,14 +1,14 @@
-;(function(){ 'use strict';
+;(function(){'use strict';
 var register = function(cytoscape){
   if(!cytoscape){return;} // Can't Register if Cytoscape is Unspecified
 
   // Default Layout Options
   var defaults = {
-    padding: 100, // padding around the layout
-    boundingBox: undefined, // constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
-    chromPadding: 5, //Ammount of padding at the end of the chrom lines in degrees (I think?)
-    nodeHeight: 10, // Diameter of the SNP nodes
-    geneOffset: 10, // Distance between stacked genes
+    padding: 100, // Padding around the layout
+    boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
+    chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
+    nodeHeight: 30, // Diameter of the SNP nodes
+    geneOffset: 30, // Distance between stacked genes
     radWidth: 0.025, // Thickness of the chromosomes lines
     minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered
@@ -26,31 +26,38 @@ var register = function(cytoscape){
 
   // Runs the Layout
   PolywasLayout.prototype.run = function(){
-    // Making some convinience aliases
+    console.log('Started Layout');
+    // Making some convinience/speed aliases
     var layout = this;
     var options = this.options;
     var cy = options.cy; // The whole environment
     var eles = options.eles; // elements to consider in the layout
-    var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians around chromuences
+    var nodes = eles.nodes();
+    var chromPad = (options.chromPadding*Math.PI)/180; // Padding in radians
+    var geneOffset = options.geneOffset;
+    var radWidth = options.radWidth;
+    var minNodeDegree = options.minNodeDegree;
+    var minEdgeScore = options.minEdgeScore;
+    
+    // Clean up things from previous layout
+    cy.reset();
+    nodes.filter('[type = "snpG"]').remove();
+    eles.style({'display': 'element'});
     
     // Finding and splitting up the different element types
-    var nodes = eles.nodes();
     var chrom = nodes.filter('[type = "chrom"]').sort(options.sort);
     var snps = nodes.filter('[type = "snp"]');
     var genes = nodes.filter('[type = "gene"]');
-    console.log('Pulled Chromosomes, SNPs, and Nodes');
     
-    // Get rid of genes that are not above the threshold
+    // Hide genes that are not above the threshold
     genes = genes.difference(genes.filter(function(i, ele){
-        if(parseInt(ele.data('ldegree')) < options.minNodeDegree){return true;}
-        else{return false;}}).remove());
-    console.log('Filtered Genes');
+        return (parseInt(ele.data('ldegree')) < minNodeDegree);
+      }).style({'display': 'none'}));
     
-    // Get rid of edges that are not above the threshold
+    // Hide edges that are not above the threshold
     eles.edges().filter(function(i, ele){
-        if(parseFloat(ele.data('score')) < options.minEdgeScore){return true;}
-        else{return false;}}).remove();
-    console.log('Filtered Edges');
+        return (parseFloat(ele.data('score')) < minEdgeScore);
+      }).style({'display': 'none'});
     
     // Find the Bounding Box and the Center
     var bb = options.boundingBox || cy.extent();
@@ -69,178 +76,61 @@ var register = function(cytoscape){
     var dtheta = circum/chromCount;
 
     // Start the actual laying out
+    console.log('Set metadata and filtered.');
     layout.trigger('layoutstart');
 
-    // ========================
-    // Position the Chromosomes
-    // ========================
-    // Error if there are less than two chrom
-    try{if(chromCount < 2){
-      throw "chrom layout doeesn't make sense with less than 2 chrom.\nPlease add more chrom and try again.";}}
-    catch(err){window.alert(err);}
+    // ======================
+    // Handle the Chromosomes
+    // ======================
+    // Find and set the position of the chromosomes
+    var chromData = {};
+    chrom.layoutPositions(layout, layout.options, function(i, ele){
+      var res = positionChrom(i, ele, dtheta, chromPad, radius, center);
+      chromData[ele.data('id')] = res;
+      return res.pos;
+    }).lock();
 
-    // Find the and set the position of the chrom
-    chrom.layoutPositions(this, options, (function(i, ele){
-      // Find the angle of the ends of the chrom line
-      var radA = ((i-1)*dtheta)+(chromPad/2);
-      var radB = ((i)*dtheta)-(chromPad/2);
-
-      // Use trig to find the actual coordinates of the points
-      var ax = Math.round((radius * Math.cos(radA)) + center.x);
-      var ay = Math.round((radius * Math.sin(radA)) + center.y);
-      var bx = Math.round((radius * Math.cos(radB)) + center.x);
-      var by = Math.round((radius * Math.sin(radB)) + center.y);
-
-      // Find the midpoint of the line (where it will actually be positioned
-      var mx = Math.round((ax+bx)/2);
-      var my = Math.round((ay+by)/2);
-
-      // Find the two relevant measures of line length, pixels and base pairs
-      var chromLen = ele.data('end')-ele.data('start');
-      var pxLen = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
-      var BPperPX = chromLen/pxLen;
-
-      // Add some information in the node concerning it's position
-      ele.data({
-        pxStart: {x:ax, y:ay}, // The starting pixel
-        pxEnd: {x:bx, y:by}, // THe ending pixel
-        mid: {x:mx, y:my}, // The middle pixel
-        delta: {x:((bx-ax)/chromLen), y:((by-ay)/chromLen)}, // Pixels per basepair
-        len: pxLen, // Total length in pixels
-        BPperPX: BPperPX, // Basepair per pixel
-        theta: (radA+radB)/2, // Radian of midpoint from center
-        radius: radius,
-        center: center,
-      });
-      return ele.data('mid');
-    }));
-    console.log('Placed Chromosomes');
-    
-    // =====================
-    // Make Chromosome Lines
-    // =====================
+    // Set the style for each chromosome to make them into the line
     cy.style().selector('[type = "chrom"]').style({
       'shape': 'polygon',
       'width': function(ele){return ele.data('len');},
       'height': function(ele){return ele.data('len');},
       'shape-polygon-points': function(ele){
-          var theta = (ele.data('theta')-(Math.PI/2));
-          // Calls helper function (at bottom) for getting the polygon points
-          return getLinePolygon(theta, options.radWidth);
-      },
+          return getLinePolygon((ele.data('theta')-(Math.PI/2)), radWidth);}
     }).update();
-    chrom.lock();
-    console.log('Styled Chromosome Polygons');
-    
-    // ================
-    // Combine the snps
-    // ================
-    // Extract the data from the SNPS
-    var snpData = []
-    snps.forEach(function(currentValue, index, array){
-        var id = currentValue.data('id');
-        var chrom = currentValue.data('chrom');
-        var start = parseInt(currentValue.data('start'));
-        var end =  parseInt(currentValue.data('end'))
-        snpData.push({id: id, chrom: chrom, start: start, end: end, pos: ((start + end)/2)});
-    });
-    console.log('Extracted SNP Data to Dict');
-    
-    // Sort that data by chromasome and position
-    snpData.sort(function(a,b){
-        if(a.chrom < b.chrom){return -1;}
-        else if(a.chrom > b.chrom){return 1;}
-        else{
-            if(a.pos < b.pos){return -1;}
-            else if(a.pos > b.pos){return 1;}
-            else{return 0;}
-    }});
-    console.log('Sorted SNPs');
-    
-    // Make new nodes from these
-    var snpNodes = [];
-    var idNum = -1;
-    var snpToGroup = {};
-    var curNode = null;
-    var lastPos = 0;
-    var totDist = 0;
-    var first = true;
-    snpData.forEach(function(currentValue, index, array){
-        totDist = totDist + (currentValue.pos - lastPos);
-        var parent = chrom.filter(('[id = "'+currentValue.chrom+'"]'));
-        // Need to start a new node
-        if(first || (currentValue.chrom !== curNode.data.chrom) || (totDist >= (options.nodeHeight*parent.data('BPperPX')))){
-            // Push the last node
-            if(curNode !== null){snpNodes.push(curNode);}
-            else{first = false;}
-            
-            // Set the new intial values
-            idNum = idNum + 1;
-            lastPos = currentValue.pos;
-            totDist = 0;
-            curNode = {group: 'nodes', data:{
-                id: ('SNPG:' + idNum.toString()),
-                type: 'snpG',
-                nGenes: 1,
-                chrom: currentValue.chrom,
-                start: currentValue.start,
-                end: currentValue.end,
-                snps: [currentValue.id]}};
-            snpToGroup[currentValue.id] = curNode.data.id;
-        }
-        else{
-            if(currentValue.start < curNode.data.start){
-                curNode.data.start = currentValue.start;}
-            if(currentValue.end > curNode.data.end){
-                curNode.data.end = currentValue.end;}
-            lastPos = currentValue.pos;
-            curNode.data.snps.push(currentValue.id);
-            snpToGroup[currentValue.id] = curNode.data.id;
-        }
-    });
-    // Push the last built node
-    snpNodes.push(curNode);
-    console.log('Built new SNPs');
-    
-    // Remove the raw SNPs from the graph and add our fresh ones
-    cy.remove(snps);
-    snps = cy.add(snpNodes);
-    console.log('Replaced SNPs');
-    
-    // =================
-    // Position the snps
-    // =================
-    snps.layoutPositions(this, options, (function(i, ele){
-      // Find information about the parent
-      var chromObj = chrom.filter(('[id = "'+ele.data('chrom')+'"]'));
-      
-      // Get some data from the chromosome
-      var chromPos = chromObj.data('pxStart');
-      var delta = chromObj.data('delta');
+    console.log('Placed Chromosomes');
 
-      // Find the start and end position of snps
-      var start = ele.data('start');
-      var end = ele.data('end');
+    // ===============
+    // Handle the SNPs
+    // ===============
+    // Extract the data from the SNPS
+    var snpData = getSNPData(snps);
       
-      // Find the position of the snps based on all the data
-      var x = Math.round((((start*delta.x)+(end*delta.x))/2)+chromPos.x);
-      var y = Math.round((((start*delta.y)+(end*delta.y))/2)+chromPos.y);
-      
-      // Save these to the object
-      var theta = Math.atan2((y-center.y),(x-center.x));
-      ele.data('x', x);
-      ele.data('y', y);
-      ele.data('coefX', (Math.cos(theta)*options.geneOffset));
-      ele.data('coefY', (Math.sin(theta)*options.geneOffset));
-      return {x: x, y: y};
-    }));
-    snps.lock();
-    console.log('Placed SNPs');
+    // Make new snps
+    var res = combineSNPS(cy, snpData, options.nodeHeight, genes, snps, chromData);
+    var snpToGroup = res['map'];
     
-    // ==================
-    // Position the genes
-    // ==================
-    // Sort them by Degree
+    // Remove the raw SNPs from the graph
+    snps.style({'display': 'none'});
+    
+    // Add our fresh nodes
+    snps = cy.add(res['nodes']);
+    
+    // Position the new snps
+    snpData = {};
+    snps.layoutPositions(layout, layout.options, function(i, ele){
+      var eleData = ele.data()
+      var chromInfo = chromData[eleData['chrom']];
+      var res = positionSNP(eleData['start'], eleData['end'], chromInfo['pxStart'], chromInfo['delta'], geneOffset, center);
+      snpData[eleData['id']] = res;
+      return res.pos;
+    }).lock();
+    console.log('Placed SNPs');
+
+    // ================
+    // Handle the genes
+    // ================
+    // Sort the genes by degree
     genes = genes.sort(function(a,b){
         var ad = a.degree();
         var bd = b.degree();
@@ -248,46 +138,22 @@ var register = function(cytoscape){
         else if(ad > bd){return -1;}
         else{return 0;}
     });
-    console.log('Sorted the Genes');
     
-    // Lay them out
-    var orphanGenes = [];
-    genes.layoutPositions(this, options, (function(i, ele){
-        // Get the obj of the parent SNP group
-        var snpObj = snps.filter(('[id = "'+ snpToGroup[ele.data('snp')] +'"]'));
-        
-        // Put orphan snps in the middle of the graph
-        if(snpObj.length !== 1){
-          orphanGenes[orphanGenes.length] = [ele.data('id'),ele.data('snp'),snpToGroup[ele.data('snp')]];
-          return {x:center.x, y:center.y};
-        }
-        
-        // Get data from the SNP
-        var snpX = snpObj.data('x');
-        var snpY = snpObj.data('y');
-        var coefX = snpObj.data('coefX');
-        var coefY = snpObj.data('coefY');
-        var n = snpObj.data('nGenes');
-        snpObj.data('nGenes', (n+1));
-        
-        // Compute the positions and return it
-        return {x: Math.round((n*coefX)+snpX), y: Math.round((n*coefY)+snpY)};
-    }));
-    
-    // Throw up an alert if there are orphan genes
-    try{if(orphanGenes.length > 0){
-      throw "You have genes with either more or less than one parent snp, they are in the middle of the graph, please fix this for correct formatting. The affected genes are:\n";}}
-    catch(err){
-      var geneStr = '';
-      for(var i=0; i < orphanGenes.length; i++){
-        geneStr += orphanGenes[i][0] + '   ' + orphanGenes[i][1] + '   ' + orphanGenes[i][2] + '\n';}
-      window.alert(err + geneStr);
-    }
+    // Lay them out based on the data about snps
+    genes.layoutPositions(layout, layout.options, function(i, ele){
+      var snpInfo = snpData[snpToGroup[ele.data('snp')]];
+      var n = snpInfo['n']
+      snpInfo['n'] += 1;
+      return {
+        x: Math.round((n*snpInfo['coef']['x'])+snpInfo['pos']['x']),
+        y: Math.round((n*snpInfo['coef']['y'])+snpInfo['pos']['y'])
+      };
+    });
     console.log('Placed the Genes');
     
-    // ====================
-    // Finished the Layout!
-    // ====================
+    // ==================
+    // Finish the Layout!
+    // ==================
     // Trigger layoutready when each node has had its position set at least once
     layout.one('layoutready', options.ready);
     layout.trigger('layoutready');
@@ -295,8 +161,10 @@ var register = function(cytoscape){
     // Trigger layoutstop when the layout stops (e.g. finishes)
     layout.one('layoutstop', options.stop);
     layout.trigger('layoutstop');
-
-    return this; // chaining
+    
+    // Done
+    console.log('Finished Layout');
+    return this;
   };
 
   // Called on Continuous Layouts to Stop Them Before They Finish
@@ -316,9 +184,36 @@ if( typeof define !== 'undefined' && define.amd ){
 // Expose to Global Cytoscape (i.e. window.cytoscape)
 if( typeof cytoscape !== 'undefined' ){register(cytoscape);}})();
 
+function positionChrom(i, ele, dtheta, chromPad, radius, center){
+  // Find the angle of the ends of the chrom line
+  var radA = ((i-1)*dtheta)+(chromPad/2);
+  var radB = ((i)*dtheta)-(chromPad/2);
+
+  // Use trig to find the actual coordinates of the points
+  var ax = Math.round((radius * Math.cos(radA)) + center.x);
+  var ay = Math.round((radius * Math.sin(radA)) + center.y);
+  var bx = Math.round((radius * Math.cos(radB)) + center.x);
+  var by = Math.round((radius * Math.sin(radB)) + center.y);
+
+  // Find the midpoint of the line (where it will actually be positioned
+  var mx = Math.round((ax+bx)/2);
+  var my = Math.round((ay+by)/2);
+
+  // Find the two relevant measures of line length, pixels and base pairs
+  var chromLen = ele.data('end')-ele.data('start');
+  var pxLen = Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
+
+  // Add some information in the node concerning it's position
+  ele.data({
+    len: pxLen, // Total length in pixels
+    theta: (radA+radB)/2, // Radian of midpoint from center
+  });
+  return {pos:{x:mx, y:my}, pxStart:{x:ax, y:ay}, delta:{x:((bx-ax)/chromLen), y:((by-ay)/chromLen)}, BPperPX: (chromLen/pxLen)};
+};
+
 // Helper function that, given theta, returns the polygon points for a line oriented
 // in that direction in relation to the origin (0,0) of the unit circle
-var getLinePolygon = function(theta, radWidth){
+function getLinePolygon(theta, radWidth){
   var ax = Math.cos(theta+(radWidth/2)); var ay = Math.sin(theta+(radWidth/2));
   var bx = Math.cos(theta-(radWidth/2)); var by = Math.sin(theta-(radWidth/2));
   var cx = -ax; var cy = -ay;
@@ -332,4 +227,92 @@ var getLinePolygon = function(theta, radWidth){
     + dx.toString() + ' ' + dy.toString() + ' '
     + ax.toString() + ' ' + ay.toString();
   return res;
+};
+
+function getSNPData(snps){
+  var snpData = []
+  snps.forEach(function(currentValue, index, array){
+    var eleD = currentValue.data();
+    var start = parseInt(eleD['start']);
+    var end =  parseInt(eleD['end']);
+    snpData.push({id: eleD['id'], chrom: eleD['chrom'], start: start, end: end, pos: ((start + end)/2)});
+  });
+  
+  // Sort that data by chromasome and position
+  snpData.sort(function(a,b){
+      if(a['chrom'] < b['chrom']){return -1;}
+      else if(a['chrom'] > b['chrom']){return 1;}
+      else{
+          if(a['pos'] < b['pos']){return -1;}
+          else if(a['pos'] > b['pos']){return 1;}
+          else{return 0;}
+  }});
+  return snpData;
+};
+
+function combineSNPS(cy, snpData, nodeHeight, genes, snps, chromData){
+  // Make new nodes from these
+  var snpNodes = [];
+  var idNum = -1;
+  var snpToGroup = {};
+  var curGID = null;
+  var curNode = null;
+  var curChrom = null;
+  var lastPos = 0;
+  var totDist = 0;
+  var first = true;
+  var newID = null;
+  var newChrom = null;
+  var newPos = null;
+  snpData.forEach(function(currentValue, index, array){
+      totDist = totDist + (currentValue['pos'] - lastPos);
+      newID = currentValue['id'];
+      newChrom = currentValue['chrom'];
+      lastPos = currentValue['pos'];
+      // Need to start a new node
+      if(first || (newChrom !== curChrom) || (totDist >= (nodeHeight*chromData[curChrom]['BPperPX']))){
+          // Push the last node
+          if(curNode !== null){snpNodes.push(curNode);}
+          else{first = false;}
+          
+          // Set the new intial values
+          idNum = idNum + 1;
+          totDist = 0;
+          curGID = ('SNPG:' + idNum.toString())
+          curChrom = newChrom;
+          curNode = {group: 'nodes', data:{
+              id: curGID,
+              type: 'snpG',
+              chrom: newChrom,
+              start: currentValue['start'],
+              end: currentValue['end'],
+              snps: []}};
+      }
+      else{
+          // Set the max and min vals
+          currentValue['start'] = Math.min(currentValue['start'], curNode['data']['start']);
+          currentValue['end'] = Math.max(currentValue['end'], curNode['data']['end']);
+      }
+      
+      // Update the SNP maps
+      curNode['data']['snps'].push(newID);
+      snpToGroup[newID] = curGID;
+  });
+  
+  // Push the last built node
+  snpNodes.push(curNode);
+  return {nodes: snpNodes, map:snpToGroup};
+};
+
+function positionSNP(start, end, chromPos, delta, geneOffset, center){
+  // Find the position of the snps based on all the data
+  var x = Math.round((((start*delta['x'])+(end*delta['x']))/2)+chromPos['x']);
+  var y = Math.round((((start*delta['y'])+(end*delta['y']))/2)+chromPos['y']);
+  
+  // Save these to the object
+  var theta = Math.atan2((y-center['y']),(x-center['x']));
+  return{
+    pos: {x:x, y:y},
+    coef: {x:(Math.cos(theta)*geneOffset), y:(Math.sin(theta)*geneOffset)},
+    n: 1};
 };

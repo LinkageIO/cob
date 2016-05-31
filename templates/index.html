@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<!--Justin is the greatest!-->
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
   <script type="text/javascript"></script>
@@ -8,10 +7,10 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+  <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
   
   <!-- Cytoscape and Extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.6/cytoscape.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
 
   <!-- Bootstrap-->
   <!-- JavaScript -->
@@ -25,14 +24,9 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
   integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
-  <!-- DataTables -->
-  <script src="https://cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/1.10.12/js/dataTables.bootstrap.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/1.10.12/css/dataTables.bootstrap.min.css">
-  <script src="https://cdn.datatables.net/select/1.1.2/js/dataTables.select.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/select/1.1.2/css/select.bootstrap.min.css">
-  <script src="https://cdn.datatables.net/scroller/1.4.2/js/dataTables.scroller.min.js"></script>
-  <link rel='stylesheet' type='text/css'  href="https://cdn.datatables.net/scroller/1.4.2/css/scroller.dataTables.min.css">
+  <!-- DataTables, found using their package builder -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.js"></script>
   
 
   <!-- Loaf COB -->
@@ -42,14 +36,14 @@
       rel: 'shortcut icon', 
       href: ($SCRIPT_ROOT + 'static/favicon.ico')
     }).appendTo('head');
+    
+    // Set some global variables for reference
     var CurrentOntology = "";
     var CurrentTerm = "";
     var CurrentNetwork = "";
     var cy = null;
-    var cyDataCache = null;
-    $('#OntologyTable').DataTable();
-    $('#TermTable').DataTable();
-    $('#NetworkTable').DataTable();
+    
+    // Load in the core scripts
     $(document).ready(function(){
         $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
             $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
@@ -71,11 +65,10 @@
     }
     #cyWait {
       float: left;
-      width: 66%;
+      width: 67%;
     }
     #cy {
-      float: left;
-      width: 66%;
+      width: 67%;
       height: 100%;
       position: absolute;
       left: 33%;
@@ -94,6 +87,26 @@
 
 <!-- Actual Body -->
 <body>
+  
+<!-- Modal -->
+<style></style>
+<div class="modal fade" id="cytoWait" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h4 class="modal-title"><b>Please Wait For Layout</b></h4></div>
+        <div class="modal-body" id="geneStatus">
+          <div id="geneMsg">
+            <p>We are now getting the node data and running the layout algorithm.</p>
+            
+            For bigger networks this can take up to 30 seconds so please be patient, 
+            the page goes unresponsive while processing the layout, if you're just 
+            updating the parameters, this will be much faster.
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+
 <!-- Selection Column -->
 <div id='cob' class='container'>
   <div id='cobHead' class='bg-primary well-sm'><h1>CoEx Browser</h1></div>
@@ -111,11 +124,11 @@
     
     <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="networks">
-      
+
     <!-- Section For Ontology Selection -->
       <br><div id="Ontology">
           <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="OntologyTable">
+          <table class="table table-hover hidden" id="OntologyTable">
             <thead>
               <tr>
                 <th>Ontology</th>
@@ -129,13 +142,13 @@
       <!-- Section For Term Selection -->
       <br><div id="Term">
           <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="TermTable">
+          <table class="table table-hover hidden" id="TermTable">
             <thead>
               <tr>
                 <th>Name</th>
                 <th>Desc</th>
-                <th>Num SNPs</th>
-                <th>Num Genes</th>
+                <th>SNPs</th>
+                <th>Genes</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -145,7 +158,7 @@
       <!-- Section For Network Selection -->
       <br><div id="Network">
         <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
-          <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="NetworkTable">
+          <table class="table table-hover hidden" id="NetworkTable">
             <thead>
               <tr>
                 <th>Network</th>
@@ -161,11 +174,11 @@
       <!-- Parameter Adjustment Tab -->
       <div role="tabpanel" class="tab-pane" id="params"><br>
         <div id='Graph Params' class="form-group">
-            <form class="form-inline" id="graphParams">
+            <form class="" id="graphParams">
                 <label class="" for="nodeCutoff">Min Node Degree</label>
-                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
+                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+"><br>
                 <label class="" for="edgeCutoff">Min Edge Score</label>
-                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*"><br>
                 <input type="button" class="btn btn-primary" id="updateButton" value="Update">
             </form>
         </div>
@@ -174,7 +187,7 @@
       
       <!-- Gene Table Tab -->
       <div role="tabpanel" class="tab-pane" id="genes"><br>
-        <table cellpadding="0" cellspacing="0" border="0" class="table table-hover hidden" id="GeneTable">
+        <table class="table table-hover hidden" id="GeneTable">
           <thead>
             <tr>
               <th>ID</th>
@@ -185,6 +198,11 @@
               <th>Local Degree</th>
               <th>Global Degree</th>
               <th>Locality</th>
+              <th>Num Intervening</th>
+              <th>Rank Intervening</th>
+              <th>Num Siblings</th>
+              <!--<th>Parent Iterations</th>
+              <th>Parent Avg Effect</th>-->
             </tr>
           </thead>
           <tbody></tbody>
@@ -197,6 +215,6 @@
 </div>
 <!-- Box for Cytoscape Column -->
 <h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
-<div id='cy' class='container'></div>
+<div id='cy' class=''></div>
 </body>
 </html>
