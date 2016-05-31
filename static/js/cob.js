@@ -210,7 +210,7 @@ function initCytoscape(data){
          }},
        {selector: 'edge',
          css: {
-           'curve-style': 'unbundled-bezier',
+           'curve-style': 'haystack',
            'width': '1',
            'opacity': '0.5',
            'line-color': 'grey'
