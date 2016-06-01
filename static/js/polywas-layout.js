@@ -31,8 +31,8 @@ var register = function(cytoscape){
     var cy = this.options.cy; // The whole environment
     cy.reset();
     cy.nodes().style({'display': 'element'});
-    cy.remove(cy.nodes().filter('[type = "chrom"]'));
-    cy.remove(cy.nodes().filter('[type = "snpG"]'));
+    cy.remove('[type = "chrom"]');
+    cy.remove('[type = "snpG"]');
     
     // Making some convinience/speed aliases
     var layout = this;
@@ -86,12 +86,7 @@ var register = function(cytoscape){
     snpData = res['snpData'];
     
     // Add the chromosomes to the graph
-    //console.log(nodes.filter('[type = "snpG"]'));
-    //console.log(nodes.filter('[type = "chrom"]'));
-    //console.log(cy);
-    cy.add(res['chromNodes']);
-    //console.log(cy);
-    var chrom = cy.nodes().filter('[type = "chrom"]');
+    var chrom = cy.add(res['nodes']);
     
     // ======================
     // Handle the Chromosomes
@@ -103,26 +98,23 @@ var register = function(cytoscape){
     // Find and set the position of the chromosomes
     var chromData = {};
     chrom.layoutPositions(layout, layout.options, function(i, ele){
-      var res = positionChrom(i, ele, dtheta, chromPad, radius, center);
+      res = positionChrom(i, ele, dtheta, chromPad, radius, center);
       chromData[ele.data('id')] = res;
       return res.pos;
-    }).lock();
-    
-    // Set the style for each chromosome to make them into the line
-    cy.style().selector("[type = 'chrom']").style({
+    }).lock().style({
       'shape': 'polygon',
       'width': function(ele){return ele.data('len');},
       'height': function(ele){return ele.data('len');},
       'shape-polygon-points': function(ele){
           return getLinePolygon((ele.data('theta')-(Math.PI/2)), radWidth);}
-    }).update();
+    });
     console.log('Placed Chromosomes');
 
     // ===============
     // Handle the SNPs
     // ===============
     // Make new snps
-    var res = combineSNPS(cy, snpData, options.nodeHeight, genes, snps, chromData);
+    res = combineSNPS(cy, snpData, options.nodeHeight, genes, snps, chromData);
     var snpToGroup = res['map'];
     
     // Remove the raw SNPs from the graph
@@ -136,10 +128,10 @@ var register = function(cytoscape){
     snps.layoutPositions(layout, layout.options, function(i, ele){
       var eleData = ele.data();
       var chromInfo = chromData[eleData['chrom']];
-      var res = positionSNP(eleData['pos'], chromInfo['pxStart'], chromInfo['delta'], geneOffset, center);
+      res = positionSNP(eleData['pos'], chromInfo['pxStart'], chromInfo['delta'], geneOffset, center);
       snpData[eleData['id']] = res;
       //console.log(res.pos);
-      return res.pos;
+      return res['pos'];
     }).lock();
     console.log('Placed SNPs');
 
@@ -261,8 +253,7 @@ function makeChroms(snpData){
   });
   // Push the last built node
   chromNodes.push(curNode);
-  console.log(chromNodes);
-  return {snpData: snpData, chromNodes: chromNodes};
+  return {snpData: snpData, nodes: chromNodes};
 };
 
 function positionChrom(i, ele, dtheta, chromPad, radius, center){

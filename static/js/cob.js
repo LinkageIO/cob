@@ -96,16 +96,13 @@ function updateGraph(){
     cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
     
     // Run the layout
-    cy.destroy();
-    initCytoscape(cyDataCache);
-    setTapListeners();
-    //cy.layout({
-    //  name: 'polywas',
-    //  minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
-    //  minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
-    //  nodeHeight: 10,
-    //  geneOffset: 10
-    //});
+    cy.layout({
+      name: 'polywas',
+      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
+      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
+      nodeHeight: 10,
+      geneOffset: 10
+    });
     
     // Do DOM manipulations
     $('#navTabs a[href="#genes"]').tab('show');
