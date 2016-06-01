@@ -42,13 +42,14 @@
     var CurrentTerm = "";
     var CurrentNetwork = "";
     var cy = null;
+    var cyDataCache = null;
     
     // Load in the core scripts
     $(document).ready(function(){
         $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
-            $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
-                tableMaker('Ontology');
-            });
+          $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
+              tableMaker('Ontology');
+          });
         });
     });
   </script>
@@ -212,8 +213,9 @@
     </div>
   </div>
 </div>
+
 <!-- Box for Cytoscape Column -->
-<h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
+<h2 id='cyWait' class='container'>Please select an ontology, then a term, and finally a network, at which point the network will be shown here.</h2>
 <div id='cy' class=''></div>
 </body>
 </html>

@@ -56,6 +56,7 @@ $('#NetworkTable tbody').on('click','tr',function(){
         console.log('Recieved Data');
         // Set up a run the builder function
         if(cy != null){cy.destroy();}
+        cyDataCache = data;
         initCytoscape(data);
 
         // Do DOM Manipulations
@@ -95,13 +96,16 @@ function updateGraph(){
     cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
     
     // Run the layout
-    cy.layout({
-      name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
-      nodeHeight: 10,
-      geneOffset: 10
-    });
+    cy.destroy();
+    initCytoscape(cyDataCache);
+    setTapListeners();
+    //cy.layout({
+    //  name: 'polywas',
+    //  minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
+    //  minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
+    //  nodeHeight: 10,
+    //  geneOffset: 10
+    //});
     
     // Do DOM manipulations
     $('#navTabs a[href="#genes"]').tab('show');
@@ -258,7 +262,7 @@ function buildGeneTable(nodes){
       "paginate": true,
       "scrollCollapse": true,
       "dom": '<"GeneTitle">frtip',
-      "order": [[0,'asc']],
+      "order": [[3,'asc'],[5,'asc']],
       "rowId": 'id',
       "scrollXInner": "100%",
       "scrollX": "100%",
