@@ -42,7 +42,6 @@
     var CurrentTerm = "";
     var CurrentNetwork = "";
     var cy = null;
-    var cyDataCache = null;
     
     // Load in the core scripts
     $(document).ready(function(){
@@ -64,9 +63,15 @@
       float: left;
       width: 100%;
     }
-    #cyWait {
+    #cyWait{
       float: left;
       width: 67%;
+    }
+    #cyTitle{
+      float: left;
+      width: 67%;
+      font-size: 25px;
+      opacity: 0.75;
     }
     #cy {
       width: 67%;
@@ -217,5 +222,6 @@
 <!-- Box for Cytoscape Column -->
 <h2 id='cyWait' class='container'>Please select an ontology, then a term, and finally a network, at which point the network will be shown here.</h2>
 <div id='cy' class=''></div>
+<!--<div id='cyTitle' class=''>snp Layout Demo</div>-->
 </body>
 </html>

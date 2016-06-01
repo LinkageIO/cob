@@ -124,13 +124,8 @@ var register = function(cytoscape){
     // ================
     // Sort the genes by degree
     genes = genes.sort(function(a,b){
-        if(a.degree() < b.degree()){return 1;}
-        else if(a.degree() > b.degree()){return -1;}
-        else{return 0;}
-    });
-    
-    // Lay them out based on the data about snps
-    genes.layoutPositions(this, options, function(i, ele){
+        return (b.data('ldegree') - a.data('ldegree'));
+    }).layoutPositions(this, options, function(i, ele){
       var snpInfo = snpData[snpToGroup[ele.data('snp')]];
       var n = snpInfo['n'];
       snpInfo['n'] += 1;
