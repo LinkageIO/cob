@@ -101,7 +101,9 @@ function updateGraph(){
       minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
       minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
       nodeHeight: 10,
-      geneOffset: 10
+      geneOffset: 10,
+      logSpacing: true,
+      snpLevels: 2,
     });
     
     // Do DOM manipulations
@@ -179,6 +181,8 @@ function initCytoscape(data){
       minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
       nodeHeight: 10,
       geneOffset: 10,
+      logSpacing: true,
+      snpLevels: 2,
     },
     style: [
         {selector: '[type = "chrom"]',
@@ -204,10 +208,21 @@ function initCytoscape(data){
         }},
        {selector: '[type = "gene"]',
          style: {
-           'background-color': 'DarkMagenta',
            'shape': 'circle',
            'height': '10',
            'width': '10',
+         }},
+       {selector: '.snp0',
+         style: {
+           'background-color': 'MediumSeaGreen',
+         }},
+       {selector: '.snp1',
+         style: {
+           'background-color': 'DarkOrchid',
+         }},
+       {selector: '.snp2',
+         style: {
+           'background-color': 'Tan',
          }},
        {selector: 'edge',
          css: {
@@ -218,7 +233,7 @@ function initCytoscape(data){
          }},
        {selector: '.neighbors',
          css: {
-           'background-color': 'orange',
+           'background-color': 'DarkOrange',
        }},
        {selector: '.highlighted',
          css: {
@@ -229,6 +244,7 @@ function initCytoscape(data){
            'line-color': 'gold',
            'width': '2',
            'opacity': '1',
+           'z-index': '3',
          }},
      ],
    elements: {

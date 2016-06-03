@@ -4,7 +4,7 @@ var register = function(cytoscape){
 
   // Default Layout Options
   var defaults = {
-    padding: 100, // Padding around the layout
+    padding: 150, // Padding around the layout
     boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
     chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
     nodeHeight: 30, // Diameter of the SNP nodes
@@ -13,8 +13,9 @@ var register = function(cytoscape){
     minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered
     logSpacing: false, // Log or linear SNP layout along chromosome
-    snpSelector: '[type = "snp"]',
-    geneSelector: '[type = "gene"]',
+    snpSelector: '[type = "snp"]', // Selector that denotes SNP nodes
+    geneSelector: '[type = "gene"]', // Selector that denotes gene nodes
+    snpLevels: 3, // How many colors to stripe the snps (Max 3)
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -46,7 +47,7 @@ var register = function(cytoscape){
 
     // Clean up things from previous layout, if there was one
     cy.reset();
-    cy.nodes().style({'display': 'element'});
+    cy.nodes().style({'display': 'element'}).removeClass('snp0 snp1 snp2');
     cy.remove('[type = "chrom"], [type = "snpG"]');
 
     // Finding and splitting up the different element types
@@ -96,12 +97,12 @@ var register = function(cytoscape){
           return getLinePolygon((ele.data('theta')-(Math.PI/2)), options.radWidth);}
     }).lock();
     console.log('Placed Chromosomes');
-    console.log(chromData);
+    
     // ===============
     // Handle the SNPs
     // ===============
     // Make new snps
-    res = combineSNPS(snpData, chromData, options.nodeHeight);
+    res = combineSNPS(snpData, chromData, options.nodeHeight, options.snpLevels);
     var snpToGroup = res['map'];
 
     // Remove the raw SNPs from the graph
@@ -125,17 +126,37 @@ var register = function(cytoscape){
     // Handle the genes
     // ================
     // Sort the genes by degree
+    var snp = null;
+    var snpInfo = null;
+    var n = 0;
+    var snpDiff = null;
+    var snpCnt
+    var snpLevels = (options.snpLevels > 3) ? 3 : options.snpLevels;
     genes = genes.sort(function(a,b){
-        return (b.data('ldegree') - a.data('ldegree'));
-    }).layoutPositions(this, options, function(i, ele){
-      var snpInfo = snpData[snpToGroup[ele.data('snp')]];
-      var n = snpInfo['n'];
+      snpDiff = snpToGroup[a.data('snp')]['idx'] - snpToGroup[b.data('snp')]['idx'];
+      if(snpDiff !== 0){return snpDiff}
+      else{return (b.data('ldegree') - a.data('ldegree'));}
+    });
+    console.log('Sorted Genes');
+    cy.startBatch();
+    genes.layoutPositions(this, options, function(i, ele){
+      snp = snpToGroup[ele.data('snp')];
+      snpInfo = snpData[snp['snp']];
+      n = snpInfo['n'];
       snpInfo['n'] += 1;
+      if(n > 1 && snpInfo['lastIdx'] !== snp['idx']){
+        n += 1;
+        snpInfo['n'] += 1;
+        snpInfo['lastIdx'] = snp['idx'];
+        snpInfo['i'] += 1;
+      }
+      ele.addClass('snp'+(snpInfo['i'] % snpLevels).toString());
       return {
         x: Math.round((n*snpInfo['coef']['x'])+snpInfo['pos']['x']),
         y: Math.round((n*snpInfo['coef']['y'])+snpInfo['pos']['y'])
       };
     });
+    cy.endBatch();
     console.log('Placed Genes');
 
     // ==================
@@ -286,7 +307,7 @@ function getLinePolygon(theta, radWidth){
   return res;
 };
 
-function combineSNPS(snpData, chromData, nodeHeight){
+function combineSNPS(snpData, chromData, nodeHeight, snpLevels){
   // Containers for derived vals
   var snpNodes = [];
   var snpToGroup = {};
@@ -327,7 +348,11 @@ function combineSNPS(snpData, chromData, nodeHeight){
 
       // Update the SNP maps
       curNode['data']['snps'].push(currentValue['id']);
-      snpToGroup[currentValue['id']] = ('SNPG:' + idNum.toString());
+      
+      snpToGroup[currentValue['id']] = {
+        snp: ('SNPG:' + idNum.toString()),
+        idx: ((curNode['data']['snps']).length - 1) 
+      };
   });
 
   // Push the last built node
@@ -348,5 +373,8 @@ function positionSNP(vpos, chromPos, delta, geneOffset, center){
   return{
     pos: {x:x, y:y},
     coef: {x:(Math.cos(theta)*geneOffset), y:(Math.sin(theta)*geneOffset)},
-    n: 1};
+    n: 1,
+    lastIdx: 0,
+    i: 0,
+  };
 };
