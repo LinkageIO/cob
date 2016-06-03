@@ -32,7 +32,7 @@ var register = function(cytoscape){
   PolywasLayout.prototype.run = function(){
     var options = this.options;
     var cy = options.cy;
-
+    
     // Find the Bounding Box and the Center
     var bb = options.boundingBox || cy.extent();
     if(bb.x2 === undefined){bb.x2 = bb.x1 + bb.w;}
@@ -47,8 +47,8 @@ var register = function(cytoscape){
 
     // Clean up things from previous layout, if there was one
     cy.reset();
-    cy.nodes().style({'display': 'element'}).removeClass('snp0 snp1 snp2');
     cy.remove('[type = "chrom"], [type = "snpG"]');
+    cy.nodes().style({'display': 'element'}).removeClass('snp0 snp1 snp2');
 
     // Finding and splitting up the different element types
     var nodes = cy.nodes();
@@ -64,7 +64,6 @@ var register = function(cytoscape){
     options.eles.edges().filter(function(i, ele){
         return (parseFloat(ele.data('score')) < options.minEdgeScore);
       }).style({'display': 'none'});
-    console.log('Prepped Element Data');
 
     // ===========================
     // Find Info About Chromosomes
@@ -96,14 +95,13 @@ var register = function(cytoscape){
       'shape-polygon-points': function(ele){
           return getLinePolygon((ele.data('theta')-(Math.PI/2)), options.radWidth);}
     }).lock();
-    console.log('Placed Chromosomes');
     
     // ===============
     // Handle the SNPs
     // ===============
     // Make new snps
     res = combineSNPS(snpData, chromData, options.nodeHeight, options.snpLevels);
-    var snpToGroup = res['map'];
+    snpData = res['map'];
 
     // Remove the raw SNPs from the graph
     snps.style({'display': 'none'});
@@ -112,52 +110,55 @@ var register = function(cytoscape){
     snps = cy.add(res['nodes']);
 
     // Position the new snps
-    snpData = {};
+    var snpGData = {};
     snps.layoutPositions(this, options, function(i, ele){
       var eleData = ele.data();
       var chromInfo = chromData[eleData['chrom']];
       res = positionSNP(eleData['pos'], chromInfo['pxStart'], chromInfo['delta'], options.geneOffset, center);
-      snpData[eleData['id']] = res;
+      snpGData[eleData['id']] = res;
       return res['pos'];
     }).lock();
-    console.log('Placed SNPs');
 
     // ================
     // Handle the genes
     // ================
-    // Sort the genes by degree
-    var snp = null;
-    var snpInfo = null;
-    var n = 0;
-    var snpDiff = null;
-    var snpCnt
+    // Number of snp levels
     var snpLevels = (options.snpLevels > 3) ? 3 : options.snpLevels;
+    
+    // Sort the genes by SNP index, then by local degree
     genes = genes.sort(function(a,b){
-      snpDiff = snpToGroup[a.data('snp')]['idx'] - snpToGroup[b.data('snp')]['idx'];
+      var snpDiff = snpData[a.data('snp')]['idx'] - snpData[b.data('snp')]['idx'];
       if(snpDiff !== 0){return snpDiff}
       else{return (b.data('ldegree') - a.data('ldegree'));}
     });
-    console.log('Sorted Genes');
+    
+    // Find the position of the genes
     cy.startBatch();
     genes.layoutPositions(this, options, function(i, ele){
-      snp = snpToGroup[ele.data('snp')];
-      snpInfo = snpData[snp['snp']];
-      n = snpInfo['n'];
-      snpInfo['n'] += 1;
-      if(n > 1 && snpInfo['lastIdx'] !== snp['idx']){
-        n += 1;
-        snpInfo['n'] += 1;
-        snpInfo['lastIdx'] = snp['idx'];
-        snpInfo['i'] += 1;
+      // Make local references to the snp and group data
+      var snp = snpData[ele.data('snp')];
+      var snpG = snpGData[snp['grp']];
+      
+      // If we are starting a new SNP in the group, update the conditions
+      if(snpG['nextOffset'] > 1 && snpG['lastSNP'] !== snp['idx']){
+        snpG['nextOffset'] += 1;
+        snpG['lastSNP'] = snp['idx'];
+        snpG['numSNPs'] += 1;
       }
-      ele.addClass('snp'+(snpInfo['i'] % snpLevels).toString());
+      
+      // Increment the Offset counter 
+      snpG['nextOffset'] += 1;
+      
+      // Add the class to enable coloring
+      ele.addClass('snp'+(snpG['numSNPs'] % snpLevels).toString());
+      
+      // Return the position based on some math 
       return {
-        x: Math.round((n*snpInfo['coef']['x'])+snpInfo['pos']['x']),
-        y: Math.round((n*snpInfo['coef']['y'])+snpInfo['pos']['y'])
+        x: Math.round((snpG['nextOffset']*snpG['coef']['x'])+snpG['pos']['x']),
+        y: Math.round((snpG['nextOffset']*snpG['coef']['y'])+snpG['pos']['y'])
       };
     });
     cy.endBatch();
-    console.log('Placed Genes');
 
     // ==================
     // Finish the Layout!
@@ -208,13 +209,10 @@ function getSNPData(snps){
 
   // Sort that data by chromosome and position
   snpData.sort(function(a,b){
-      if(a['chrom'] < b['chrom']){return -1;}
-      else if(a['chrom'] > b['chrom']){return 1;}
-      else{
-          if(a['pos'] < b['pos']){return -1;}
-          else if(a['pos'] > b['pos']){return 1;}
-          else{return 0;}
-  }});
+    var chromDiff = a['chrom'] - b['chrom'];
+    if(chromDiff !== 0){return chromDiff;}
+    else{return (a['pos'] - b['pos'])}
+  });
   return snpData;
 };
 
@@ -310,7 +308,7 @@ function getLinePolygon(theta, radWidth){
 function combineSNPS(snpData, chromData, nodeHeight, snpLevels){
   // Containers for derived vals
   var snpNodes = [];
-  var snpToGroup = {};
+  var snp2grp = {};
 
   // Variables for use during processing
   var curNode = null;
@@ -348,9 +346,8 @@ function combineSNPS(snpData, chromData, nodeHeight, snpLevels){
 
       // Update the SNP maps
       curNode['data']['snps'].push(currentValue['id']);
-      
-      snpToGroup[currentValue['id']] = {
-        snp: ('SNPG:' + idNum.toString()),
+      snp2grp[currentValue['id']] = {
+        grp: ('SNPG:' + idNum.toString()),
         idx: ((curNode['data']['snps']).length - 1) 
       };
   });
@@ -360,7 +357,7 @@ function combineSNPS(snpData, chromData, nodeHeight, snpLevels){
   snpNodes.push(curNode);
 
   // Return the stuff!
-  return {nodes: snpNodes, map:snpToGroup};
+  return {nodes: snpNodes, map:snp2grp};
 };
 
 function positionSNP(vpos, chromPos, delta, geneOffset, center){
@@ -373,8 +370,8 @@ function positionSNP(vpos, chromPos, delta, geneOffset, center){
   return{
     pos: {x:x, y:y},
     coef: {x:(Math.cos(theta)*geneOffset), y:(Math.sin(theta)*geneOffset)},
-    n: 1,
-    lastIdx: 0,
-    i: 0,
+    nextOffset: 0, // Offset index of the last gene 
+    lastSNP: 0, // SNP index of last placed gene
+    numSNPs: 0, // Number of SNPs so far
   };
 };
