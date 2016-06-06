@@ -7,10 +7,7 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
-  
-  <!-- Cytoscape and Extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
   <!-- JavaScript -->
@@ -27,7 +24,14 @@
   <!-- DataTables, found using their package builder -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.css"/>
   <script type="text/javascript" src="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.js"></script>
+
+  <!-- qTip2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
   
+  <!-- Cytoscape and Extensions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
 
   <!-- Loaf COB -->
   <script>
@@ -45,11 +49,11 @@
     
     // Load in the core scripts
     $(document).ready(function(){
-        $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
-          $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
-              tableMaker('Ontology');
-          });
+      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
+        $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
+            tableMaker('Ontology');
         });
+      });
     });
   </script>
   
@@ -79,7 +83,6 @@
       position: absolute;
       left: 33%;
       top: 0;
-      z-index: 999;
     }
     .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle {
       float: left;

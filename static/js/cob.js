@@ -67,7 +67,7 @@ $('#NetworkTable tbody').on('click','tr',function(){
         buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
         
         // Set up the tap listeners
-        setTapListeners();
+        setListeners();
       });
     });
     $("#cytoWait").modal('show');
@@ -94,6 +94,7 @@ function updateGraph(){
     // Clean up selected elements 
     cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
     cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+    unSetListeners();
     
     // Run the layout
     cy.layout({
@@ -112,6 +113,8 @@ function updateGraph(){
     
     // Run the gene table builder
     buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+    
+    setListeners();
   });
   $("#cytoWait").modal('show');
   return;
@@ -304,11 +307,15 @@ function buildGeneTable(nodes){
 }
 
 /*--------------------------------
-      Listener Constructor
+    Graph Listener Constructor
 ---------------------------------*/
-function setTapListeners(){
+function setListeners(){
+  // Filter the necessary nodes
+  var genes = cy.nodes().filter('[type = "gene"]:visible');
+  var snpgs = cy.nodes().filter('[type = "snpG"]:visible');
+  
   // Set up the node tap listener
-  cy.nodes().filter('[type = "gene"]').on('tap', function(evt){
+  genes.on('tap', function(evt){
     nodeSelect(evt.cyTarget.data('id'), evt['originalEvent']['ctrlKey']);
   });
   
@@ -316,6 +323,55 @@ function setTapListeners(){
   $('#GeneTable tbody').on('click','tr', function(evt){
     nodeSelect($('td', this).eq(0).text(), evt['ctrlKey']);
   });
+  
+  // Set the gene qTip listener
+  genes.qtip({
+    content: function(){
+      return 'ID: '+this.data('id').toString()+'<br>'+
+      'SNP: '+this.data('snp').toString()+'<br>'+
+      'Position: '+this.data('start').toString()+'-'+this.data('end').toString();
+    },
+    position: {my: 'bottom center', at: 'top center'},
+    style: {
+      classes: 'qtip-dark qtip-rounded qtip-shadow',
+      tip: {width: 10, height: 5},
+    },
+    show: {event: 'tapdragover'},
+    hide: {event: 'tapdragout'},
+  });
+  
+  // Set the SNP Group qTip listner
+  snpgs.qtip({
+    content: function(){
+      var res = 'SNPs in Group:<br>'; var snps = this.data('snps');
+      $(snps).each(function(i){res += (this.toString() + '<br>');});
+      return res;
+    },
+    position: {my: 'bottom center', at: 'top center'},
+    style: {
+      classes: 'qtip-light qtip-rounded qtip-shadow',
+      tip: {width: 10, height: 5},
+    },
+    show: {event: 'tapdragover'},
+    hide: {event: 'tapdragout'},
+  });
+}
+
+function unSetListeners(){
+  // Filter the necessary nodes
+  var genes = cy.nodes().filter('[type = "gene"]:visible');
+  var snpgs = cy.nodes().filter('[type = "snpG"]:visible');
+  
+  // Remove the click listeners
+  genes.off('tap');
+  $('#GeneTable tbody').off('click');
+  
+  // Unset the qTip Listeners as a batch
+  cy.startBatch();
+  genes.each(function(i){this.qtip('api').destroy();});
+  snpgs.each(function(i){this.qtip('api').destroy();});
+  cy.endBatch();
+  return;
 }
 
 /*--------------------------------
