@@ -4,12 +4,12 @@ var register = function(cytoscape){
 
   // Default Layout Options
   var defaults = {
-    padding: 150, // Padding around the layout
+    padding: 90, // Padding around the layout
     boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
     chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
     nodeHeight: 30, // Diameter of the SNP nodes
     geneOffset: 30, // Distance between stacked genes
-    radWidth: 0.025, // Thickness of the chromosomes lines
+    radWidth: 0.015, // Thickness of the chromosomes lines
     minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
     minNodeDegree: 1, // Minimum local degree for a node to be rendered
     logSpacing: false, // Log or linear SNP layout along chromosome
@@ -107,7 +107,11 @@ var register = function(cytoscape){
     snps.style({'display': 'none'});
 
     // Add our fresh nodes
-    snps = cy.add(res['nodes']);
+    snps = cy.add(res['nodes'])
+    snps.style({
+      'width': options.nodeHeight,
+      'height': options.nodeHeight,
+    });
 
     // Position the new snps
     var snpGData = {};
@@ -140,8 +144,8 @@ var register = function(cytoscape){
       var snpG = snpGData[snp['grp']];
       
       // If we are starting a new SNP in the group, update the conditions
-      if(snpG['nextOffset'] > 1 && snpG['lastSNP'] !== snp['idx']){
-        snpG['nextOffset'] += 1;
+      if(snpG['lastSNP'] !== snp['idx']){
+        if(snpG['nextOffset'] > 0){snpG['nextOffset'] += 1;}
         snpG['lastSNP'] = snp['idx'];
         snpG['numSNPs'] += 1;
       }
@@ -157,6 +161,9 @@ var register = function(cytoscape){
         x: Math.round((snpG['nextOffset']*snpG['coef']['x'])+snpG['pos']['x']),
         y: Math.round((snpG['nextOffset']*snpG['coef']['y'])+snpG['pos']['y'])
       };
+    }).style({
+      'width': options.nodeHeight,
+      'height': options.nodeHeight,
     });
     cy.endBatch();
 

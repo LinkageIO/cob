@@ -78,19 +78,19 @@ def Ontology_Terms(term_name):
     return jsonify(terms[term_name])
 
 # Route for sending the CoEx Network Data for graphing
-@app.route("/COB/<network_name>/<ontology>/<term>")
-def COB_network(network_name,ontology,term):
+@app.route("/COB/<network_name>/<ontology>/<term>/<window_size>/<flank_limit>")
+def COB_network(network_name,ontology,term,window_size,flank_limit):
     net = {}
     cob = networks[network_name]
     term = co.GWAS(ontology)[term]
     nodes = []
     parents = set()
     chroms = dict()
-    effective_loci = term.effective_loci(window_size=50000)
+    effective_loci = term.effective_loci(window_size=int(window_size))
     try:
         candidate_genes = cob.refgen.candidate_genes(
             effective_loci,
-            flank_limit=2,
+            flank_limit=int(flank_limit),
             chain=True,
             include_parent_locus=True,
             #include_parent_attrs=['numIterations', 'avgEffectSize'],
