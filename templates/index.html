@@ -10,16 +10,11 @@
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
-  <!-- JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
   integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
   crossorigin="anonymous"></script>
-  <!-- CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
   integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <!-- Optional Theme -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
-  integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
   <!-- DataTables, found using their package builder -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.css"/>
@@ -66,15 +61,19 @@
     #cob {
       float: left;
       width: 33%;
-      height: 100%
+      height: 100%;
     }
     #cobHead{
+      display: flex;
+      justify-content: left;
+      align-items: center;
       float: left;
       color: white;
       background-color: #337ab7;
-      height: 65px;
+      height: 70px;
       width: 100%;
       border-radius: 5px;
+      font-size: 2.5em;
     }
     #cy {
       width: 67%;
@@ -149,7 +148,7 @@
 
 <!-- Selection Column -->
 <div id='cob' class='container'>
-  <div id='cobHead' class='container'><h1>CoEx Browser</h1></div>
+  <div id='cobHead' class='container'>CoEx Browser</div>
 
 <div>
   <!-- Tab List -->
@@ -167,7 +166,7 @@
 
     <!-- Section For Ontology Selection -->
       <br><div id="Ontology">
-          <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
+          <h5 id="OntologyWait" class="">We are gathering the datasets, please wait.</h5>
           <table class="table table-hover hidden" id="OntologyTable">
             <thead>
               <tr>
@@ -181,7 +180,7 @@
       
       <!-- Section For Term Selection -->
       <br><div id="Term">
-          <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
+          <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
           <table class="table table-hover hidden" id="TermTable">
             <thead>
               <tr>
@@ -197,7 +196,7 @@
       
       <!-- Section For Network Selection -->
       <br><div id="Network">
-        <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
+        <h5 id="NetworkWait">This table will appear once you select an attribute above.</h5>
           <table class="table table-hover hidden" id="NetworkTable">
             <thead>
               <tr>

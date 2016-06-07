@@ -4,7 +4,7 @@ var register = function(cytoscape){
 
   // Default Layout Options
   var defaults = {
-    padding: 90, // Padding around the layout
+    padding: 100, // Padding around the layout
     boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
     chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
     nodeHeight: 30, // Diameter of the SNP nodes
@@ -372,8 +372,10 @@ function positionSNP(vpos, chromPos, delta, geneOffset, center){
   var x = Math.round((vpos*delta['x'])+chromPos['x']);
   var y = Math.round((vpos*delta['y'])+chromPos['y']);
 
-  // Save these to the object
+  // Find theta from the center
   var theta = Math.atan2((y-center['y']),(x-center['x']));
+  
+  // Return position and some metadata
   return{
     pos: {x:x, y:y},
     coef: {x:(Math.cos(theta)*geneOffset), y:(Math.sin(theta)*geneOffset)},
