@@ -78,19 +78,19 @@ def Ontology_Terms(term_name):
     return jsonify(terms[term_name])
 
 # Route for sending the CoEx Network Data for graphing
-@app.route("/COB/<network_name>/<ontology>/<term>")
-def COB_network(network_name,ontology,term):
+@app.route("/COB/<network_name>/<ontology>/<term>/<window_size>/<flank_limit>")
+def COB_network(network_name,ontology,term,window_size,flank_limit):
     net = {}
     cob = networks[network_name]
     term = co.GWAS(ontology)[term]
     nodes = []
     parents = set()
     chroms = dict()
-    effective_loci = term.effective_loci(window_size=50000)
+    effective_loci = term.effective_loci(window_size=int(window_size))
     try:
         candidate_genes = cob.refgen.candidate_genes(
             effective_loci,
-            flank_limit=2,
+            flank_limit=int(flank_limit),
             chain=True,
             include_parent_locus=True,
             #include_parent_attrs=['numIterations', 'avgEffectSize'],
@@ -123,11 +123,10 @@ def COB_network(network_name,ontology,term):
                 'id': str(gene.id),
                 'type': 'gene',
                 'snp': str(gene.attr['parent_locus']),
-                'chrom': parent_list[2],
-                'start': str(gene.start),
-                'end': str(gene.end),
+                'chrom': int(parent_list[2]),
+                'start': int(gene.start),
+                'end': int(gene.end),
                 'ldegree': int(local_degree), 
-                'locality': float(gene_locality),
                 'gdegree': int(global_degree),
                 'num_intervening': num_interv,
                 'rank_intervening': str(gene.attr['intervening_rank']),
@@ -136,34 +135,19 @@ def COB_network(network_name,ontology,term):
                 #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
             }})
         parents.add(str(gene.attr['parent_locus']))
-        if int(parent_list[2]) in chroms:
-            if gene.end > chroms[int(parent_list[2])]:
-                chroms[int(parent_list[2])] = gene.end
-        else:
-            chroms[int(parent_list[2])] = gene.end
+        
     # Add parents first
     for p in parents:
         parent_list = re.split('<|>|:|-', p)
-        parent = {
+        nodes.insert(0, {'data':{
             'id': p,
             'type': 'snp',
-            'chrom': parent_list[2],
-            'start': parent_list[3],
-            'end': parent_list[4],
-        }
-        nodes.insert(0,{'data':parent,'classes':'snp'})
-    
-    # Add chrmosomes to the nodes
-    for k,v in chroms.items():
-        chrom = {
-          'id': str(k),
-          'type': 'chrom',
-          'chrom': str(k),
-          'start': str(0),
-          'end': str(v),
-        }
-        nodes.insert(0,{'data':chrom})
-    
+            'chrom': int(parent_list[2]),
+            'start': int(parent_list[3]),
+            'end': int(parent_list[4]),
+        }})
+
+
     # Now do the edges
     subnet = cob.subnetwork(candidate_genes)
     subnet.reset_index(inplace=True)
@@ -189,3 +173,20 @@ def fix_val(val):
     else:
         return val
 
+'''
+        if chrom in chroms:
+            chroms[chrom][0] = min(start, chroms[chrom][0])
+            chroms[chrom][1] = max(end, chroms[chrom][1])
+        else:
+            chroms[chrom] = [start, end]
+        
+    # Add chrmosomes to the nodes
+    for k,v in chroms.items():
+        chrom = {
+          'id': str(k),
+          'type': 'chrom',
+          'start': int(v[0]),
+          'end': int(v[1]),
+        }
+        nodes.insert(0,{'data':chrom})
+'''

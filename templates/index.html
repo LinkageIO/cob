@@ -7,27 +7,26 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script   src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
-  
-  <!-- Cytoscape and Extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
-  <!-- JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
   integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
   crossorigin="anonymous"></script>
-  <!-- CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
   integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <!-- Optional Theme -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
-  integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
   <!-- DataTables, found using their package builder -->
   <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.css"/>
   <script type="text/javascript" src="https://cdn.datatables.net/u/bs/dt-1.10.12,sc-1.4.2,se-1.2.0/datatables.min.js"></script>
+
+  <!-- qTip2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
   
+  <!-- Cytoscape and Extensions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
 
   <!-- Loaf COB -->
   <script>
@@ -42,14 +41,19 @@
     var CurrentTerm = "";
     var CurrentNetwork = "";
     var cy = null;
+    var logSpacingVal = true;
+    var lastWindow = null;
+    var lastFlank = null;
     
     // Load in the core scripts
     $(document).ready(function(){
-        $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
-            $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
-                tableMaker('Ontology');
-            });
+      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
+        $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
+          lastWindow = document.forms["graphParams"]["windowSize"].value;
+          lastFlank = document.forms["graphParams"]["flankLimit"].value;
+          tableMaker('Ontology');
         });
+      });
     });
   </script>
   
@@ -57,15 +61,19 @@
     #cob {
       float: left;
       width: 33%;
-      height: 100%
+      height: 100%;
     }
     #cobHead{
+      display: flex;
+      justify-content: left;
+      align-items: center;
       float: left;
+      color: white;
+      background-color: #337ab7;
+      height: 70px;
       width: 100%;
-    }
-    #cyWait {
-      float: left;
-      width: 67%;
+      border-radius: 5px;
+      font-size: 2.5em;
     }
     #cy {
       width: 67%;
@@ -73,7 +81,15 @@
       position: absolute;
       left: 33%;
       top: 0;
-      z-index: 999;
+      z-index: 5;
+    }
+    #cyTitle{
+      position: absolute;
+      bottom: 0;
+      color: DimGrey;
+      z-index: 1;
+      left: 33%;
+      font-size: 1.75em;
     }
     .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle {
       float: left;
@@ -81,6 +97,29 @@
     }
     table {
       background-color: white;
+    }
+    #cyTool{
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      border-radius: 5px;
+      border: 1px solid #dddddd;
+      background-color: WhiteSmoke;
+    }
+    .paramBox {
+      margin: 2px;
+      float: left;
+      height: 65px;
+      width: 90px;
+      text-align: center;
+    }
+    .paramButton {
+      float: left;
+      display: flex; 
+      justify-content: center;
+      align-items: center;
+      height: 65px;
     }
   </style>
 </head>
@@ -90,7 +129,7 @@
   
 <!-- Modal -->
 <style></style>
-<div class="modal fade" id="cytoWait" tabindex="-1" role="dialog">
+<div class="modal fade" id="cyWait" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header"><h4 class="modal-title"><b>Please Wait For Layout</b></h4></div>
@@ -109,7 +148,7 @@
 
 <!-- Selection Column -->
 <div id='cob' class='container'>
-  <div id='cobHead' class='bg-primary well-sm'><h1>CoEx Browser</h1></div>
+  <div id='cobHead' class='container'>CoEx Browser</div>
 
 <div>
   <!-- Tab List -->
@@ -127,7 +166,7 @@
 
     <!-- Section For Ontology Selection -->
       <br><div id="Ontology">
-          <h5 id="OntologyWait" class="">Are we gathering the datasets?, please wait.</h5>
+          <h5 id="OntologyWait" class="">We are gathering the datasets, please wait.</h5>
           <table class="table table-hover hidden" id="OntologyTable">
             <thead>
               <tr>
@@ -141,7 +180,7 @@
       
       <!-- Section For Term Selection -->
       <br><div id="Term">
-          <h5 id="TermWait" class="">This table will appear once you select an attribute above.</h5>
+          <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
           <table class="table table-hover hidden" id="TermTable">
             <thead>
               <tr>
@@ -157,7 +196,7 @@
       
       <!-- Section For Network Selection -->
       <br><div id="Network">
-        <h5 id="NetworkWait" class="">This table will populate once you select an attribute above.</h5>
+        <h5 id="NetworkWait">This table will appear once you select an attribute above.</h5>
           <table class="table table-hover hidden" id="NetworkTable">
             <thead>
               <tr>
@@ -173,15 +212,41 @@
       
       <!-- Parameter Adjustment Tab -->
       <div role="tabpanel" class="tab-pane" id="params"><br>
-        <div id='Graph Params' class="form-group">
-            <form class="" id="graphParams">
-                <label class="" for="nodeCutoff">Min Node Degree</label>
-                <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+"><br>
-                <label class="" for="edgeCutoff">Min Edge Score</label>
-                <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*"><br>
-                <input type="button" class="btn btn-primary" id="updateButton" value="Update">
-            </form>
-        </div>
+        <form class="form-inline" id="graphParams">
+          <div class="paramBox">
+            <b>Window Size</b>
+            <input type="text" class="form-control" id="windowSize" value="50000" size="6" pattern="[0-9]+">
+          </div>
+          <div class="paramBox">
+            <b>Flank Limit</b>
+            <input type="text" class="form-control" id="flankLimit" value="2" size="3" pattern="[0-9]+">
+          </div>
+          <div class="paramBox">
+            <b>Node Degree</b>
+            <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
+          </div>
+          <div class="paramBox">
+            <b>Edge Score</b>
+            <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+          </div>
+          <div class="paramBox">
+            <b>Node Size</b>
+            <input type="text" class="form-control" id="nodeSize" value="10" size="2" pattern="[0-9]+">
+          </div>
+          <div class="paramBox">
+            <b>SNP Levels</b>
+            <input type="text" class="form-control" id="snpLevels" value="2" size="2" pattern="[1-3]+">
+          </div>
+          <div class="paramButton" style="width: 110px;">
+            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing</button>
+          </div>
+          <div class="paramButton" style="width: 75px;">
+            <input type="button" class="btn btn-primary" id="updateButton" value="Update">
+          </div>
+          <div class="paramButton" style="width: 125px;">
+            <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+          </div>
+        </form>
       </div>
       <!-- End Parameter Adjustment Tab -->
       
@@ -191,13 +256,12 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Chrom</th>
-              <th>Start</th>
-              <th>End</th>
-              <th>SNP</th>
               <th>Local Degree</th>
               <th>Global Degree</th>
-              <th>Locality</th>
+              <th>Chrom</th>
+              <th>SNP</th>
+              <th>Start</th>
+              <th>End</th>
               <th>Num Intervening</th>
               <th>Rank Intervening</th>
               <th>Num Siblings</th>
@@ -213,8 +277,11 @@
     </div>
   </div>
 </div>
-<!-- Box for Cytoscape Column -->
-<h2 id='cyWait' class='container'>Please select a dataset, then an attribute, and finally a network, at which point the network will show here!</h2>
-<div id='cy' class=''></div>
+
+<!-- Box for Cytoscape Graph -->
+<div id='cy'></div>
+
+<!-- Box for title indicating current network -->
+<div id='cyTitle'>Please select one option in each table to build a graph.</div>
 </body>
 </html>
