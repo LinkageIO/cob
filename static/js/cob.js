@@ -122,7 +122,7 @@ $('#clearSelectionButton').click(function(){
   cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
   cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
-  $('#SubnetTable').DataTable().destroy();
+  $('#SubnetTable').DataTable().clear().draw();
 });
 
 /*------------------------------------------
@@ -148,6 +148,7 @@ function newGraph(){
       
       // Run the gene table builder
       buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+      buildSubnetTable();
       
       // Set the snp group qtips
       setSnpgQtips();
@@ -184,6 +185,7 @@ function updateGraph(){
     
     // Run the gene table builder
     buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+    buildSubnetTable();
     
     // Set the snp group qtips
     setSnpgQtips();
@@ -290,6 +292,12 @@ function initCytoscape(data){
   
   // Set up the gene node tap listener
   genes.on('tap', function(evt){
+    // Only scroll to the gene if it isn't highlighted already
+    if(!(evt.cyTarget.hasClass('highlighted'))){
+      $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();
+    }
+    
+    // Run the selection algorithm
     nodeSelect(evt.cyTarget.data('id'));
   });
   
@@ -353,20 +361,21 @@ function nodeSelect(gene_id){
     }
     else{
       gene_node.toggleClass('highlighted', true);
-      $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
+      $('#GeneTable').DataTable().row('#'+gene_id).select();
     }
     
     // Reselect all necessary edges and neighbors
-    cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
-    cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
+    var genes = cy.nodes().filter('.highlighted');
+    genes.neighborhood().toggleClass('neighbors', true);
+    genes.connectedEdges().toggleClass('highlightedEdge', true);
     
     // Build the Subnetwork Table
-    buildSubnetTable(cy.nodes().filter('.highlighted, .neighbors'));
-    //$('#SubnetTable').DataTable().clear();
-    //var geneData = [];
-    //cy.nodes().filter('.highlighted, .neighbors').forEach(function(currentValue, index, array){geneData.push(currentValue.data());});
-    //console.log(geneData);
-    //$('#SubnetTable').DataTable().rows.add(geneData);
+    $('#navTabs a[href="#subnet"]').tab('show');
+    $('#SubnetTable').DataTable().clear();
+    var geneData = [];
+    cy.nodes().filter('.highlighted, .neighbors').forEach(function(currentValue, index, array){geneData.push(currentValue.data());});
+    $('#SubnetTable').DataTable().rows.add(geneData).draw();
+    $('#navTabs a[href="#genes"]').tab('show');
   });
   return;
 }
@@ -398,7 +407,7 @@ function buildGeneTable(nodes){
       "scrollXInner": "100%",
       "scrollX": "100%",
       "scrollY": $(window).height()-275,
-      "select": true,
+      "select": {"style": 'api'},
       "scroller": true,
       "searching": true,
       "columns": [
@@ -420,29 +429,23 @@ function buildGeneTable(nodes){
   
   // Set up the table tap listener
   $('#GeneTable tbody').on('click','tr', function(evt){
-    nodeSelect($('td', this).eq(0).text());
+    nodeSelect(this['id']);
   });
-
+  
   return;
 }
 
-function buildSubnetTable(nodes){
-  // Format the node data for the DataTable
-  var geneData = [];
-  nodes.forEach(function(currentValue, index, array){
-    geneData.push(currentValue.data());
-  });
-  
+function buildSubnetTable(){
   // Clean up the old table
   $('#SubnetTable').removeClass("hidden");
-  //$('#SubnetTable tbody').off('click');
   $('#SubnetTable').DataTable().destroy();
   
   // Uses DataTables to build a pretty table
   $('#SubnetTable').DataTable({
-      "data": geneData,
-      "paging": true,
-      "paginate": true,
+      "data": [],
+      "autoWidth": false, 
+      "bPaginate": false,
+      "bJQueryUI": false,
       "scrollCollapse": true,
       "dom": '<"SubnetTitle">frtip',
       "order": [[3,'asc'],[5,'asc']],
@@ -450,9 +453,8 @@ function buildSubnetTable(nodes){
       "scrollXInner": "100%",
       "scrollX": "100%",
       "scrollY": $(window).height()-275,
-      "select": true,
-      "scroller": true,
       "searching": true,
+      "select": true,
       "columns": [
         {data: 'id'},
         {data: 'ldegree'},
@@ -469,9 +471,4 @@ function buildSubnetTable(nodes){
       ]
     });
   $("div.SubnetTitle").html('Subnet Data');
-  
-  // Set up the table tap listener
-  //$('#SubnetTable tbody').on('click','tr', function(evt){
-  //  nodeSelect($('td', this).eq(0).text());
-  //});
 }

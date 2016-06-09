@@ -85,7 +85,6 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
     term = co.GWAS(ontology)[term]
     nodes = []
     parents = set()
-    chroms = dict()
     effective_loci = term.effective_loci(window_size=int(window_size))
     try:
         candidate_genes = cob.refgen.candidate_genes(
@@ -103,38 +102,32 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
         raise
     locality = cob.locality(candidate_genes)
     for gene in candidate_genes:
-        #print(gene.attr)
         try:
             local_degree = locality.ix[gene.id]['local']
             global_degree = locality.ix[gene.id]['global']
         except KeyError as e:
-            local_degree = 0
-        gene_locality = local_degree / global_degree
-        if np.isnan(gene_locality):
-            gene_locality = 0
-        parent_id = str(gene.attr['parent_locus'])
-        parent_list = re.split('<|>|:|-', parent_id)
+            local_degree = global_degree = 0
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
             num_interv = 'NAN'
         nodes.append(
             {'data':{
-                'id': str(gene.id),
+                'id': gene.id,
                 'type': 'gene',
-                'snp': str(gene.attr['parent_locus']),
-                'chrom': int(parent_list[2]),
-                'start': int(gene.start),
-                'end': int(gene.end),
-                'ldegree': int(local_degree), 
-                'gdegree': int(global_degree),
+                'snp': gene.attr['parent_locus'],
+                'chrom': gene.chrom,
+                'start': gene.start,
+                'end': gene.end,
+                'ldegree': local_degree, 
+                'gdegree': global_degree,
                 'num_intervening': num_interv,
-                'rank_intervening': str(gene.attr['intervening_rank']),
-                'num_siblings': str(gene.attr['num_siblings']),
+                'rank_intervening': gene.attr['intervening_rank'],
+                'num_siblings': gene.attr['num_siblings'],
                 #'parent_num_iterations': str(gene.attr['parent_numIterations']),
                 #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
             }})
-        parents.add(str(gene.attr['parent_locus']))
+        parents.add(gene.attr['parent_locus'])
         
     # Add parents first
     for p in parents:
@@ -142,11 +135,10 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
         nodes.insert(0, {'data':{
             'id': p,
             'type': 'snp',
-            'chrom': int(parent_list[2]),
-            'start': int(parent_list[3]),
-            'end': int(parent_list[4]),
+            'chrom': parent_list[2],
+            'start': parent_list[3],
+            'end': parent_list[4],
         }})
-
 
     # Now do the edges
     subnet = cob.subnetwork(candidate_genes)
@@ -157,36 +149,8 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
             'data':{
                 'source': source,
                 'target' : target,
-                'score' : score,
-                'distance' : fix_val(distance)
+                'score' : score
             }
         } for source,target,score,significant,distance in subnet.itertuples(index=False)
     ]
     return jsonify(net)
-
-def fix_val(val):
-    if isinf(val):
-        return -1
-    if np.isnan(val):
-        # because Fuck JSON
-        return "null"
-    else:
-        return val
-
-'''
-        if chrom in chroms:
-            chroms[chrom][0] = min(start, chroms[chrom][0])
-            chroms[chrom][1] = max(end, chroms[chrom][1])
-        else:
-            chroms[chrom] = [start, end]
-        
-    # Add chrmosomes to the nodes
-    for k,v in chroms.items():
-        chrom = {
-          'id': str(k),
-          'type': 'chrom',
-          'start': int(v[0]),
-          'end': int(v[1]),
-        }
-        nodes.insert(0,{'data':chrom})
-'''
