@@ -443,9 +443,8 @@ function buildSubnetTable(){
   // Uses DataTables to build a pretty table
   $('#SubnetTable').DataTable({
       "data": [],
-      "autoWidth": false, 
-      "bPaginate": false,
-      "bJQueryUI": false,
+      "paging": true,
+      "paginate": true,
       "scrollCollapse": true,
       "dom": '<"SubnetTitle">frtip',
       "order": [[3,'asc'],[5,'asc']],
@@ -454,6 +453,7 @@ function buildSubnetTable(){
       "scrollX": "100%",
       "scrollY": $(window).height()-275,
       "searching": true,
+      "scroller": true,
       "select": true,
       "columns": [
         {data: 'id'},
