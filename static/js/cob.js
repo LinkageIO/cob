@@ -297,6 +297,7 @@ function initCytoscape(data){
   genes.qtip({
     content: function(){
       return 'ID: '+this.data('id').toString()+'<br>'+
+      'Local Degree: '+this.data('ldegree').toString()+'<br>'+
       'SNP: '+this.data('snp').toString()+'<br>'+
       'Position: '+this.data('start').toString()+'-'+this.data('end').toString();
     },
