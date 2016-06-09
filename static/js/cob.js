@@ -164,9 +164,6 @@ function newGraph(){
 function updateGraph(){
   // Otherwise pull up the wait dialog and run the algrithm
   $("#cyWait").one('shown.bs.modal', function(){
-    // Clean up selected elements 
-    cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
-    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
     
     // Run the layout
     cy.layout({
@@ -250,13 +247,17 @@ function initCytoscape(data){
          }},
        {selector: '.snp0',
          style: {
-           'background-color': 'MediumSeaGreen',
+           'background-color': 'DarkOrchid',
          }},
        {selector: '.snp1',
          style: {
-           'background-color': 'DarkOrchid',
+           'background-color': 'MediumSeaGreen',
          }},
        {selector: '.snp2',
+         style: {
+           'background-color': '#337ab7',
+         }},
+       {selector: '.snp3',
          style: {
            'background-color': 'Tan',
          }},
