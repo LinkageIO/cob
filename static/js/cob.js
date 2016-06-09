@@ -370,12 +370,13 @@ function nodeSelect(gene_id){
     genes.connectedEdges().toggleClass('highlightedEdge', true);
     
     // Build the Subnetwork Table
+    var ogTab = $('.active [role="tab"]').attr('href');
     $('#navTabs a[href="#subnet"]').tab('show');
     $('#SubnetTable').DataTable().clear();
     var geneData = [];
     cy.nodes().filter('.highlighted, .neighbors').forEach(function(currentValue, index, array){geneData.push(currentValue.data());});
     $('#SubnetTable').DataTable().rows.add(geneData).draw();
-    $('#navTabs a[href="#genes"]').tab('show');
+    $('#navTabs a[href="'+ogTab+'"]').tab('show');
   });
   return;
 }
@@ -443,17 +444,14 @@ function buildSubnetTable(){
   // Uses DataTables to build a pretty table
   $('#SubnetTable').DataTable({
       "data": [],
-      "paging": true,
-      "paginate": true,
+      "paginate": false,
+      "processing" : true,
       "scrollCollapse": true,
       "dom": '<"SubnetTitle">frtip',
       "order": [[3,'asc'],[5,'asc']],
       "rowId": 'id',
-      "scrollXInner": "100%",
-      "scrollX": "100%",
       "scrollY": $(window).height()-275,
       "searching": true,
-      "scroller": true,
       "select": true,
       "columns": [
         {data: 'id'},
