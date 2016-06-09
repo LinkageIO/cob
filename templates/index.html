@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
   
-  <!-- Cytoscape and Extensions -->
+  <!-- Cytoscape and qTip2 extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
 
@@ -91,7 +91,14 @@
       left: 33%;
       font-size: 1.75em;
     }
-    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle {
+    #clearButton{
+      position: absolute;
+      margin: 3px;
+      bottom: 0;
+      right: 0;
+      z-index: 10;
+    }
+    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle, .SubnetTitle {
       float: left;
       font-size: x-large;
     }
@@ -127,7 +134,7 @@
 <!-- Actual Body -->
 <body>
   
-<!-- Modal -->
+<!-- Cytoscape Wait Modal -->
 <style></style>
 <div class="modal fade" id="cyWait" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -156,6 +163,7 @@
     <li role="presentation" class="active"><a href="#networks" aria-controls="networks" role="tab" data-toggle="tab">Network</a></li>
     <li role="presentation"><a aria-controls="params" href="#params" role="tab" data-toggle="tab">Parameters</a></li>
     <li role="presentation"><a aria-controls="genes" href="#genes" role="tab" data-toggle="tab">Genes</a></li>
+    <li role="presentation"><a aria-controls="subnet" href="#subnet" role="tab" data-toggle="tab">Subnetwork</a></li>
   </ul>
   
   <!-- Section for all of the Tab Content -->
@@ -243,9 +251,6 @@
           <div class="paramButton" style="width: 75px;">
             <input type="button" class="btn btn-primary" id="updateButton" value="Update">
           </div>
-          <div class="paramButton" style="width: 125px;">
-            <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
-          </div>
         </form>
       </div>
       <!-- End Parameter Adjustment Tab -->
@@ -253,6 +258,30 @@
       <!-- Gene Table Tab -->
       <div role="tabpanel" class="tab-pane" id="genes"><br>
         <table class="table table-hover hidden" id="GeneTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Local Degree</th>
+              <th>Global Degree</th>
+              <th>Chrom</th>
+              <th>SNP</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Num Intervening</th>
+              <th>Rank Intervening</th>
+              <th>Num Siblings</th>
+              <!--<th>Parent Iterations</th>
+              <th>Parent Avg Effect</th>-->
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <!-- End Gene Table Tab -->
+      
+      <!-- Sub Network Table Tab -->
+      <div role="tabpanel" class="tab-pane" id="subnet"><br>
+        <table class="table table-hover hidden" id="SubnetTable">
           <thead>
             <tr>
               <th>ID</th>
@@ -283,5 +312,6 @@
 
 <!-- Box for title indicating current network -->
 <div id='cyTitle'>Please select one option in each table to build a graph.</div>
+<div id='clearButton'><input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection"></div>
 </body>
 </html>

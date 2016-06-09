@@ -122,6 +122,7 @@ $('#clearSelectionButton').click(function(){
   cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
   cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
+  $('#SubnetTable').DataTable().destroy();
 });
 
 /*------------------------------------------
@@ -309,9 +310,9 @@ function initCytoscape(data){
   });
 }
 
-/*---------------------------------------------
-    Graph Listener Constructor/Deconstructor
----------------------------------------------*/
+/*------------------------------------
+    SNP Group Listener Constructor
+------------------------------------*/
 function setSnpgQtips(){
   // Set the SNP Group qTip listner
   cy.nodes().filter('[type = "snpG"]').qtip({
@@ -357,6 +358,14 @@ function nodeSelect(gene_id){
     // Reselect all necessary edges and neighbors
     cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
     cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
+    
+    // Build the Subnetwork Table
+    buildSubnetTable(cy.nodes().filter('.highlighted, .neighbors'));
+    //$('#SubnetTable').DataTable().clear();
+    //var geneData = [];
+    //cy.nodes().filter('.highlighted, .neighbors').forEach(function(currentValue, index, array){geneData.push(currentValue.data());});
+    //console.log(geneData);
+    //$('#SubnetTable').DataTable().rows.add(geneData);
   });
   return;
 }
@@ -412,6 +421,56 @@ function buildGeneTable(nodes){
   $('#GeneTable tbody').on('click','tr', function(evt){
     nodeSelect($('td', this).eq(0).text());
   });
-  
+
   return;
+}
+
+function buildSubnetTable(nodes){
+  // Format the node data for the DataTable
+  var geneData = [];
+  nodes.forEach(function(currentValue, index, array){
+    geneData.push(currentValue.data());
+  });
+  
+  // Clean up the old table
+  $('#SubnetTable').removeClass("hidden");
+  //$('#SubnetTable tbody').off('click');
+  $('#SubnetTable').DataTable().destroy();
+  
+  // Uses DataTables to build a pretty table
+  $('#SubnetTable').DataTable({
+      "data": geneData,
+      "paging": true,
+      "paginate": true,
+      "scrollCollapse": true,
+      "dom": '<"SubnetTitle">frtip',
+      "order": [[3,'asc'],[5,'asc']],
+      "rowId": 'id',
+      "scrollXInner": "100%",
+      "scrollX": "100%",
+      "scrollY": $(window).height()-275,
+      "select": true,
+      "scroller": true,
+      "searching": true,
+      "columns": [
+        {data: 'id'},
+        {data: 'ldegree'},
+        {data: 'gdegree'},
+        {data: 'chrom'},
+        {data: 'snp'},
+        {data: 'start'},
+        {data: 'end'},
+        {data: 'num_intervening'},
+        {data: 'rank_intervening'},
+        {data: 'num_siblings'},
+        //{data: 'parent_num_iterations'},
+        //{data: 'parent_avg_effect_size'},
+      ]
+    });
+  $("div.SubnetTitle").html('Subnet Data');
+  
+  // Set up the table tap listener
+  //$('#SubnetTable tbody').on('click','tr', function(evt){
+  //  nodeSelect($('td', this).eq(0).text());
+  //});
 }
