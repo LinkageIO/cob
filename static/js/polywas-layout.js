@@ -15,7 +15,7 @@ var register = function(cytoscape){
     logSpacing: false, // Log or linear SNP layout along chromosome
     snpSelector: '[type = "snp"]', // Selector that denotes SNP nodes
     geneSelector: '[type = "gene"]', // Selector that denotes gene nodes
-    snpLevels: 3, // How many colors to stripe the snps (Max 3)
+    snpLevels: 3, // How many colors to stripe the snps
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -48,8 +48,9 @@ var register = function(cytoscape){
     // Clean up things from previous layout, if there was one
     cy.reset();
     cy.remove('[type = "chrom"], [type = "snpG"]');
-    cy.nodes().style({'display': 'element'}).removeClass('snp0 snp1 snp2');
-
+    cy.nodes().classes('').style({'display': 'element'});
+    cy.edges().classes('');
+    
     // Finding and splitting up the different element types
     var nodes = cy.nodes();
     var snps = nodes.filter(options.snpSelector);
@@ -126,13 +127,10 @@ var register = function(cytoscape){
     // ================
     // Handle the genes
     // ================
-    // Number of snp levels
-    var snpLevels = (options.snpLevels > 3) ? 3 : options.snpLevels;
-    
     // Sort the genes by SNP index, then by local degree
     genes = genes.sort(function(a,b){
       var snpDiff = snpData[a.data('snp')]['idx'] - snpData[b.data('snp')]['idx'];
-      if(snpDiff !== 0){return snpDiff}
+      if(snpDiff !== 0){return snpDiff;}
       else{return (b.data('ldegree') - a.data('ldegree'));}
     });
     
@@ -154,7 +152,7 @@ var register = function(cytoscape){
       snpG['nextOffset'] += 1;
       
       // Add the class to enable coloring
-      ele.addClass('snp'+(snpG['numSNPs'] % snpLevels).toString());
+      ele.addClass('snp'+(snpG['numSNPs'] % options.snpLevels).toString());
       
       // Return the position based on some math 
       return {
@@ -380,7 +378,7 @@ function positionSNP(vpos, chromPos, delta, geneOffset, center){
     pos: {x:x, y:y},
     coef: {x:(Math.cos(theta)*geneOffset), y:(Math.sin(theta)*geneOffset)},
     nextOffset: 0, // Offset index of the last gene 
-    lastSNP: 0, // SNP index of last placed gene
-    numSNPs: 0, // Number of SNPs so far
+    lastSNP: -1, // SNP index of last placed gene
+    numSNPs: -1, // Number of SNPs so far
   };
 };
