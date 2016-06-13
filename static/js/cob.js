@@ -140,7 +140,15 @@ function newGraph(){
       // Set up a run the builder function
       if(cy != null){cy.destroy();}
       initCytoscape(data);
-
+      
+      cy.style().selector('[type = "snpG"], [type = "gene"]').style({
+        'width': document.forms["graphOpts"]["nodeSize"].value,
+        'height': document.forms["graphOpts"]["nodeSize"].value,
+      }).selector('.pop').style({
+        'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+        'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+      }).update();
+      
       // Do DOM Manipulations
       $('#navTabs a[href="#GeneTab"]').tab('show');
       $("#cyWait").modal('hide');
@@ -173,6 +181,14 @@ function updateGraph(){
       logSpacing: logSpacingVal,
       snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
     });
+    
+    cy.style().selector('[type = "snpG"], [type = "gene"]').style({
+      'width': document.forms["graphOpts"]["nodeSize"].value,
+      'height': document.forms["graphOpts"]["nodeSize"].value,
+    }).selector('.pop').style({
+      'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+      'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+    }).update();
     
     // Do DOM manipulations
     $('#navTabs a[href="#GeneTab"]').tab('show');
@@ -231,16 +247,12 @@ function initCytoscape(data){
            'text-background-shape': 'roundrectangle',
            'font-size': '10',
          }},
-       {selector: '[type = "snpG"]',
+       {selector: '[type = "snpG"], [type = "gene"]',
         css: {
           'z-index': '1',
           'shape': 'circle',
           'background-color': 'DimGrey',
         }},
-       {selector: '[type = "gene"]',
-         style: {
-           'shape': 'circle',
-         }},
        {selector: '.snp0',
          style: {
            'background-color': 'DarkOrchid',
@@ -456,7 +468,9 @@ function buildGeneTable(){
   
   // Set Listeners
   $('#GeneTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
-  //setPopListeners('GeneTable');
+  //$('#GeneTable tbody').on('mouseover','tr', function(evt){
+  //  cy.nodes().filter('[id = "'+this['id']+'"]').flashClass('pop',750);
+  //});
 }
 
 function buildSubnetTable(){
@@ -497,24 +511,8 @@ function buildSubnetTable(){
   $("div.SubnetTitle").html('Subnet Data');
   
   // Set Listeners
-  setPopListeners('SubnetTable');
-}
-
-function setPopListeners(tableID){
-  $('#'+tableID+' tbody').on('mouseover','tr', function(evt){
-    cy.startBatch();
-      cy.nodes().filter('[id = "'+this['id']+'"]')
-        //.style({'width': 20,'height': 20,})
-        .toggleClass('pop',true)
-        .trigger('mouseover');
-    cy.endBatch();
-  });
-  $('#'+tableID+' tbody').on('mouseout','tr', function(evt){
-    cy.startBatch();
-      cy.nodes().filter('.pop')
-        //.style({'width': 10,'height': 10,})
-        .toggleClass('pop',false)
-        .trigger('mouseout');
-    cy.endBatch();
+  $('#SubnetTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
+  $('#SubnetTable tbody').on('mouseover','tr', function(evt){
+    cy.nodes().filter('[id = "'+this['id']+'"]').flashClass('pop',750);
   });
 }

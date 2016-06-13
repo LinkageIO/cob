@@ -108,11 +108,7 @@ var register = function(cytoscape){
     snps.style({'display': 'none'});
 
     // Add our fresh nodes
-    snps = cy.add(res['nodes'])
-    snps.style({
-      'width': options.nodeHeight,
-      'height': options.nodeHeight,
-    });
+    snps = cy.add(res['nodes']);
 
     // Position the new snps
     var snpGData = {};
@@ -153,15 +149,11 @@ var register = function(cytoscape){
       
       // Add the class to enable coloring
       ele.addClass('snp'+(snpG['numSNPs'] % options.snpLevels).toString());
-      
       // Return the position based on some math 
       return {
         x: Math.round((snpG['nextOffset']*snpG['coef']['x'])+snpG['pos']['x']),
         y: Math.round((snpG['nextOffset']*snpG['coef']['y'])+snpG['pos']['y'])
       };
-    }).style({
-      'width': options.nodeHeight,
-      'height': options.nodeHeight,
     });
     cy.endBatch();
 
