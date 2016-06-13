@@ -142,12 +142,11 @@ function newGraph(){
       initCytoscape(data);
 
       // Do DOM Manipulations
-      $('#navTabs a[href="#genes"]').tab('show');
+      $('#navTabs a[href="#GeneTab"]').tab('show');
       $("#cyWait").modal('hide');
       
       // Run the gene table builder
-      buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
-      buildSubnetTable();
+      updateTable('Gene',cy.nodes().filter('[type = "gene"]:visible'));
       
       // Set the snp group qtips
       setSnpgQtips();
@@ -176,15 +175,16 @@ function updateGraph(){
     });
     
     // Do DOM manipulations
-    $('#navTabs a[href="#genes"]').tab('show');
-    $("#cyWait").modal('hide');
+    $('#navTabs a[href="#GeneTab"]').tab('show');
     
     // Run the gene table builder
-    buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
-    buildSubnetTable();
+    updateTable('Gene',cy.nodes().filter('[type = "gene"]:visible'));
     
     // Set the snp group qtips
     setSnpgQtips();
+    
+    // Close the wait dialog
+    $("#cyWait").modal('hide');
   });
   $("#cyWait").modal('show');
   return;
@@ -203,6 +203,7 @@ function initCytoscape(data){
     autounselectify: false,
     
     // Rendering Options
+    pixelRatio: 1,
     hideEdgesOnViewport: false,
     textureOnViewport: true,
     wheelSensitivity: 0.5,
@@ -265,15 +266,15 @@ function initCytoscape(data){
          }},
        {selector: '.neighbors',
          css: {
-           'background-color': 'DarkOrange',
+           'background-color': 'rgb(255,100,0)',
        }},
        {selector: '.highlighted',
          css: {
-           'background-color': 'red',
+           'background-color': 'Red',
          }},
        {selector: '.highlightedEdge',
          css: {
-           'line-color': 'gold',
+           'line-color': 'rgb(255,200,0)',
            'width': '2',
            'opacity': '1',
            'z-index': '3',
@@ -281,6 +282,7 @@ function initCytoscape(data){
        {selector: '.pop',
          css: {
            'background-color': 'Yellow',
+           'z-index': '4',
          }},
      ],
    elements: {
@@ -288,7 +290,7 @@ function initCytoscape(data){
      edges: data.edges,
   }});
   
-  var genes = cy.nodes().filter('[type = "gene"]')
+  var genes = cy.nodes().filter('[type = "gene"]');
   
   // Set up the gene node tap listener
   genes.on('tap', function(evt){
@@ -304,18 +306,19 @@ function initCytoscape(data){
   // Set the gene qTip listeners (only needs to be done once per full graph redo)
   genes.qtip({
     content: function(){
-      return 'ID: '+this.data('id').toString()+'<br>'+
-      'Local Degree: '+this.data('ldegree').toString()+'<br>'+
-      'SNP: '+this.data('snp').toString()+'<br>'+
-      'Position: '+this.data('start').toString()+'-'+this.data('end').toString();
+      var data = this.data();
+      return 'ID: '+data['id'].toString()+'<br>'+
+      'Local Degree: '+data['ldegree'].toString()+'<br>'+
+      'SNP: '+data['snp'].toString()+'<br>'+
+      'Position: '+data['start'].toString()+'-'+data['end'].toString();
     },
     position: {my: 'bottom center', at: 'top center'},
     style: {
       classes: 'qtip-dark qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'tapdragover'},
-    hide: {event: 'tapdragout'},
+    show: {event: 'mouseover'},
+    hide: {event: 'mouseout'},
   });
 }
 
@@ -335,8 +338,8 @@ function setSnpgQtips(){
       classes: 'qtip-light qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'tapdragover'},
-    hide: {event: 'tapdragout'},
+    show: {event: 'mouseover'},
+    hide: {event: 'mouseout'},
   });
 }
 
@@ -348,7 +351,7 @@ function nodeSelect(gene_id){
   var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
   var genes = null;
   var isHigh = gene_node.hasClass('highlighted');
-  var ogTab = $('.active [role="tab"]').attr('href');
+  
   
   // Run all the graph mods as a batch
   cy.batch(function(){
@@ -374,37 +377,25 @@ function nodeSelect(gene_id){
     genes.connectedEdges().toggleClass('highlightedEdge', true);
   });
     
-  // Show the subnetwork tab, needed for column scaling
-  $('#navTabs a[href="#subnet"]').tab('show');
-  
-  // Clear old data
-  $('#SubnetTable').DataTable().clear();
-  
-  // Get the data and add it to the table
-  var geneData = [];
-  var geneDict = null;
-  cy.nodes().filter('.highlighted, .neighbors')
-    .forEach(function(currentValue, index, array){
-      geneDict = currentValue.data();
-      geneDict['window_size'] = lastWindow;
-      geneDict['flank_limit'] = lastFlank;
-      geneData.push(geneDict);
-    });
-  $('#SubnetTable').DataTable().rows.add(geneData).draw();
+  // Update the subnetwork Table
+  updateTable('Subnet',cy.nodes().filter('.highlighted, .neighbors'));
   
   // Select the highlighted ones
   genes.forEach(function(currentValue, index, array){
     $('#SubnetTable').DataTable().row('#'+currentValue.data('id')).select();
   });
-  $('#navTabs a[href="'+ogTab+'"]').tab('show');
-
-  return;
 }
 
 /*--------------------------------
-      Gene Table Constructor
+      Gene Table Constructors
 ---------------------------------*/
-function buildGeneTable(nodes){
+function updateTable(tableName, nodes){
+  // Save original tab
+  var ogTab = $('.active [role="tab"]').attr('href');
+  
+  // Switch to needed tab, needed for column scaling
+  $('#navTabs a[href="#'+tableName+'Tab"]').tab('show');
+  
   // Format the node data for the DataTable
   var geneData = [];
   var geneDict = null;
@@ -415,24 +406,29 @@ function buildGeneTable(nodes){
     geneData.push(geneDict);
   });
   
-  // Clean up the old table
-  $('#GeneTable').removeClass("hidden");
-  $('#GeneTable tbody').off('click mouseenter mouseleave');
-  if($.fn.DataTable.isDataTable('#GeneTable')){$('#GeneTable').DataTable().destroy();}
+  // Clear old data and add new
+  $('#'+tableName+'Table').DataTable().rows('*').clear();
+  $('#'+tableName+'Table').DataTable().rows.add(geneData).draw();
   
+  // Return to original tab
+  $('#navTabs a[href="'+ogTab+'"]').tab('show');
+}
+
+function buildGeneTable(){
   // Uses DataTables to build a pretty table
   $('#GeneTable').DataTable({
-      "data": geneData,
-      "dom": '<"GeneTitle">frtBip',
+      "data": [],
+      "deferRender": true,
+      "dom": '<"GeneTitle">frtipB',
       "order": [[3,'asc'],[5,'asc']],
       "paging": true,
       "paginate": false,
       "rowId": 'id',
       "scrollCollapse": true,
-      "scroller": true,
+      "scroller": {displayBuffer: 75},
       "scrollXInner": "100%",
       "scrollX": "100%",
-      "scrollY": $(window).height()-275,
+      "scrollY": ($(window).height()-275),
       "searching": true,
       "select": {"style": 'api'},
       "buttons": [{
@@ -458,30 +454,12 @@ function buildGeneTable(nodes){
     });
   $("div.GeneTitle").html('Gene Data');
   
-  // Set up the table listeners
-  $('#GeneTable tbody').on('click','tr', function(evt){
-    nodeSelect(this['id']);
-  });
-  $('#GeneTable tbody').on('mouseenter','tr', function(evt){
-    var gene = cy.nodes().filter('[id = "'+this['id']+'"]');
-    gene.toggleClass('pop', true);
-    gene.trigger('tapdragover');
-  });
-  $('#GeneTable tbody').on('mouseleave','tr', function(evt){
-    var gene = cy.nodes().filter('[id = "'+this['id']+'"]');
-    gene.toggleClass('pop', false);
-    gene.trigger('tapdragout');
-  });
-  
-  return;
+  // Set Listeners
+  $('#GeneTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
+  //setPopListeners('GeneTable');
 }
 
 function buildSubnetTable(){
-  // Clean up the old table
-  $('#SubnetTable').removeClass('hidden');
-  $('#SubnetTable tbody').off('mouseenter mouseleave');
-  if($.fn.DataTable.isDataTable('#SubnetTable')){$('#SubnetTable').DataTable().destroy();}
-  
   // Uses DataTables to build a pretty table
   $('#SubnetTable').DataTable({
       "data": [],
@@ -518,15 +496,25 @@ function buildSubnetTable(){
     });
   $("div.SubnetTitle").html('Subnet Data');
   
-  // Set up the table listeners
-  $('#SubnetTable tbody').on('mouseenter','tr', function(evt){
-    var gene = cy.nodes().filter('[id = "'+this['id']+'"]');
-    gene.toggleClass('pop', true);
-    gene.trigger('tapdragover');
+  // Set Listeners
+  setPopListeners('SubnetTable');
+}
+
+function setPopListeners(tableID){
+  $('#'+tableID+' tbody').on('mouseover','tr', function(evt){
+    cy.startBatch();
+      cy.nodes().filter('[id = "'+this['id']+'"]')
+        //.style({'width': 20,'height': 20,})
+        .toggleClass('pop',true)
+        .trigger('mouseover');
+    cy.endBatch();
   });
-  $('#SubnetTable tbody').on('mouseleave','tr', function(evt){
-    var gene = cy.nodes().filter('[id = "'+this['id']+'"]');
-    gene.toggleClass('pop', false);
-    gene.trigger('tapdragout');
+  $('#'+tableID+' tbody').on('mouseout','tr', function(evt){
+    cy.startBatch();
+      cy.nodes().filter('.pop')
+        //.style({'width': 10,'height': 10,})
+        .toggleClass('pop',false)
+        .trigger('mouseout');
+    cy.endBatch();
   });
 }

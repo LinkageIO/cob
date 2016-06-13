@@ -49,9 +49,16 @@
     $(document).ready(function(){
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
         $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
+          // Set some of the variables from the form
           lastWindow = document.forms["graphOpts"]["windowSize"].value;
           lastFlank = document.forms["graphOpts"]["flankLimit"].value;
+          
+          // Kick off the ontology selector table
           tableMaker('Ontology');
+          
+          // Build the gene tables
+          buildGeneTable();
+          buildSubnetTable();
         });
       });
     });
@@ -149,8 +156,8 @@
   <ul class="nav nav-tabs" role="tablist" id="navTabs">
     <li role="presentation" class="active"><a href="#networks" aria-controls="networks" role="tab" data-toggle="tab">Network</a></li>
     <li role="presentation"><a aria-controls="opts" href="#opts" role="tab" data-toggle="tab">Options</a></li>
-    <li role="presentation"><a aria-controls="genes" href="#genes" role="tab" data-toggle="tab">Genes</a></li>
-    <li role="presentation"><a aria-controls="subnet" href="#subnet" role="tab" data-toggle="tab">Subnetwork</a></li>
+    <li role="presentation"><a aria-controls="GeneTab" href="#GeneTab" role="tab" data-toggle="tab">Genes</a></li>
+    <li role="presentation"><a aria-controls="SubnetTab" href="#SubnetTab" role="tab" data-toggle="tab">Subnetwork</a></li>
   </ul>
   
   <!-- Section for all of the Tab Content -->
@@ -243,14 +250,18 @@
       <!-- End Parameter Adjustment Tab -->
       
       <!-- Gene Table Tab -->
-      <div role="tabpanel" class="tab-pane" id="genes"><br>
-        <table class="table table-hover hidden" id="GeneTable"></table>
+      <div role="tabpanel" class="tab-pane" id="GeneTab"><br>
+        <table class="table" id="GeneTable">
+        <tbody></tbody>
+        </table>
       </div>
       <!-- End Gene Table Tab -->
       
       <!-- Sub Network Table Tab -->
-      <div role="tabpanel" class="tab-pane" id="subnet"><br>
-        <table class="table table-hover hidden" id="SubnetTable"></table>
+      <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
+        <table class="table" id="SubnetTable">
+        <tbody></tbody>
+        </table>
       </div>
       <!-- End Gene Table Tab -->
       
