@@ -55,17 +55,17 @@ var register = function(cytoscape){
     var nodes = cy.nodes();
     var snps = nodes.filter(options.snpSelector);
     var genes = nodes.filter(options.geneSelector);
-
+    
     // Hide genes that are not above the threshold
     genes = genes.difference(genes.filter(function(i, ele){
         return (parseInt(ele.data('ldegree')) < options.minNodeDegree);
       }).style({'display': 'none'}));
-
+    
     // Hide edges that are not above the threshold
     options.eles.edges().filter(function(i, ele){
         return (parseFloat(ele.data('score')) < options.minEdgeScore);
       }).style({'display': 'none'});
-
+    
     // ===========================
     // Find Info About Chromosomes
     // ===========================
@@ -123,15 +123,20 @@ var register = function(cytoscape){
     // ================
     // Handle the genes
     // ================
+    cy.startBatch();
+    // Set new gene degreees
+    genes.forEach(function(cur, index, array){
+      cur.data('cur_ldegree', cur.connectedEdges(':visible').size());
+    });
+    
     // Sort the genes by SNP index, then by local degree
     genes = genes.sort(function(a,b){
       var snpDiff = snpData[a.data('snp')]['idx'] - snpData[b.data('snp')]['idx'];
       if(snpDiff !== 0){return snpDiff;}
-      else{return (b.data('ldegree') - a.data('ldegree'));}
+      else{return (b.data('cur_ldegree') - a.data('cur_ldegree'));}
     });
     
     // Find the position of the genes
-    cy.startBatch();
     genes.layoutPositions(this, options, function(i, ele){
       // Make local references to the snp and group data
       var snp = snpData[ele.data('snp')];
@@ -191,6 +196,9 @@ if( typeof define !== 'undefined' && define.amd ){
 if( typeof cytoscape !== 'undefined' ){register(cytoscape);}})();
 
 
+// ================
+// Helper Functions
+// ================
 // Function to get Sorted array of SNP data from SNP nodes
 function getSNPData(snps){
   // Make an array of important SNP Data for quicker access
@@ -222,17 +230,17 @@ function makeChroms(snpData, logSpacing){
   var curPos = 0; // Current Position on literal chromosome
   var curVPos = 0; // Current position on the virtual chromosome
   var dist = 0; // Distance in BP between this SNP and last SNP
-  snpData.forEach(function(currentValue, index, array){
-    if(currentValue['chrom'] !== curChrom){
+  snpData.forEach(function(cur, idx, arr){
+    if(cur['chrom'] !== curChrom){
       // Unles it is the first run push the node onto the stack
       if(curNode !== null){chromNodes.push(curNode);}
       // Set initial values for new chromosome
-      curChrom = currentValue['chrom'];
-      curZero = currentValue['pos'] - 1;
+      curChrom = cur['chrom'];
+      curZero = cur['pos'] - 1;
       curPos = 1;
       curVPos = 1;
       curNode = {group: 'nodes', data:{
-          id: currentValue['chrom'],
+          id: cur['chrom'],
           type: 'chrom',
           start: 0,
           end: curVPos,
@@ -240,7 +248,7 @@ function makeChroms(snpData, logSpacing){
     }
     else{
       // Find the virtual position along the chrom
-      dist = currentValue['pos'] - curZero - curPos;
+      dist = cur['pos'] - curZero - curPos;
       curPos = curPos + dist;
       if(logSpacing){curVPos = Math.round(curVPos + Math.log(dist));}
       else{curVPos = Math.round(curVPos + dist);}
@@ -249,7 +257,7 @@ function makeChroms(snpData, logSpacing){
       curNode['data']['end'] = curVPos;
     }
     // Set the virtual position of the SNP
-    currentValue['vpos'] = curVPos;
+    cur['vpos'] = curVPos;
   });
   // Push the last built node
   chromNodes.push(curNode);

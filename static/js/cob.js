@@ -19,35 +19,30 @@ $('#OntologyTable tbody').on('click','tr', function(){
   $('#NetworkWait').removeClass('hidden');
   
   // Clean up the graph
-  $('#cy').addClass('hidden');
-  $('#cyTitle').html('Please select one option in each table to build a graph.');
-  if(cy != null){cy.destroy();}
+  if(cy != null){cy.destroy();cy = null;}
+  updateHUD();
   
   // Fetch and build the new Term Table
-  tableMaker('Term');
-});
-
-// A row on the Term Table is selected
-$('#TermTable tbody').on('click','tr', function(){
-  // Highlight the relevant row
-  CurrentTerm = $('td',this).eq(0).text();
-  
-  // Clean up the graph
-  $('#cy').addClass('hidden');
-  $('#cyTitle').html('Please select one option in each table to build a graph.');
-  if(cy != null){cy.destroy();}
-  
-  // Fetch and build the network table
   tableMaker('Network');
 });
 
-// A row on the Network Table is selected
-$('#NetworkTable tbody').on('click','tr',function(){
-    // Highlight the current line
-    CurrentNetwork = $('td',this).eq(0).text();
+// A row on the Term Table is selected
+$('#NetworkTable tbody').on('click','tr', function(){
+  // Highlight the relevant row
+  CurrentNetwork = $('td',this).eq(0).text();
+  
+  // Clean up the graph
+  if(cy != null){cy.destroy();cy = null;}
+  updateHUD();
+  
+  // Fetch and build the network table
+  tableMaker('Term');
+});
 
-    // Unhide the graph
-    $('#cy').removeClass('hidden');
+// A row on the Network Table is selected
+$('#TermTable tbody').on('click','tr',function(){
+    // Highlight the current line
+    CurrentTerm = $('td',this).eq(0).text();
     
     // Get the new Graph
     newGraph();
@@ -58,18 +53,17 @@ $('#NetworkTable tbody').on('click','tr',function(){
 ---------------------------------*/
 function tableMaker(section){
 // Function to me make the table out of the analysis database
-  // Keep the user updated on progress
-  $('#'+section+'Wait').addClass("hidden");
-  
-  // Find the address for each table, this will be deprecated after server improvements
+  // Find the address for each table, this will be cleaned after server improvements
   if(section == 'Ontology'){
     var address = $SCRIPT_ROOT + 'available_datasets/GWAS';}
-  else if(section == 'Term'){
-    var address = $SCRIPT_ROOT + 'Ontology/Terms/' + CurrentOntology;}
   else if(section == 'Network'){
     var address = $SCRIPT_ROOT + 'available_datasets/Expr';}
+  else if(section == 'Term'){
+    var address = $SCRIPT_ROOT + 'Ontology/Terms/' + CurrentOntology;}
+  
 
   // Make sure the table is visible
+  $('#'+section+'Wait').addClass("hidden");
   $('#'+section+'Table').removeClass("hidden");
   
   // Clean up the old table
@@ -85,8 +79,7 @@ function tableMaker(section){
       "scrollCollapse": true,
       "dom": '<"'+section+'Title">ft',
       "order": [[0,'asc']],
-      "processing" : true,
-      "scrollY": ($(window).height()/4)-50,
+      "scrollY": ($(window).height()/4),
       "select": true,
       "searching": true,
     });
@@ -118,8 +111,9 @@ $("#graphOpts").keypress(function(evt){
 // Clear all selected items
 $('#clearSelectionButton').click(function(){
   if(cy == null){return;}
-  cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
-  cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+  cy.nodes('.highlighted').toggleClass('highlighted', false)
+  cy.nodes('.neighbors').toggleClass('neighbors', false);
+  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
   $('#SubnetTable').DataTable().clear().draw();
 });
@@ -138,7 +132,7 @@ function newGraph(){
     $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
       console.log('Recieved Data');
       // Set up a run the builder function
-      if(cy != null){cy.destroy();}
+      if(cy != null){cy.destroy();cy = null;}
       initCytoscape(data);
       
       cy.style().selector('[type = "snpG"], [type = "gene"]').style({
@@ -151,16 +145,18 @@ function newGraph(){
       
       // Do DOM Manipulations
       $('#navTabs a[href="#GeneTab"]').tab('show');
-      $("#cyWait").modal('hide');
       
       // Run the gene table builder
-      updateTable('Gene',cy.nodes().filter('[type = "gene"]:visible'));
+      updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
       
       // Set the snp group qtips
       setSnpgQtips();
       
-      // Set Bread Crumb
-      $("#cyTitle").html(CurrentOntology+' > '+CurrentTerm+' > '+CurrentNetwork);
+      // Set bread crumb HUD
+      updateHUD();
+      
+      // Close the wait dialog
+      $("#cyWait").modal('hide');
     });
   });
   $("#cyWait").modal('show');
@@ -194,16 +190,32 @@ function updateGraph(){
     $('#navTabs a[href="#GeneTab"]').tab('show');
     
     // Run the gene table builder
-    updateTable('Gene',cy.nodes().filter('[type = "gene"]:visible'));
+    updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
     
     // Set the snp group qtips
     setSnpgQtips();
+    
+    // Set bread crumb HUD
+    updateHUD();
     
     // Close the wait dialog
     $("#cyWait").modal('hide');
   });
   $("#cyWait").modal('show');
   return;
+}
+
+// Function to update the HUD at the bottom of the graph
+function updateHUD(){
+  if(cy == null){
+    $('#cyTitle').html('Please select one option in each table to build a graph.');
+  }
+  else{
+    $("#cyTitle").html(cy.nodes(':visible[type="gene"]').size()+' genes | '
+      + cy.edges(':visible').size()+' interactions<br>'
+      + CurrentOntology+' > '+CurrentTerm+' > '+CurrentNetwork
+      +' > '+lastWindow+'/'+lastFlank);
+  }
 }
 
 /*--------------------------------
@@ -302,7 +314,7 @@ function initCytoscape(data){
      edges: data.edges,
   }});
   
-  var genes = cy.nodes().filter('[type = "gene"]');
+  var genes = cy.nodes('[type = "gene"]');
   
   // Set up the gene node tap listener
   genes.on('tap', function(evt){
@@ -339,7 +351,7 @@ function initCytoscape(data){
 ------------------------------------*/
 function setSnpgQtips(){
   // Set the SNP Group qTip listner
-  cy.nodes().filter('[type = "snpG"]').qtip({
+  cy.nodes('[type = "snpG"]').qtip({
     content: function(){
       var res = 'SNPs in Group:<br>'; var snps = this.data('snps');
       $(snps).each(function(i){res += (this.toString() + '<br>');});
@@ -360,7 +372,7 @@ function setSnpgQtips(){
 ---------------------------------*/
 function nodeSelect(gene_id){
   // Get the node object and whether it is currently highlighted 
-  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
+  var gene_node = cy.nodes('[id = "'+gene_id+'"]');
   var genes = null;
   var isHigh = gene_node.hasClass('highlighted');
   
@@ -368,8 +380,8 @@ function nodeSelect(gene_id){
   // Run all the graph mods as a batch
   cy.batch(function(){
     // Deselect all neighbors and edges
-    cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
-    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+    cy.nodes('.neighbors').toggleClass('neighbors', false);
+    cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
     
     // If it's highlighted, unselect it
     if(isHigh){
@@ -384,17 +396,17 @@ function nodeSelect(gene_id){
     }
     
     // Reselect all necessary edges and neighbors
-    genes = cy.nodes().filter('.highlighted');
-    genes.neighborhood().toggleClass('neighbors', true);
+    genes = cy.nodes('.highlighted');
+    genes.neighborhood('[type = "gene"]').toggleClass('neighbors', true);
     genes.connectedEdges().toggleClass('highlightedEdge', true);
   });
     
   // Update the subnetwork Table
-  updateTable('Subnet',cy.nodes().filter('.highlighted, .neighbors'));
+  updateTable('Subnet',cy.nodes('.highlighted, .neighbors'));
   
   // Select the highlighted ones
-  genes.forEach(function(currentValue, index, array){
-    $('#SubnetTable').DataTable().row('#'+currentValue.data('id')).select();
+  genes.forEach(function(cur, idx, arr){
+    $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();
   });
 }
 
@@ -411,16 +423,16 @@ function updateTable(tableName, nodes){
   // Format the node data for the DataTable
   var geneData = [];
   var geneDict = null;
-  nodes.forEach(function(currentValue, index, array){
-    geneDict = currentValue.data();
+  
+  nodes.forEach(function(cur, idx, arr){
+    geneDict = cur.data();
     geneDict['window_size'] = lastWindow;
     geneDict['flank_limit'] = lastFlank;
     geneData.push(geneDict);
   });
   
   // Clear old data and add new
-  $('#'+tableName+'Table').DataTable().rows('*').clear();
-  $('#'+tableName+'Table').DataTable().rows.add(geneData).draw();
+  $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
   
   // Return to original tab
   $('#navTabs a[href="'+ogTab+'"]').tab('show');
@@ -434,7 +446,7 @@ function buildGeneTable(){
       "dom": '<"GeneTitle">frtipB',
       "order": [[3,'asc'],[5,'asc']],
       "paging": true,
-      "paginate": false,
+      "paginate": true,
       "rowId": 'id',
       "scrollCollapse": true,
       "scroller": {displayBuffer: 75},
@@ -449,7 +461,7 @@ function buildGeneTable(){
       }],
       "columns": [
         {data: 'id', title:'ID'},
-        {data: 'ldegree', title:'Local Degree'},
+        {data: 'cur_ldegree', title:'Local Degree'},
         {data: 'gdegree', title:'Global Degree'},
         {data: 'chrom', title:'Chrom'},
         {data: 'snp', title:'SNP'},
@@ -469,7 +481,7 @@ function buildGeneTable(){
   // Set Listeners
   $('#GeneTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
   //$('#GeneTable tbody').on('mouseover','tr', function(evt){
-  //  cy.nodes().filter('[id = "'+this['id']+'"]').flashClass('pop',750);
+  //  cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
   //});
 }
 
@@ -493,7 +505,7 @@ function buildSubnetTable(){
       }],
       "columns": [
         {data: 'id', title:'ID'},
-        {data: 'ldegree', title:'Local Degree'},
+        {data: 'cur_ldegree', title:'Local Degree'},
         {data: 'gdegree', title:'Global Degree'},
         {data: 'chrom', title:'Chrom'},
         {data: 'snp', title:'SNP'},
@@ -513,6 +525,6 @@ function buildSubnetTable(){
   // Set Listeners
   $('#SubnetTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
-    cy.nodes().filter('[id = "'+this['id']+'"]').flashClass('pop',750);
+    cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
   });
 }

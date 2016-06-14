@@ -80,28 +80,32 @@ def Ontology_Terms(term_name):
 # Route for sending the CoEx Network Data for graphing
 @app.route("/COB/<network_name>/<ontology>/<term>/<window_size>/<flank_limit>")
 def COB_network(network_name,ontology,term,window_size,flank_limit):
-    net = {}
     cob = networks[network_name]
-    term = co.GWAS(ontology)[term]
+    candidate_genes = cob.refgen.candidate_genes(
+        co.GWAS(ontology)[term].effective_loci(window_size=int(window_size)),
+        flank_limit=int(flank_limit),
+        chain=True,
+        include_parent_locus=True,
+        #include_parent_attrs=['numIterations', 'avgEffectSize'],
+        include_num_intervening=True,
+        include_rank_intervening=True,
+        include_num_siblings=True
+    )
+    return getElements(candidate_genes, cob)
+    
+def getElements(genes, cob):
+    # Values needed for later computations
+    locality = cob.locality(genes)
+    subnet = cob.subnetwork(genes)
+    subnet.reset_index(inplace=True)
+    
+    # Containers for the node info
+    net = {}
     nodes = []
     parents = set()
-    effective_loci = term.effective_loci(window_size=int(window_size))
-    try:
-        candidate_genes = cob.refgen.candidate_genes(
-            effective_loci,
-            flank_limit=int(flank_limit),
-            chain=True,
-            include_parent_locus=True,
-            #include_parent_attrs=['numIterations', 'avgEffectSize'],
-            include_num_intervening=True,
-            include_rank_intervening=True,
-            include_num_siblings=True
-        )
-    except:
-        print('Cand Gene Error: ' + str(sys.exc_info()))
-        raise
-    locality = cob.locality(candidate_genes)
-    for gene in candidate_genes:
+    
+    # Loop to build the gene nodes
+    for gene in genes:
         try:
             local_degree = locality.ix[gene.id]['local']
             global_degree = locality.ix[gene.id]['global']
@@ -129,7 +133,7 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
             }})
         parents.add(gene.attr['parent_locus'])
         
-    # Add parents first
+    # Loop to build the SNP nodes
     for p in parents:
         parent_list = re.split('<|>|:|-', p)
         nodes.insert(0, {'data':{
@@ -140,9 +144,7 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
             'end': parent_list[4],
         }})
 
-    # Now do the edges
-    subnet = cob.subnetwork(candidate_genes)
-    subnet.reset_index(inplace=True)
+    # "Loop" to build the edge objects
     net['nodes'] = nodes
     net['edges'] = [
         {
@@ -153,4 +155,6 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
             }
         } for source,target,score,significant,distance in subnet.itertuples(index=False)
     ]
+    
+    # Return it as a JSON object
     return jsonify(net)

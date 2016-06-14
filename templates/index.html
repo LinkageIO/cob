@@ -54,6 +54,7 @@
           lastFlank = document.forms["graphOpts"]["flankLimit"].value;
           
           // Kick off the ontology selector table
+          updateHUD();
           tableMaker('Ontology');
           
           // Build the gene tables
@@ -96,7 +97,7 @@
       color: DimGrey;
       z-index: 1;
       left: 33%;
-      font-size: 1.75em;
+      font-size: 1.5em;
     }
     #clearButton{
       position: absolute;
@@ -180,22 +181,6 @@
           </table>
       </div>
       
-      <!-- Section For Term Selection -->
-      <br><div id="Term">
-          <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
-          <table class="table table-hover hidden" id="TermTable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Desc</th>
-                <th>SNPs</th>
-                <th>Genes</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-      </div>
-      
       <!-- Section For Network Selection -->
       <br><div id="Network">
         <h5 id="NetworkWait">This table will appear once you select an attribute above.</h5>
@@ -208,6 +193,22 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+        
+        <!-- Section For Term Selection -->
+        <br><div id="Term">
+            <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
+            <table class="table table-hover hidden" id="TermTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Desc</th>
+                  <th>SNPs</th>
+                  <th>Genes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
         </div>
       </div>
       <!-- End Network Selection Tab -->
@@ -273,7 +274,7 @@
 <div id='cy'></div>
 
 <!-- Box for title indicating current network -->
-<div id='cyTitle'>Please select one option in each table to build a graph.</div>
+<div id='cyTitle'></div>
 <div id='clearButton'><input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection"></div>
 </body>
 </html>
