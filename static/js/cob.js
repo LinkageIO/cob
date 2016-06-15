@@ -19,36 +19,30 @@ $('#OntologyTable tbody').on('click','tr', function(){
   $('#NetworkWait').removeClass('hidden');
   
   // Clean up the graph
-  $('#cy').addClass('hidden');
-  $('#cyTitle').html('Please select one option in each table to build a graph.');
-  if(cy != null){cy.destroy();}
+  if(cy != null){cy.destroy();cy = null;}
+  updateHUD();
   
   // Fetch and build the new Term Table
-  tableMaker('Term');
-});
-
-// A row on the Term Table is selected
-$('#TermTable tbody').on('click','tr', function(){
-  // Highlight the relevant row
-  CurrentTerm = $('td',this).eq(0).text();
-  
-  // Clean up the graph
-  $('#cy').addClass('hidden');
-  $('#cyTitle').html('Please select one option in each table to build a graph.');
-  if(cy != null){cy.destroy();}
-  
-  // Fetch and build the network table
   tableMaker('Network');
 });
 
-// A row on the Network Table is selected
-$('#NetworkTable tbody').on('click','tr',function(){
-    // Highlight the current line
-    CurrentNetwork = $('td',this).eq(0).text();
+// A row on the Term Table is selected
+$('#NetworkTable tbody').on('click','tr', function(){
+  // Highlight the relevant row
+  CurrentNetwork = $('td',this).eq(0).text();
+  
+  // Clean up the graph
+  if(cy != null){cy.destroy();cy = null;}
+  updateHUD();
+  
+  // Fetch and build the network table
+  tableMaker('Term');
+});
 
-    // Unhide the graph
-    //$('#cyWait').addClass('hidden');
-    $('#cy').removeClass('hidden');
+// A row on the Network Table is selected
+$('#TermTable tbody').on('click','tr',function(){
+    // Highlight the current line
+    CurrentTerm = $('td',this).eq(0).text();
     
     // Get the new Graph
     newGraph();
@@ -59,18 +53,17 @@ $('#NetworkTable tbody').on('click','tr',function(){
 ---------------------------------*/
 function tableMaker(section){
 // Function to me make the table out of the analysis database
-  // Keep the user updated on progress
-  $('#'+section+'Wait').addClass("hidden");
-  
-  // Find the address for each table, this will be deprecated after server improvements
+  // Find the address for each table, this will be cleaned after server improvements
   if(section == 'Ontology'){
     var address = $SCRIPT_ROOT + 'available_datasets/GWAS';}
-  else if(section == 'Term'){
-    var address = $SCRIPT_ROOT + 'Ontology/Terms/' + CurrentOntology;}
   else if(section == 'Network'){
     var address = $SCRIPT_ROOT + 'available_datasets/Expr';}
+  else if(section == 'Term'){
+    var address = $SCRIPT_ROOT + 'Ontology/Terms/' + CurrentOntology;}
+  
 
   // Make sure the table is visible
+  $('#'+section+'Wait').addClass("hidden");
   $('#'+section+'Table').removeClass("hidden");
   
   // Clean up the old table
@@ -86,8 +79,7 @@ function tableMaker(section){
       "scrollCollapse": true,
       "dom": '<"'+section+'Title">ft',
       "order": [[0,'asc']],
-      "processing" : true,
-      "scrollY": ($(window).height()/4)-50,
+      "scrollY": ($(window).height()/4),
       "select": true,
       "searching": true,
     });
@@ -104,24 +96,26 @@ $('#logSpacingButton').click(function(){logSpacingVal = !(logSpacingVal);});
 // Listener for update button
 $('#updateButton').click(function(){
   if(cy == null){return;}
-  if(lastWindow == document.forms["graphParams"]["windowSize"].value && lastFlank == document.forms["graphParams"]["flankLimit"].value){updateGraph();}
+  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){updateGraph();}
   else{newGraph();}
 });
 
 // Listener for pressing enter in parameter fields
-$("#graphParams").keypress(function(evt){
+$("#graphOpts").keypress(function(evt){
   if((cy == null) || (evt.which !== 13)){return;}
   evt.preventDefault();
-  if(lastWindow == document.forms["graphParams"]["windowSize"].value && lastFlank == document.forms["graphParams"]["flankLimit"].value){updateGraph();}
+  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){updateGraph();}
   else{newGraph();}
 });
 
 // Clear all selected items
 $('#clearSelectionButton').click(function(){
   if(cy == null){return;}
-  cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
-  cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+  cy.nodes('.highlighted').toggleClass('highlighted', false)
+  cy.nodes('.neighbors').toggleClass('neighbors', false);
+  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
+  $('#SubnetTable').DataTable().clear().draw();
 });
 
 /*------------------------------------------
@@ -130,65 +124,98 @@ $('#clearSelectionButton').click(function(){
 // Get data and build the new graph
 function newGraph(){
   // Update the values
-  lastWindow = document.forms["graphParams"]["windowSize"].value;
-  lastFlank = document.forms["graphParams"]["flankLimit"].value;
+  lastWindow = document.forms["graphOpts"]["windowSize"].value;
+  lastFlank = document.forms["graphOpts"]["flankLimit"].value;
   
   // Get the data and set everything up
   $("#cyWait").one('shown.bs.modal', function(){
     $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
       console.log('Recieved Data');
       // Set up a run the builder function
-      if(cy != null){cy.destroy();}
+      if(cy != null){cy.destroy();cy = null;}
       initCytoscape(data);
-
+      
+      cy.style().selector('[type = "snpG"], [type = "gene"]').style({
+        'width': document.forms["graphOpts"]["nodeSize"].value,
+        'height': document.forms["graphOpts"]["nodeSize"].value,
+      }).selector('.pop').style({
+        'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+        'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+      }).update();
+      
       // Do DOM Manipulations
-      $('#navTabs a[href="#genes"]').tab('show');
-      $("#cyWait").modal('hide');
+      $('#navTabs a[href="#GeneTab"]').tab('show');
       
       // Run the gene table builder
-      buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+      updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
       
       // Set the snp group qtips
       setSnpgQtips();
       
-      // Set Bread Crumb
-      $("#cyTitle").html(CurrentOntology+' > '+CurrentTerm+' > '+CurrentNetwork);
+      // Set bread crumb HUD
+      updateHUD();
+      
+      // Close the wait dialog
+      $("#cyWait").modal('hide');
     });
   });
   $("#cyWait").modal('show');
 }
 
-// Update Graph with new params
+// Update Graph with new Opts
 function updateGraph(){
   // Otherwise pull up the wait dialog and run the algrithm
   $("#cyWait").one('shown.bs.modal', function(){
-    // Clean up selected elements 
-    cy.nodes().filter('.highlighted, .neighbors').toggleClass('highlighted', false).toggleClass('neighbors', false);
-    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
     
     // Run the layout
     cy.layout({
       name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
-      nodeHeight: parseInt(document.forms["graphParams"]["nodeSize"].value),
-      geneOffset: parseInt(document.forms["graphParams"]["nodeSize"].value),
+      minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
+      minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
+      nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
+      geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
       logSpacing: logSpacingVal,
-      snpLevels: parseInt(document.forms["graphParams"]["snpLevels"].value),
+      snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
     });
     
+    cy.style().selector('[type = "snpG"], [type = "gene"]').style({
+      'width': document.forms["graphOpts"]["nodeSize"].value,
+      'height': document.forms["graphOpts"]["nodeSize"].value,
+    }).selector('.pop').style({
+      'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+      'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
+    }).update();
+    
     // Do DOM manipulations
-    $('#navTabs a[href="#genes"]').tab('show');
-    $("#cyWait").modal('hide');
+    $('#navTabs a[href="#GeneTab"]').tab('show');
     
     // Run the gene table builder
-    buildGeneTable(cy.nodes().filter('[type = "gene"]:visible'));
+    updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
     
     // Set the snp group qtips
     setSnpgQtips();
+    
+    // Set bread crumb HUD
+    updateHUD();
+    
+    // Close the wait dialog
+    $("#cyWait").modal('hide');
   });
   $("#cyWait").modal('show');
   return;
+}
+
+// Function to update the HUD at the bottom of the graph
+function updateHUD(){
+  if(cy == null){
+    $('#cyTitle').html('Please select one option in each table to build a graph.');
+  }
+  else{
+    $("#cyTitle").html(cy.nodes(':visible[type="gene"]').size()+' genes | '
+      + cy.edges(':visible').size()+' interactions<br>'
+      + CurrentOntology+' > '+CurrentTerm+' > '+CurrentNetwork
+      +' > '+lastWindow+'/'+lastFlank);
+  }
 }
 
 /*--------------------------------
@@ -204,18 +231,19 @@ function initCytoscape(data){
     autounselectify: false,
     
     // Rendering Options
+    pixelRatio: 1,
     hideEdgesOnViewport: false,
     textureOnViewport: true,
     wheelSensitivity: 0.5,
     
     layout: {
       name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphParams"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphParams"]["edgeCutoff"].value),
-      nodeHeight: parseInt(document.forms["graphParams"]["nodeSize"].value),
-      geneOffset: parseInt(document.forms["graphParams"]["nodeSize"].value),
+      minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
+      minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
+      nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
+      geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
       logSpacing: logSpacingVal,
-      snpLevels: parseInt(document.forms["graphParams"]["snpLevels"].value),
+      snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
     },
     style: [
         {selector: '[type = "chrom"]',
@@ -231,29 +259,25 @@ function initCytoscape(data){
            'text-background-shape': 'roundrectangle',
            'font-size': '10',
          }},
-       {selector: '[type = "snpG"]',
+       {selector: '[type = "snpG"], [type = "gene"]',
         css: {
           'z-index': '1',
           'shape': 'circle',
-          'height': '10',
-          'width': '10',
           'background-color': 'DimGrey',
         }},
-       {selector: '[type = "gene"]',
-         style: {
-           'shape': 'circle',
-           'height': '10',
-           'width': '10',
-         }},
        {selector: '.snp0',
-         style: {
-           'background-color': 'MediumSeaGreen',
-         }},
-       {selector: '.snp1',
          style: {
            'background-color': 'DarkOrchid',
          }},
+       {selector: '.snp1',
+         style: {
+           'background-color': 'MediumSeaGreen',
+         }},
        {selector: '.snp2',
+         style: {
+           'background-color': '#337ab7',
+         }},
+       {selector: '.snp3',
          style: {
            'background-color': 'Tan',
          }},
@@ -266,18 +290,23 @@ function initCytoscape(data){
          }},
        {selector: '.neighbors',
          css: {
-           'background-color': 'DarkOrange',
+           'background-color': 'rgb(255,100,0)',
        }},
        {selector: '.highlighted',
          css: {
-           'background-color': 'red',
+           'background-color': 'Red',
          }},
        {selector: '.highlightedEdge',
          css: {
-           'line-color': 'gold',
+           'line-color': 'rgb(255,200,0)',
            'width': '2',
            'opacity': '1',
            'z-index': '3',
+         }},
+       {selector: '.pop',
+         css: {
+           'background-color': 'Yellow',
+           'z-index': '4',
          }},
      ],
    elements: {
@@ -285,36 +314,44 @@ function initCytoscape(data){
      edges: data.edges,
   }});
   
-  var genes = cy.nodes().filter('[type = "gene"]')
+  var genes = cy.nodes('[type = "gene"]');
   
   // Set up the gene node tap listener
   genes.on('tap', function(evt){
+    // Only scroll to the gene if it isn't highlighted already
+    if(!(evt.cyTarget.hasClass('highlighted'))){
+      $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();
+    }
+    
+    // Run the selection algorithm
     nodeSelect(evt.cyTarget.data('id'));
   });
   
   // Set the gene qTip listeners (only needs to be done once per full graph redo)
   genes.qtip({
     content: function(){
-      return 'ID: '+this.data('id').toString()+'<br>'+
-      'SNP: '+this.data('snp').toString()+'<br>'+
-      'Position: '+this.data('start').toString()+'-'+this.data('end').toString();
+      var data = this.data();
+      return 'ID: '+data['id'].toString()+'<br>'+
+      'Local Degree: '+data['ldegree'].toString()+'<br>'+
+      'SNP: '+data['snp'].toString()+'<br>'+
+      'Position: '+data['start'].toString()+'-'+data['end'].toString();
     },
     position: {my: 'bottom center', at: 'top center'},
     style: {
       classes: 'qtip-dark qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'tapdragover'},
-    hide: {event: 'tapdragout'},
+    show: {event: 'mouseover'},
+    hide: {event: 'mouseout'},
   });
 }
 
-/*---------------------------------------------
-    Graph Listener Constructor/Deconstructor
----------------------------------------------*/
+/*------------------------------------
+    SNP Group Listener Constructor
+------------------------------------*/
 function setSnpgQtips(){
   // Set the SNP Group qTip listner
-  cy.nodes().filter('[type = "snpG"]').qtip({
+  cy.nodes('[type = "snpG"]').qtip({
     content: function(){
       var res = 'SNPs in Group:<br>'; var snps = this.data('snps');
       $(snps).each(function(i){res += (this.toString() + '<br>');});
@@ -325,8 +362,8 @@ function setSnpgQtips(){
       classes: 'qtip-light qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'tapdragover'},
-    hide: {event: 'tapdragout'},
+    show: {event: 'mouseover'},
+    hide: {event: 'mouseout'},
   });
 }
 
@@ -335,83 +372,159 @@ function setSnpgQtips(){
 ---------------------------------*/
 function nodeSelect(gene_id){
   // Get the node object and whether it is currently highlighted 
-  var gene_node = cy.nodes().filter('[id = "'+gene_id+'"]');
+  var gene_node = cy.nodes('[id = "'+gene_id+'"]');
+  var genes = null;
   var isHigh = gene_node.hasClass('highlighted');
+  
   
   // Run all the graph mods as a batch
   cy.batch(function(){
     // Deselect all neighbors and edges
-    cy.nodes().filter('.neighbors').toggleClass('neighbors', false);
-    cy.edges().filter('.highlightedEdge').toggleClass('highlightedEdge', false);
+    cy.nodes('.neighbors').toggleClass('neighbors', false);
+    cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
     
-    // If the control key is pressed, and it is higlighted just deselect this node
+    // If it's highlighted, unselect it
     if(isHigh){
       gene_node.toggleClass('highlighted', false);
       $('#GeneTable').DataTable().row('#'+gene_id).deselect();
     }
+    
+    // Otherwise just add it to the list
     else{
       gene_node.toggleClass('highlighted', true);
-      $('#GeneTable').DataTable().row('#'+gene_id).select().scrollTo();
+      $('#GeneTable').DataTable().row('#'+gene_id).select();
     }
     
     // Reselect all necessary edges and neighbors
-    cy.nodes().filter('.highlighted').neighborhood().toggleClass('neighbors', true);
-    cy.nodes().filter('.highlighted').connectedEdges().toggleClass('highlightedEdge', true);
+    genes = cy.nodes('.highlighted');
+    genes.neighborhood('[type = "gene"]').toggleClass('neighbors', true);
+    genes.connectedEdges().toggleClass('highlightedEdge', true);
   });
-  return;
+    
+  // Update the subnetwork Table
+  updateTable('Subnet',cy.nodes('.highlighted, .neighbors'));
+  
+  // Select the highlighted ones
+  genes.forEach(function(cur, idx, arr){
+    $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();
+  });
 }
 
 /*--------------------------------
-      Gene Table Constructor
+      Gene Table Constructors
 ---------------------------------*/
-function buildGeneTable(nodes){
+function updateTable(tableName, nodes){
+  // Save original tab
+  var ogTab = $('.active [role="tab"]').attr('href');
+  
+  // Switch to needed tab, needed for column scaling
+  $('#navTabs a[href="#'+tableName+'Tab"]').tab('show');
+  
   // Format the node data for the DataTable
   var geneData = [];
-  nodes.forEach(function(currentValue, index, array){
-    geneData.push(currentValue.data());
+  var geneDict = null;
+  
+  nodes.forEach(function(cur, idx, arr){
+    geneDict = cur.data();
+    geneDict['window_size'] = lastWindow;
+    geneDict['flank_limit'] = lastFlank;
+    geneData.push(geneDict);
   });
   
-  // Clean up the old table
-  $('#GeneTable').removeClass("hidden");
-  $('#GeneTable tbody').off('click');
-  $('#GeneTable').DataTable().destroy();
+  // Clear old data and add new
+  $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
   
+  // Return to original tab
+  $('#navTabs a[href="'+ogTab+'"]').tab('show');
+}
+
+function buildGeneTable(){
   // Uses DataTables to build a pretty table
   $('#GeneTable').DataTable({
-      "data": geneData,
+      "data": [],
+      "deferRender": true,
+      "dom": '<"GeneTitle">frtipB',
+      "order": [[3,'asc'],[5,'asc']],
       "paging": true,
       "paginate": true,
-      "scrollCollapse": true,
-      "dom": '<"GeneTitle">frtip',
-      "order": [[3,'asc'],[5,'asc']],
       "rowId": 'id',
+      "scrollCollapse": true,
+      "scroller": {displayBuffer: 75},
       "scrollXInner": "100%",
       "scrollX": "100%",
-      "scrollY": $(window).height()-275,
-      "select": true,
-      "scroller": true,
+      "scrollY": ($(window).height()-275),
       "searching": true,
+      "select": {"style": 'api'},
+      "buttons": [{
+        "extend": 'csv',
+        "filename": 'genenetwork',
+      }],
       "columns": [
-        {data: 'id'},
-        {data: 'ldegree'},
-        {data: 'gdegree'},
-        {data: 'chrom'},
-        {data: 'snp'},
-        {data: 'start'},
-        {data: 'end'},
-        {data: 'num_intervening'},
-        {data: 'rank_intervening'},
-        {data: 'num_siblings'},
-        //{data: 'parent_num_iterations'},
-        //{data: 'parent_avg_effect_size'},
+        {data: 'id', title:'ID'},
+        {data: 'cur_ldegree', title:'Local Degree'},
+        {data: 'gdegree', title:'Global Degree'},
+        {data: 'chrom', title:'Chrom'},
+        {data: 'snp', title:'SNP'},
+        {data: 'start', title:'Start'},
+        {data: 'end', title:'End'},
+        {data: 'num_intervening', title:'Num Intervening'},
+        {data: 'rank_intervening', title:'Rank Intervening'},
+        {data: 'num_siblings', title:'Num Siblings'},
+        {data: 'window_size', title:'Window Size', visible: false},
+        {data: 'flank_limit', title:'Flank Limit', visible: false},
+        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
+        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
       ]
     });
   $("div.GeneTitle").html('Gene Data');
   
-  // Set up the table tap listener
-  $('#GeneTable tbody').on('click','tr', function(evt){
-    nodeSelect($('td', this).eq(0).text());
-  });
+  // Set Listeners
+  $('#GeneTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
+  //$('#GeneTable tbody').on('mouseover','tr', function(evt){
+  //  cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
+  //});
+}
+
+function buildSubnetTable(){
+  // Uses DataTables to build a pretty table
+  $('#SubnetTable').DataTable({
+      "data": [],
+      "dom": '<"SubnetTitle">frtipB',
+      "order": [[3,'asc'],[5,'asc']],
+      "paging": false,
+      "paginate": false,
+      "rowId": 'id',
+      "scrollCollapse": true,
+      "scrollX": "100%",
+      "scrollY": $(window).height()-275,
+      "searching": true,
+      "select": {"style": 'api'},
+      "buttons": [{
+        "extend": 'csv',
+        "filename": 'subnetwork',
+      }],
+      "columns": [
+        {data: 'id', title:'ID'},
+        {data: 'cur_ldegree', title:'Local Degree'},
+        {data: 'gdegree', title:'Global Degree'},
+        {data: 'chrom', title:'Chrom'},
+        {data: 'snp', title:'SNP'},
+        {data: 'start', title:'Start'},
+        {data: 'end', title:'End'},
+        {data: 'num_intervening', title:'Num Intervening'},
+        {data: 'rank_intervening', title:'Rank Intervening'},
+        {data: 'num_siblings', title:'Num Siblings'},
+        {data: 'window_size', title:'Window Size', visible: false},
+        {data: 'flank_limit', title:'Flank Limit', visible: false},
+        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
+        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
+      ]
+    });
+  $("div.SubnetTitle").html('Subnet Data');
   
-  return;
+  // Set Listeners
+  $('#SubnetTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
+  $('#SubnetTable tbody').on('mouseover','tr', function(evt){
+    cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
+  });
 }
