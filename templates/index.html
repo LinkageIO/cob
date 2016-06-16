@@ -37,9 +37,9 @@
     }).appendTo('head');
     
     // Set some global variables for reference
-    var CurrentOntology = "";
-    var CurrentTerm = "";
-    var CurrentNetwork = "";
+    var CurrentOntology = '';
+    var CurrentTerm = '';
+    var CurrentNetwork = '';
     var cy = null;
     var logSpacingVal = true;
     var lastWindow = null;
@@ -55,7 +55,7 @@
           
           // Kick off the ontology selector table
           updateHUD();
-          tableMaker('Ontology');
+          tableMaker('Network');
           
           // Build the gene tables
           buildGeneTable();
@@ -166,52 +166,52 @@
     
     <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="networks">
-
-    <!-- Section For Ontology Selection -->
-      <br><div id="Ontology">
-          <h5 id="OntologyWait" class="">We are gathering the datasets, please wait.</h5>
-          <table class="table table-hover hidden" id="OntologyTable">
-            <thead>
-              <tr>
-                <th>Ontology</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-      </div>
-      
       <!-- Section For Network Selection -->
       <br><div id="Network">
-        <h5 id="NetworkWait">This table will appear once you select an attribute above.</h5>
-          <table class="table table-hover hidden" id="NetworkTable">
-            <thead>
-              <tr>
-                <th>Network</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        
-        <!-- Section For Term Selection -->
-        <br><div id="Term">
-            <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
-            <table class="table table-hover hidden" id="TermTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Desc</th>
-                  <th>SNPs</th>
-                  <th>Genes</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-        </div>
+        <h5 id="NetworkWait">We are gathering the networks, please wait.</h5>
+        <table class="table table-hover hidden" id="NetworkTable">
+          <thead>
+            <tr>
+              <th>Network</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <!-- End Network Selection Tab -->
+    
+      <!-- Section For Ontology Selection -->
+      <br><div id="Ontology">
+        <h5 id="OntologyWait" class="">This table will appear once you select an attribute above.</h5>
+        <table class="table table-hover hidden" id="OntologyTable">
+          <thead>
+            <tr>
+              <th>Ontology</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+        
+      <!-- Section For Term Selection -->
+      <br><div id="Term">
+        <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
+        <table class="table table-hover hidden" id="TermTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Desc</th>
+              <th>SNPs</th>
+              <th>Genes</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+    </div>
+    <!-- End Network Selection Tab -->
       
       <!-- Parameter Adjustment Tab -->
       <div role="tabpanel" class="tab-pane" id="opts"><br>

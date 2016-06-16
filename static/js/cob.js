@@ -2,34 +2,34 @@
       Table Event Listeners
 ---------------------------------*/
 // A row on the Ontology Table is selected
-$('#OntologyTable tbody').on('click','tr', function(){
+$('#NetworkTable tbody').on('click','tr', function(){
   // Save the selected row
-  CurrentOntology = $('td', this).eq(0).text();
+  CurrentNetwork = $('td', this).eq(0).text();
   
   // Clean up the old Term Table
+  CurrentOntology = '';
+  $('#OntologyTable').DataTable().destroy();
+  $('#OntologyTable').addClass('hidden');
+  $('#OntologyWait').removeClass('hidden');
+  
+  // Clean up the Network Table
   CurrentTerm = '';
   $('#TermTable').DataTable().destroy();
   $('#TermTable').addClass('hidden');
   $('#TermWait').removeClass('hidden');
-  
-  // Clean up the Network Table
-  CurrentNetwork = '';
-  $('#NetworkTable').DataTable().destroy();
-  $('#NetworkTable').addClass('hidden');
-  $('#NetworkWait').removeClass('hidden');
   
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
   
   // Fetch and build the new Term Table
-  tableMaker('Network');
+  tableMaker('Ontology');
 });
 
 // A row on the Term Table is selected
-$('#NetworkTable tbody').on('click','tr', function(){
+$('#OntologyTable tbody').on('click','tr', function(){
   // Highlight the relevant row
-  CurrentNetwork = $('td',this).eq(0).text();
+  CurrentOntology = $('td',this).eq(0).text();
   
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
@@ -213,7 +213,7 @@ function updateHUD(){
   else{
     $("#cyTitle").html(cy.nodes(':visible[type="gene"]').size()+' genes | '
       + cy.edges(':visible').size()+' interactions<br>'
-      + CurrentOntology+' > '+CurrentTerm+' > '+CurrentNetwork
+      + CurrentNetwork+' > '+CurrentOntology+' > '+CurrentTerm
       +' > '+lastWindow+'/'+lastFlank);
   }
 }
@@ -290,7 +290,7 @@ function initCytoscape(data){
          }},
        {selector: '.neighbors',
          css: {
-           'background-color': 'rgb(255,100,0)',
+           'background-color': '#FF6400',
        }},
        {selector: '.highlighted',
          css: {
@@ -332,7 +332,7 @@ function initCytoscape(data){
     content: function(){
       var data = this.data();
       return 'ID: '+data['id'].toString()+'<br>'+
-      'Local Degree: '+data['ldegree'].toString()+'<br>'+
+      'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
       'SNP: '+data['snp'].toString()+'<br>'+
       'Position: '+data['start'].toString()+'-'+data['end'].toString();
     },
@@ -374,6 +374,7 @@ function nodeSelect(gene_id){
   // Get the node object and whether it is currently highlighted 
   var gene_node = cy.nodes('[id = "'+gene_id+'"]');
   var genes = null;
+  var edges = null;
   var isHigh = gene_node.hasClass('highlighted');
   
   
@@ -397,8 +398,8 @@ function nodeSelect(gene_id){
     
     // Reselect all necessary edges and neighbors
     genes = cy.nodes('.highlighted');
-    genes.neighborhood('[type = "gene"]').toggleClass('neighbors', true);
-    genes.connectedEdges().toggleClass('highlightedEdge', true);
+    edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
+    edges.connectedNodes().toggleClass('neighbors', true);
   });
     
   // Update the subnetwork Table
