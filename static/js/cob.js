@@ -6,24 +6,22 @@ $('#NetworkTable tbody').on('click','tr', function(){
   // Save the selected row
   CurrentNetwork = $('td', this).eq(0).text();
   
-  // Clean up the old Term Table
-  CurrentOntology = '';
-  $('#OntologyTable').DataTable().destroy();
-  $('#OntologyTable').addClass('hidden');
-  $('#OntologyWait').removeClass('hidden');
-  
-  // Clean up the Network Table
-  CurrentTerm = '';
-  $('#TermTable').DataTable().destroy();
-  $('#TermTable').addClass('hidden');
-  $('#TermWait').removeClass('hidden');
-  
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
   
-  // Fetch and build the new Term Table
-  tableMaker('Ontology');
+  // Prep the Ontology Table
+  CurrentOntology = '';
+  $('#OntologyWait').addClass("hidden");
+  $('#Ontology').removeClass("hidden");
+  
+  // Clean up the Term Table
+  CurrentTerm = '';
+  $('#Term').addClass('hidden');
+  $('#TermWait').removeClass('hidden');
+  
+  // Fetch and build the next table
+  buildOntologyTable();
 });
 
 // A row on the Term Table is selected
@@ -35,8 +33,14 @@ $('#OntologyTable tbody').on('click','tr', function(){
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
   
+  // Prep the Term Table
+  CurrentTerm = '';
+  $('#TermWait').addClass("hidden");
+  $('#Term').removeClass("hidden");
+  $('#TermTabs a[href="#TermTableTab"]').tab('show');
+  
   // Fetch and build the network table
-  tableMaker('Term');
+  buildTermTable(CurrentOntology);
 });
 
 // A row on the Network Table is selected
@@ -45,47 +49,13 @@ $('#TermTable tbody').on('click','tr',function(){
     CurrentTerm = $('td',this).eq(0).text();
     
     // Get the new Graph
-    newGraph();
+    loadGraph('new','polywas');
 });
 
-/*--------------------------------
-         Table Constructor
----------------------------------*/
-function tableMaker(section){
-// Function to me make the table out of the analysis database
-  // Find the address for each table, this will be cleaned after server improvements
-  if(section == 'Ontology'){
-    var address = $SCRIPT_ROOT + 'available_datasets/GWAS';}
-  else if(section == 'Network'){
-    var address = $SCRIPT_ROOT + 'available_datasets/Expr';}
-  else if(section == 'Term'){
-    var address = $SCRIPT_ROOT + 'Ontology/Terms/' + CurrentOntology;}
-  
-
-  // Make sure the table is visible
-  $('#'+section+'Wait').addClass("hidden");
-  $('#'+section+'Table').removeClass("hidden");
-  
-  // Clean up the old table
-  $('#'+section+'Table').DataTable().destroy();
-  
-  // Uses DataTables to build a pretty table
-  $('#'+section+'Table').DataTable(
-      {
-      "ajax": address,
-      "bAutoWidth": false, 
-      "bPaginate": false,
-      "bJQueryUI": false,
-      "scrollCollapse": true,
-      "dom": '<"'+section+'Title">ft',
-      "order": [[0,'asc']],
-      "scrollY": ($(window).height()/4),
-      "select": true,
-      "searching": true,
-    });
-  $("div."+section+"Title").html(section);
-  return;
-}
+$("#TermGenesButton").click(function(){
+  // Build the graph
+  //loadGraph('new','force');
+});
 
 /*------------------------------------------
      Parameter Update Event Listeners
@@ -96,16 +66,16 @@ $('#logSpacingButton').click(function(){logSpacingVal = !(logSpacingVal);});
 // Listener for update button
 $('#updateButton').click(function(){
   if(cy == null){return;}
-  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){updateGraph();}
-  else{newGraph();}
+  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){loadGraph('update','polywas');}
+  else{loadGraph('new','polywas');}
 });
 
 // Listener for pressing enter in parameter fields
 $("#graphOpts").keypress(function(evt){
   if((cy == null) || (evt.which !== 13)){return;}
   evt.preventDefault();
-  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){updateGraph();}
-  else{newGraph();}
+  if(lastWindow == document.forms["graphOpts"]["windowSize"].value && lastFlank == document.forms["graphOpts"]["flankLimit"].value){loadGraph('update','polywas');}
+  else{loadGraph('new','polywas');}
 });
 
 // Clear all selected items
@@ -116,267 +86,46 @@ $('#clearSelectionButton').click(function(){
   cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
   $('#SubnetTable').DataTable().clear().draw();
+  $('#navTabs a[href="#GeneTab"]').tab('show');
 });
 
-/*------------------------------------------
-      Build Orchestration Functions
-------------------------------------------*/
+/*---------------------------------------
+      Load the Graph and Tables
+---------------------------------------*/
 // Get data and build the new graph
-function newGraph(){
-  // Update the values
-  lastWindow = document.forms["graphOpts"]["windowSize"].value;
-  lastFlank = document.forms["graphOpts"]["flankLimit"].value;
-  
-  // Get the data and set everything up
+function loadGraph(op, layout){
   $("#cyWait").one('shown.bs.modal', function(){
-    $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
-      console.log('Recieved Data');
-      // Set up a run the builder function
-      if(cy != null){cy.destroy();cy = null;}
-      initCytoscape(data);
-      
-      cy.style().selector('[type = "snpG"], [type = "gene"]').style({
-        'width': document.forms["graphOpts"]["nodeSize"].value,
-        'height': document.forms["graphOpts"]["nodeSize"].value,
-      }).selector('.pop').style({
-        'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-        'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-      }).update();
-      
-      // Do DOM Manipulations
+    // Make a promise to do the graph
+    var pinkySwear = new Promise(function(resolve,reject){
+      if(op === 'new'){
+        if(layout === 'polywas'){newPoly(resolve,reject);}
+        else{newForce(resolve,reject);}}
+      else{
+        if(layout === 'polywas'){updatePoly(resolve,reject);}
+        else{updateForce(resolve,reject);}}
+    });
+    
+    pinkySwear.then(function(result){
+      // Update the Table and such
       $('#navTabs a[href="#GeneTab"]').tab('show');
-      
-      // Run the gene table builder
-      updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
-      
-      // Set the snp group qtips
-      setSnpgQtips();
-      
-      // Set bread crumb HUD
+      updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
       updateHUD();
       
-      // Close the wait dialog
       $("#cyWait").modal('hide');
-    });
+    },function(err){console.log(err);});
   });
   $("#cyWait").modal('show');
 }
 
-// Update Graph with new Opts
-function updateGraph(){
-  // Otherwise pull up the wait dialog and run the algrithm
-  $("#cyWait").one('shown.bs.modal', function(){
-    
-    // Run the layout
-    cy.layout({
-      name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
-      nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      logSpacing: logSpacingVal,
-      snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
-    });
-    
-    cy.style().selector('[type = "snpG"], [type = "gene"]').style({
-      'width': document.forms["graphOpts"]["nodeSize"].value,
-      'height': document.forms["graphOpts"]["nodeSize"].value,
-    }).selector('.pop').style({
-      'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-      'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-    }).update();
-    
-    // Do DOM manipulations
-    $('#navTabs a[href="#GeneTab"]').tab('show');
-    
-    // Run the gene table builder
-    updateTable('Gene',cy.nodes('[type = "gene"]:visible'));
-    
-    // Set the snp group qtips
-    setSnpgQtips();
-    
-    // Set bread crumb HUD
-    updateHUD();
-    
-    // Close the wait dialog
-    $("#cyWait").modal('hide');
-  });
-  $("#cyWait").modal('show');
-  return;
-}
-
-// Function to update the HUD at the bottom of the graph
-function updateHUD(){
-  if(cy == null){
-    $('#cyTitle').html('Please select one option in each table to build a graph.');
-  }
-  else{
-    $("#cyTitle").html(cy.nodes(':visible[type="gene"]').size()+' genes | '
-      + cy.edges(':visible').size()+' interactions<br>'
-      + CurrentNetwork+' > '+CurrentOntology+' > '+CurrentTerm
-      +' > '+lastWindow+'/'+lastFlank);
-  }
-}
-
 /*--------------------------------
-      Cytoscape Constructor
+      Gene Selection Algorithm
 ---------------------------------*/
-function initCytoscape(data){
-  // Initialize Cytoscape
-  cy = window.cy = cytoscape({
-    container: $('#cy'),
-    
-    // Interaction Options
-    boxSelectionEnabled: true,
-    autounselectify: false,
-    
-    // Rendering Options
-    pixelRatio: 1,
-    hideEdgesOnViewport: false,
-    textureOnViewport: true,
-    wheelSensitivity: 0.5,
-    
-    layout: {
-      name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
-      nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      logSpacing: logSpacingVal,
-      snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
-    },
-    style: [
-        {selector: '[type = "chrom"]',
-         css: {
-           'z-index': '2',
-           'background-color': 'DarkSlateGrey',
-           'content': 'data(id)',
-           'color': 'white',
-           'text-valign': 'center',
-           'text-halign': 'center',
-           'text-background-color': 'DarkSlateGrey',
-           'text-background-opacity': '1',
-           'text-background-shape': 'roundrectangle',
-           'font-size': '10',
-         }},
-       {selector: '[type = "snpG"], [type = "gene"]',
-        css: {
-          'z-index': '1',
-          'shape': 'circle',
-          'background-color': 'DimGrey',
-        }},
-       {selector: '.snp0',
-         style: {
-           'background-color': 'DarkOrchid',
-         }},
-       {selector: '.snp1',
-         style: {
-           'background-color': 'MediumSeaGreen',
-         }},
-       {selector: '.snp2',
-         style: {
-           'background-color': '#337ab7',
-         }},
-       {selector: '.snp3',
-         style: {
-           'background-color': 'Tan',
-         }},
-       {selector: 'edge',
-         css: {
-           'curve-style': 'haystack',
-           'width': '1',
-           'opacity': '0.5',
-           'line-color': 'grey'
-         }},
-       {selector: '.neighbors',
-         css: {
-           'background-color': '#ff6400',
-       }},
-       {selector: '.highlighted',
-         css: {
-           'background-color': 'Red',
-         }},
-       {selector: '.highlightedEdge',
-         css: {
-           'line-color': '#ffc800',
-           'width': '2',
-           'opacity': '1',
-           'z-index': '3',
-         }},
-       {selector: '.pop',
-         css: {
-           'background-color': 'Yellow',
-           'z-index': '4',
-         }},
-     ],
-   elements: {
-     nodes: data.nodes,
-     edges: data.edges,
-  }});
-  
-  var genes = cy.nodes('[type = "gene"]');
-  
-  // Set up the gene node tap listener
-  genes.on('tap', function(evt){
-    // Only scroll to the gene if it isn't highlighted already
-    if(!(evt.cyTarget.hasClass('highlighted'))){
-      $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();
-    }
-    
-    // Run the selection algorithm
-    nodeSelect(evt.cyTarget.data('id'));
-  });
-  
-  // Set the gene qTip listeners (only needs to be done once per full graph redo)
-  genes.qtip({
-    content: function(){
-      var data = this.data();
-      return 'ID: '+data['id'].toString()+'<br>'+
-      'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-      'SNP: '+data['snp'].toString()+'<br>'+
-      'Position: '+data['start'].toString()+'-'+data['end'].toString();
-    },
-    position: {my: 'bottom center', at: 'top center'},
-    style: {
-      classes: 'qtip-dark qtip-rounded qtip-shadow',
-      tip: {width: 10, height: 5},
-    },
-    show: {event: 'mouseover'},
-    hide: {event: 'mouseout'},
-  });
-}
-
-/*------------------------------------
-    SNP Group Listener Constructor
-------------------------------------*/
-function setSnpgQtips(){
-  // Set the SNP Group qTip listner
-  cy.nodes('[type = "snpG"]').qtip({
-    content: function(){
-      var res = 'SNPs in Group:<br>'; var snps = this.data('snps');
-      $(snps).each(function(i){res += (this.toString() + '<br>');});
-      return res;
-    },
-    position: {my: 'bottom center', at: 'top center'},
-    style: {
-      classes: 'qtip-light qtip-rounded qtip-shadow',
-      tip: {width: 10, height: 5},
-    },
-    show: {event: 'mouseover'},
-    hide: {event: 'mouseout'},
-  });
-}
-
-/*--------------------------------
-      Node Selection Algorithm
----------------------------------*/
-function nodeSelect(gene_id){
+function geneSelect(gene_id){
   // Get the node object and whether it is currently highlighted 
   var gene_node = cy.nodes('[id = "'+gene_id+'"]');
   var genes = null;
   var edges = null;
   var isHigh = gene_node.hasClass('highlighted');
-  
   
   // Run all the graph mods as a batch
   cy.batch(function(){
@@ -403,7 +152,7 @@ function nodeSelect(gene_id){
   });
     
   // Update the subnetwork Table
-  updateTable('Subnet',cy.nodes('.highlighted, .neighbors'));
+  updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbors'));
   
   // Select the highlighted ones
   genes.forEach(function(cur, idx, arr){
@@ -412,120 +161,17 @@ function nodeSelect(gene_id){
 }
 
 /*--------------------------------
-      Gene Table Constructors
+       HUD Update Algorithm
 ---------------------------------*/
-function updateTable(tableName, nodes){
-  // Save original tab
-  var ogTab = $('.active [role="tab"]').attr('href');
-  
-  // Switch to needed tab, needed for column scaling
-  $('#navTabs a[href="#'+tableName+'Tab"]').tab('show');
-  
-  // Format the node data for the DataTable
-  var geneData = [];
-  var geneDict = null;
-  
-  nodes.forEach(function(cur, idx, arr){
-    geneDict = cur.data();
-    geneDict['window_size'] = lastWindow;
-    geneDict['flank_limit'] = lastFlank;
-    geneData.push(geneDict);
-  });
-  
-  // Clear old data and add new
-  $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
-  
-  // Return to original tab
-  $('#navTabs a[href="'+ogTab+'"]').tab('show');
-}
-
-function buildGeneTable(){
-  // Uses DataTables to build a pretty table
-  $('#GeneTable').DataTable({
-      "data": [],
-      "deferRender": true,
-      "dom": '<"GeneTitle">frtipB',
-      "order": [[3,'asc'],[5,'asc']],
-      "paging": true,
-      "paginate": true,
-      "rowId": 'id',
-      "scrollCollapse": true,
-      "scroller": {displayBuffer: 75},
-      "scrollXInner": "100%",
-      "scrollX": "100%",
-      "scrollY": ($(window).height()-275),
-      "searching": true,
-      "select": {"style": 'api'},
-      "buttons": [{
-        "extend": 'csv',
-        "filename": 'genenetwork',
-      }],
-      "columns": [
-        {data: 'id', title:'ID'},
-        {data: 'cur_ldegree', title:'Local Degree'},
-        {data: 'gdegree', title:'Global Degree'},
-        {data: 'chrom', title:'Chrom'},
-        {data: 'snp', title:'SNP'},
-        {data: 'start', title:'Start'},
-        {data: 'end', title:'End'},
-        {data: 'num_intervening', title:'Num Intervening'},
-        {data: 'rank_intervening', title:'Rank Intervening'},
-        {data: 'num_siblings', title:'Num Siblings'},
-        {data: 'window_size', title:'Window Size', visible: false},
-        {data: 'flank_limit', title:'Flank Limit', visible: false},
-        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
-        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
-      ]
-    });
-  $("div.GeneTitle").html('Gene Data');
-  
-  // Set Listeners
-  $('#GeneTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
-  //$('#GeneTable tbody').on('mouseover','tr', function(evt){
-  //  cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
-  //});
-}
-
-function buildSubnetTable(){
-  // Uses DataTables to build a pretty table
-  $('#SubnetTable').DataTable({
-      "data": [],
-      "dom": '<"SubnetTitle">frtipB',
-      "order": [[3,'asc'],[5,'asc']],
-      "paging": false,
-      "paginate": false,
-      "rowId": 'id',
-      "scrollCollapse": true,
-      "scrollX": "100%",
-      "scrollY": $(window).height()-275,
-      "searching": true,
-      "select": {"style": 'api'},
-      "buttons": [{
-        "extend": 'csv',
-        "filename": 'subnetwork',
-      }],
-      "columns": [
-        {data: 'id', title:'ID'},
-        {data: 'cur_ldegree', title:'Local Degree'},
-        {data: 'gdegree', title:'Global Degree'},
-        {data: 'chrom', title:'Chrom'},
-        {data: 'snp', title:'SNP'},
-        {data: 'start', title:'Start'},
-        {data: 'end', title:'End'},
-        {data: 'num_intervening', title:'Num Intervening'},
-        {data: 'rank_intervening', title:'Rank Intervening'},
-        {data: 'num_siblings', title:'Num Siblings'},
-        {data: 'window_size', title:'Window Size', visible: false},
-        {data: 'flank_limit', title:'Flank Limit', visible: false},
-        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
-        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
-      ]
-    });
-  $("div.SubnetTitle").html('Subnet Data');
-  
-  // Set Listeners
-  $('#SubnetTable tbody').on('click','tr', function(evt){nodeSelect(this['id']);});
-  $('#SubnetTable tbody').on('mouseover','tr', function(evt){
-    cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
-  });
+// Function to update the HUD at the bottom of the graph
+function updateHUD(){
+  if(cy == null){
+    $('#cyTitle').html('Please select one option in each table to build a graph.');
+  }
+  else{
+    $("#cyTitle").html(cy.nodes(':visible[type="gene"]').size()+' genes | '
+      + cy.edges(':visible').size()+' interactions<br>'
+      + CurrentNetwork+' > '+CurrentOntology+' > '+CurrentTerm
+      +' > '+lastWindow+'/'+lastFlank);
+  }
 }

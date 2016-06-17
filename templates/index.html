@@ -27,13 +27,11 @@
   <!-- Cytoscape and qTip2 extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
-
+  
   <!-- Loaf COB -->
   <script>
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
-    $('<link/>', {
-      rel: 'shortcut icon', 
-      href: ($SCRIPT_ROOT + 'static/favicon.ico')
+    $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')
     }).appendTo('head');
     
     // Set some global variables for reference
@@ -45,19 +43,24 @@
     var lastWindow = null;
     var lastFlank = null;
     
-    // Load in the core scripts
+    // Load in the scripts
+    $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
+    $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
+    $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
     $(document).ready(function(){
-      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){
-        $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'), function(){
-          // Set some of the variables from the form
-          lastWindow = document.forms["graphOpts"]["windowSize"].value;
-          lastFlank = document.forms["graphOpts"]["flankLimit"].value;
+      // Some bookkeeping things
+      lastWindow = document.forms["graphOpts"]["windowSize"].value;
+      lastFlank = document.forms["graphOpts"]["flankLimit"].value;
+      
+      // Load the important scripts and stuff when finished
+      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
+        $.getScript(($SCRIPT_ROOT + 'static/js/cobTables.js'), function(){
+          // Make sure the table is visible
+          $('#NetworkWait').addClass("hidden");
+          $('#Network').removeClass("hidden");
           
-          // Kick off the ontology selector table
-          updateHUD();
-          tableMaker('Network');
-          
-          // Build the gene tables
+          // Build some tables!
+          buildNetworkTable();
           buildGeneTable();
           buildSubnetTable();
         });
@@ -165,9 +168,10 @@
     <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="NetworkTab">
       <!-- Section For Network Selection -->
-      <br><div id="Network">
-        <h5 id="NetworkWait">We are gathering the networks, please wait.</h5>
-        <table class="table table-hover hidden" id="NetworkTable">
+      <br>
+      <h5 id="NetworkWait">We are gathering the networks, please wait.</h5>
+      <div class="hidden" id="Network">
+        <table class="table table-hover" id="NetworkTable">
           <thead>
             <tr>
               <th>Network</th>
@@ -179,9 +183,10 @@
       </div>
     
       <!-- Section For Ontology Selection -->
-      <br><div id="Ontology">
-        <h5 id="OntologyWait" class="">This table will appear once you select an attribute above.</h5>
-        <table class="table table-hover hidden" id="OntologyTable">
+      <br>
+      <h5 id="OntologyWait" class="">This selection will appear once you select an attribute above.</h5>
+      <div class="hidden" id="Ontology">
+        <table class="table table-hover" id="OntologyTable">
           <thead>
             <tr>
               <th>Ontology</th>
@@ -193,19 +198,36 @@
       </div>
         
       <!-- Section For Term Selection -->
-      <br><div id="Term">
-        <h5 id="TermWait">This table will appear once you select an attribute above.</h5>
-        <table class="table table-hover hidden" id="TermTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Desc</th>
-              <th>SNPs</th>
-              <th>Genes</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <br>
+      <h5 id="TermWait">This selection will appear once you select an attribute above.</h5>
+      <div class="hidden" id="Term">
+        <ul class="nav nav-tabs" role="tablist" id="TermTabs">
+          <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
+          <li role="presentation"><a aria-controls="TermGenesTab" href="#TermGenesTab" role="tab" data-toggle="tab">Custom Gene List</a></li>
+        </ul>
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane active" id="TermTableTab">
+            <br><table class="table table-hover" id="TermTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Desc</th>
+                  <th>SNPs</th>
+                  <th>Genes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        
+          <div role="tabpanel" class="tab-pane" id="TermGenesTab">
+            <br>
+            <label for="TermGenes">Enter query genes:</label>
+            <textarea class="form-control" rows="15" id="TermGenes"></textarea>
+            <br>
+            <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">
+          </div>
+        </div>
       </div>
       
     </div>

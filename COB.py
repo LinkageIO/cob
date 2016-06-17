@@ -56,28 +56,25 @@ def index():
 def send_js(path):
     return send_from_directory('static',path)
 
-# Route for listing availible datasets 
-@app.route("/available_datasets")
-def all_available_datasets():
-    return str(co.available_datasets())
-
 # Route for sending the avalible datasets and networks
 @app.route("/available_datasets/<path:type>")
 def available_datasets(type=None,*args):
-    if(type == 'GWAS'):
+    if((type == 'GWAS') or (type == 'Ontology')):
         return jsonify(gwas_sets)
-    elif(type == 'Expr'):
+    elif((type == 'Expr') or (type == 'Network')):
         return jsonify(network_list)
+    elif(type == 'All'):
+        return str(co.available_datasets())
     else:
         return jsonify({"data" : list(co.available_datasets(type)[
                     ['Name','Description']].itertuples(index=False))})
 
 # Route for finding and sending the available terms
-@app.route("/Ontology/Terms/<path:term_name>")
-def Ontology_Terms(term_name):
-    return jsonify(terms[term_name])
+@app.route("/terms/<path:ontology>")
+def Ontology_Terms(ontology):
+    return jsonify(terms[ontology])
 
-# Route for sending the CoEx Network Data for graphing
+# Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/COB/<network_name>/<ontology>/<term>/<window_size>/<flank_limit>")
 def COB_network(network_name,ontology,term,window_size,flank_limit):
     cob = networks[network_name]
@@ -92,7 +89,8 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
         include_num_siblings=True
     )
     return getElements(candidate_genes, cob)
-    
+
+# Function to get JSON elements from list of genes and cob instance
 def getElements(genes, cob):
     # Values needed for later computations
     locality = cob.locality(genes)
