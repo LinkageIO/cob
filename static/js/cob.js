@@ -290,7 +290,7 @@ function initCytoscape(data){
          }},
        {selector: '.neighbors',
          css: {
-           'background-color': '#FF6400',
+           'background-color': '#ff6400',
        }},
        {selector: '.highlighted',
          css: {
@@ -298,7 +298,7 @@ function initCytoscape(data){
          }},
        {selector: '.highlightedEdge',
          css: {
-           'line-color': 'rgb(255,200,0)',
+           'line-color': '#ffc800',
            'width': '2',
            'opacity': '1',
            'z-index': '3',
