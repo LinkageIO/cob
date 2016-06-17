@@ -37,7 +37,6 @@ $('#OntologyTable tbody').on('click','tr', function(){
   CurrentTerm = '';
   $('#TermWait').addClass("hidden");
   $('#Term').removeClass("hidden");
-  $('#TermTabs a[href="#TermTableTab"]').tab('show');
   
   // Fetch and build the network table
   buildTermTable(CurrentOntology);
@@ -87,6 +86,16 @@ $('#clearSelectionButton').click(function(){
   $('#GeneTable').DataTable().rows('*').deselect();
   $('#SubnetTable').DataTable().clear().draw();
   $('#navTabs a[href="#GeneTab"]').tab('show');
+});
+
+$('#TermTabs a[href="#TermTableTab"]').on('show.bs.tab', function(){
+  $('#windowSize').prop('readonly', false);
+  $('#flankLimit').prop('readonly', false);
+});
+
+$('#TermTabs a[href="#TermGenesTab"]').on('show.bs.tab', function(){
+  $('#windowSize').prop('readonly', true);
+  $('#flankLimit').prop('readonly', true);
 });
 
 /*---------------------------------------
