@@ -1,7 +1,7 @@
 var newForce = function(resolve, reject){
   $.ajax({
     url: ($SCRIPT_ROOT + 'custom_network'),
-    data: {network: CurrentNetwork,genes: $('#TermGenes').val()},
+    data: {network: CurrentNetwork, sigEdge: '3', genes: $('#TermGenes').val()},
     type: 'POST',
     success: function(data){
       console.log(data);
@@ -31,7 +31,6 @@ var newForce = function(resolve, reject){
           var data = this.data();
           return 'ID: '+data['id'].toString()+'<br>'+
           'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-          'SNP: '+data['snp'].toString()+'<br>'+
           'Position: '+data['start'].toString()+'-'+data['end'].toString();
         },
         position: {my: 'bottom center', at: 'top center'},
@@ -77,12 +76,16 @@ function initForceCyto(data){
         css: {
           'z-index': '2',
           'shape': 'circle',
+          'width': '20',
+          'height': '20',
           'background-color': 'DarkOrchid',
         }},
         {selector: '[origin = "neighbor"]',
          css: {
            'z-index': '1',
            'shape': 'circle',
+           'width': '20',
+           'height': '20',
            'background-color': 'MediumSeaGreen',
          }},
        {selector: 'edge',

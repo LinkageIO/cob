@@ -154,6 +154,7 @@ def term_network(network,ontology,term,window_size,flank_limit):
 def custom_network():
     # Get data from the form
     cob = networks[str(request.form['network'])]
+    cob.set_sig_edge_zscore(int(request.form['sigEdge']))
     queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', str(request.form['genes']).upper())))
     
     # Get the genes?
