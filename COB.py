@@ -28,8 +28,8 @@ gwas_sets = {"data" : list(co.available_datasets('GWAS')[
 terms = {}
 for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
-             len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
-            for term in co.GWAS(ont[0]).iter_terms()]}
+        len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
+        for term in co.GWAS(ont[0]).iter_terms()]}
 
 # Generate network list based on allowed list and load them into memory
 networks = {x:co.COB(x) for x in network_names}
@@ -75,10 +75,10 @@ def Ontology_Terms(ontology):
     return jsonify(terms[ontology])
 
 # Route for sending the CoEx Network Data for graphing from prebuilt term
-@app.route("/COB/<network_name>/<ontology>/<term>/<window_size>/<flank_limit>")
-def COB_network(network_name,ontology,term,window_size,flank_limit):
-    cob = networks[network_name]
-    candidate_genes = cob.refgen.candidate_genes(
+@app.route("/term_network/<network>/<ontology>/<term>/<window_size>/<flank_limit>")
+def term_network(network,ontology,term,window_size,flank_limit):
+    cob = networks[network]
+    genes = cob.refgen.candidate_genes(
         co.GWAS(ontology)[term].effective_loci(window_size=int(window_size)),
         flank_limit=int(flank_limit),
         chain=True,
@@ -86,12 +86,8 @@ def COB_network(network_name,ontology,term,window_size,flank_limit):
         #include_parent_attrs=['numIterations', 'avgEffectSize'],
         include_num_intervening=True,
         include_rank_intervening=True,
-        include_num_siblings=True
-    )
-    return getElements(candidate_genes, cob)
-
-# Function to get JSON elements from list of genes and cob instance
-def getElements(genes, cob):
+        include_num_siblings=True)
+    
     # Values needed for later computations
     locality = cob.locality(genes)
     subnet = cob.subnetwork(genes)
@@ -109,26 +105,27 @@ def getElements(genes, cob):
             global_degree = locality.ix[gene.id]['global']
         except KeyError as e:
             local_degree = global_degree = 0
+        
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
             num_interv = 'NAN'
-        nodes.append(
-            {'data':{
-                'id': gene.id,
-                'type': 'gene',
-                'snp': gene.attr['parent_locus'],
-                'chrom': gene.chrom,
-                'start': gene.start,
-                'end': gene.end,
-                'ldegree': local_degree, 
-                'gdegree': global_degree,
-                'num_intervening': num_interv,
-                'rank_intervening': gene.attr['intervening_rank'],
-                'num_siblings': gene.attr['num_siblings'],
-                #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-                #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            }})
+        
+        nodes.append({'data':{
+            'id': gene.id,
+            'type': 'gene',
+            'snp': gene.attr['parent_locus'],
+            'chrom': str(gene.chrom),
+            'start': str(gene.start),
+            'end': str(gene.end),
+            'ldegree': str(local_degree), 
+            'gdegree': str(global_degree),
+            'num_intervening': num_interv,
+            'rank_intervening': str(gene.attr['intervening_rank']),
+            'num_siblings': str(gene.attr['num_siblings']),
+            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
+            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+        }})
         parents.add(gene.attr['parent_locus'])
         
     # Loop to build the SNP nodes
@@ -144,15 +141,92 @@ def getElements(genes, cob):
 
     # "Loop" to build the edge objects
     net['nodes'] = nodes
-    net['edges'] = [
-        {
-            'data':{
-                'source': source,
-                'target' : target,
-                'score' : score
-            }
-        } for source,target,score,significant,distance in subnet.itertuples(index=False)
-    ]
+    net['edges'] = [{'data':{
+        'source': source,
+        'target' : target,
+        'weight' : weight
+    }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
+    
+    # Return it as a JSON object
+    return jsonify(net)
+
+@app.route("/custom_network", methods=['POST'])
+def custom_network():
+    # Get data from the form
+    cob = networks[str(request.form['network'])]
+    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', str(request.form['genes']).upper())))
+    
+    # Get the genes?
+    neighbors = set()
+    for gene in cob.refgen.from_ids(queried):
+        nbs = cob.neighbors(gene).reset_index()
+        new_set = set(nbs.gene_a).union(set(nbs.gene_b))
+        if gene.id in new_set:
+            new_set.remove(gene.id)
+        neighbors = neighbors.union(new_set)
+    genes = queried.union(neighbors)
+    genes = cob.refgen.from_ids(genes)
+    
+    # Find the candidate genes
+    genes = cob.refgen.candidate_genes(
+        genes,
+        window_size=0,
+        flank_limit=0,
+        chain=True,
+        include_parent_locus=True,
+        #include_parent_attrs=['numIterations', 'avgEffectSize'],
+        include_num_intervening=True,
+        include_rank_intervening=True,
+        include_num_siblings=True)
+    
+    # Values needed for later computations
+    locality = cob.locality(genes)
+    subnet = cob.subnetwork(genes)
+    subnet.reset_index(inplace=True)
+    
+    # Containers for the node info
+    net = {}
+    net['nodes'] = []
+    
+    # Loop to build the gene nodes
+    for gene in genes:
+        try:
+            local_degree = locality.ix[gene.id]['local']
+            global_degree = locality.ix[gene.id]['global']
+        except KeyError as e:
+            local_degree = global_degree = 0
+        
+        try:
+            num_interv = str(gene.attr['num_intervening'])
+        except KeyError as e:
+            num_interv = 'NAN'
+        
+        node = {'data':{
+            'id': gene.id,
+            'type': 'gene',
+            'snp': 'N/A',
+            'origin': 'neighbor',
+            'chrom': str(gene.chrom),
+            'start': str(gene.start),
+            'end': str(gene.end),
+            'ldegree': str(local_degree), 
+            'gdegree': str(global_degree),
+            'num_intervening': num_interv,
+            'rank_intervening': str(gene.attr['intervening_rank']),
+            'num_siblings': str(gene.attr['num_siblings']),
+            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
+            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+        }}
+        if gene.id in queried:
+            node['data']['origin'] = 'query'
+        net['nodes'].append(node)
+
+    # "Loop" to build the edge objects
+    net['edges'] = [{'data':{
+        'source': source,
+        'target' : target,
+        'weight' : weight
+    }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
     
     # Return it as a JSON object
     return jsonify(net)

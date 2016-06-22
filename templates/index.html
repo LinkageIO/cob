@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
   
-  <!-- Cytoscape and qTip2 extensions -->
+  <!-- Cytoscape and extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
   
@@ -182,48 +182,45 @@
         </table>
       </div>
     
-      <!-- Section For Ontology Selection -->
-      <br>
-      <h5 id="OntologyWait" class="">This selection will appear once you select an attribute above.</h5>
-      <div class="hidden" id="Ontology">
-        <table class="table table-hover" id="OntologyTable">
-          <thead>
-            <tr>
-              <th>Ontology</th>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-        
       <!-- Section For Term Selection -->
       <br>
-      <h5 id="TermWait">This selection will appear once you select an attribute above.</h5>
-      <div class="hidden" id="Term">
-        <ul class="nav nav-tabs" role="tablist" id="TermTabs">
+      <h5 id="GeneSelectWait">This selection will appear once you select a network above.</h5>
+      <div class="hidden" id="GeneSelect">
+        <ul class="nav nav-tabs" role="tablist" id="GeneSelectTabs">
           <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
           <li role="presentation"><a aria-controls="TermGenesTab" href="#TermGenesTab" role="tab" data-toggle="tab">Custom Gene List</a></li>
         </ul>
         <div class="tab-content">
           <div role="tabpanel" class="tab-pane active" id="TermTableTab">
-            <br><table class="table table-hover" id="TermTable">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Desc</th>
-                  <th>SNPs</th>
-                  <th>Genes</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+            <br><table class="table table-hover" id="OntologyTable">
+                <thead>
+                  <tr>
+                    <th>Ontology</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            <br><h5 id="TermWait" class="">This selection will appear once you select an ontology above.</h5>
+            <div class="hidden" id="Term">
+              <table class="table table-hover" id="TermTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Desc</th>
+                    <th>SNPs</th>
+                    <th>Genes</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         
           <div role="tabpanel" class="tab-pane" id="TermGenesTab">
             <br>
             <label for="TermGenes">Enter query genes:</label>
-            <textarea class="form-control" rows="15" id="TermGenes"></textarea>
+            <textarea class="form-control" rows="25" id="TermGenes" placeholder="GRMZM2G034471, GRMZM2G030350"></textarea>
             <br>
             <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">
           </div>

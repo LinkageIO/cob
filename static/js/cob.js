@@ -12,8 +12,8 @@ $('#NetworkTable tbody').on('click','tr', function(){
   
   // Prep the Ontology Table
   CurrentOntology = '';
-  $('#OntologyWait').addClass("hidden");
-  $('#Ontology').removeClass("hidden");
+  $('#GeneSelectWait').addClass("hidden");
+  $('#GeneSelect').removeClass("hidden");
   
   // Clean up the Term Table
   CurrentTerm = '';
@@ -52,8 +52,20 @@ $('#TermTable tbody').on('click','tr',function(){
 });
 
 $("#TermGenesButton").click(function(){
-  // Build the graph
-  //loadGraph('new','force');
+  if($('#TermGenes').val().length > 5){loadGraph('new','force');}
+  else{window.alert('You need to enter at least one gene.');}
+});
+
+$('#GeneSelectTabs a[href="#TermTableTab"]').on('show.bs.tab', function(){
+  $('#windowSize').prop('readonly', false);
+  $('#flankLimit').prop('readonly', false);
+  $('#nodeCutoff').attr('value', '1');
+});
+
+$('#GeneSelectTabs a[href="#TermGenesTab"]').on('show.bs.tab', function(){
+  $('#windowSize').prop('readonly', true);
+  $('#flankLimit').prop('readonly', true);
+  $('#nodeCutoff').attr('value', '0');
 });
 
 /*------------------------------------------
@@ -86,16 +98,6 @@ $('#clearSelectionButton').click(function(){
   $('#GeneTable').DataTable().rows('*').deselect();
   $('#SubnetTable').DataTable().clear().draw();
   $('#navTabs a[href="#GeneTab"]').tab('show');
-});
-
-$('#TermTabs a[href="#TermTableTab"]').on('show.bs.tab', function(){
-  $('#windowSize').prop('readonly', false);
-  $('#flankLimit').prop('readonly', false);
-});
-
-$('#TermTabs a[href="#TermGenesTab"]').on('show.bs.tab', function(){
-  $('#windowSize').prop('readonly', true);
-  $('#flankLimit').prop('readonly', true);
 });
 
 /*---------------------------------------

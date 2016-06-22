@@ -60,7 +60,7 @@ var register = function(cy){
     
     // Hide edges that are not above the threshold
     options.eles.edges().filter(function(i, ele){
-        return (parseFloat(ele.data('score')) < options.minEdgeScore);
+        return (parseFloat(ele.data('weight')) < options.minEdgeScore);
       }).style({'display': 'none'});
     
     // Filter the genes below the threshold

@@ -5,7 +5,7 @@ var newPoly = function(resolve, reject){
   lastFlank = document.forms["graphOpts"]["flankLimit"].value;
   
   // Get the data and build the graph
-  $.getJSON($SCRIPT_ROOT + 'COB/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
+  $.getJSON($SCRIPT_ROOT + 'term_network/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
     if(cy != null){cy.destroy();cy = null;}
     initPolyCyto(data);
     
