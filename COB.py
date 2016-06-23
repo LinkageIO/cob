@@ -170,7 +170,6 @@ def custom_network():
         if((max_neighbors > -1) and (len(nbs) > max_neighbors)):
             nbs = nbs[0:(max_neighbors-1)]
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
-        print(new_genes)
         if gene.id in new_genes:
             new_genes.remove(gene.id)
         neighbors = neighbors.union(set(new_genes))
