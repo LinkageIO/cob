@@ -2,10 +2,10 @@ var newForce = function(resolve, reject){
   $.ajax({
     url: ($SCRIPT_ROOT + 'custom_network'),
     data: {
-      network: CurrentNetwork,
-      sigEdge: document.forms["forceOpts"]["minEdgeScore"].value,
-      maxNeighbors: document.forms["forceOpts"]["maxNeighbors"].value,
-      genes: $('#TermGenes').val(),
+      network: lastNetwork,
+      sigEdgeScore: lastSigEdgeScore,
+      maxNeighbors: lastMaxNeighbors,
+      geneList: $('#geneList').val(),
     },
     type: 'POST',
     success: function(data){
@@ -49,6 +49,10 @@ var newForce = function(resolve, reject){
         show: {event: 'mouseover'},
         hide: {event: 'mouseout'},
       });
+      
+      if(data.rejected.length > 0){
+        window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');
+      }
       
       if(cy !== null){resolve();}
       else{reject('Force graph build failed');}

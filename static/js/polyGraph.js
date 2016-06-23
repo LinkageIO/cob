@@ -1,50 +1,61 @@
 // Promise function to build a new polywas graph
 var newPoly = function(resolve, reject){
   // Get the data and build the graph
-  $.getJSON($SCRIPT_ROOT + 'term_network/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
-    if(cy != null){cy.destroy();cy = null;}
-    isPoly = true;
-    initPolyCyto(data);
-    
-    // Update the styles of the nodes for the new sizes
-    updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
-    
-    // Set the snp group qtips
-    var genes = cy.nodes('[type = "gene"]');
-    
-    // Set up the gene node tap listener
-    genes.on('tap', function(evt){
-      // Only scroll to the gene if it isn't highlighted already
-      if(!(evt.cyTarget.hasClass('highlighted'))){
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'term_network'),
+    data: {
+      network: lastNetwork,
+      ontology: lastOntology,
+      term: lastTerm,
+      windowSize: lastWindowSize,
+      flankLimit: lastFlankLimit,
+    },
+    type: 'POST',
+    success: function(data){
+      if(cy != null){cy.destroy();cy = null;}
+      isPoly = true;
+      initPolyCyto(data);
       
-      // Run the selection algorithm
-      geneSelect(evt.cyTarget.data('id'));
-    });
-    
-    // Set the gene qTip listeners (only needs to be done once per full graph redo)
-    genes.qtip({
-      content: function(){
-        var data = this.data();
-        return 'ID: '+data['id'].toString()+'<br>'+
-        'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-        'SNP: '+data['snp'].toString()+'<br>'+
-        'Position: '+data['start'].toString()+'-'+data['end'].toString();
-      },
-      position: {my: 'bottom center', at: 'top center'},
-      style: {
-        classes: 'qtip-dark qtip-rounded qtip-shadow',
-        tip: {width: 10, height: 5},
-      },
-      show: {event: 'mouseover'},
-      hide: {event: 'mouseout'},
-    });
-    
-    // Set the SNPG qtips
-    setSNPGqtips();
-    
-    if(cy !== null){resolve();}
-    else{reject('Polywas graph build failed');}
+      // Update the styles of the nodes for the new sizes
+      updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
+      
+      // Set the snp group qtips
+      var genes = cy.nodes('[type = "gene"]');
+      
+      // Set up the gene node tap listener
+      genes.on('tap', function(evt){
+        // Only scroll to the gene if it isn't highlighted already
+        if(!(evt.cyTarget.hasClass('highlighted'))){
+          $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
+        
+        // Run the selection algorithm
+        geneSelect(evt.cyTarget.data('id'));
+      });
+      
+      // Set the gene qTip listeners (only needs to be done once per full graph redo)
+      genes.qtip({
+        content: function(){
+          var data = this.data();
+          return 'ID: '+data['id'].toString()+'<br>'+
+          'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
+          'SNP: '+data['snp'].toString()+'<br>'+
+          'Position: '+data['start'].toString()+'-'+data['end'].toString();
+        },
+        position: {my: 'bottom center', at: 'top center'},
+        style: {
+          classes: 'qtip-dark qtip-rounded qtip-shadow',
+          tip: {width: 10, height: 5},
+        },
+        show: {event: 'mouseover'},
+        hide: {event: 'mouseout'},
+      });
+      
+      // Set the SNPG qtips
+      setSNPGqtips();
+      
+      if(cy !== null){resolve();}
+      else{reject('Polywas graph build failed');}
+    }
   });
 }
 
@@ -90,7 +101,7 @@ function getPolyLayoutOpts(){
     minEdgeScore: parseFloat(document.forms["polyOpts"]["edgeCutoff"].value),
     nodeHeight: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
     geneOffset: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
-    logSpacing: logSpacingVal,
+    logSpacing: logSpacing,
     snpLevels: parseInt(document.forms["polyOpts"]["snpLevels"].value),
   }
 }

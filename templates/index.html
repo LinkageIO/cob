@@ -35,16 +35,12 @@
     }).appendTo('head');
     
     // Set some global variables for reference
-    var CurrentOntology = '';
-    var CurrentTerm = '';
-    var CurrentNetwork = '';
+    var lastOntology = '';
+    var lastTerm = '';
+    var lastNetwork = '';
     var cy = null;
     var isPoly = null;
-    var logSpacingVal = true;
-    var lastWindow = null;
-    var lastFlank = null;
-    var lastSig = null;
-    var lastNb = null;
+    var logSpacing = true;
     
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
@@ -52,10 +48,10 @@
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
     $(document).ready(function(){
       // Some bookkeeping things
-      lastWindow = document.forms["polyOpts"]["windowSize"].value;
-      lastFlank = document.forms["polyOpts"]["flankLimit"].value;
-      lastSig = document.forms["forceOpts"]["minEdgeScore"].value;
-      lastNb = document.forms["forceOpts"]["maxNeighbors"].value;
+      var lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
+      var lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
+      var lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
+      var lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
       
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
@@ -224,8 +220,10 @@
         
           <div role="tabpanel" class="tab-pane" id="TermGenesTab">
             <br>
-            <label for="TermGenes">Enter query genes:</label>
-            <textarea class="form-control" rows="25" id="TermGenes" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044">GRMZM2G159456, GRMZM2G152135, GRMZM2G010044</textarea>
+            <div id="TermGenes">
+              <label for="geneList">Enter query genes:</label>
+              <textarea class="form-control" rows="25" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044">GRMZM2G159456, GRMZM2G152135, GRMZM2G010044</textarea>
+            </div>
             <br>
             <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">
           </div>
@@ -272,8 +270,8 @@
           <input type="text" class="form-control" id="maxNeighbors" value="15" size="3" pattern="[0-9]+">
         </div>
         <div class="form-group">
-          <label>Min Edge Score</label>
-          <input type="text" class="form-control" id="minEdgeScore" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+          <label>Min Significant Edge Score</label>
+          <input type="text" class="form-control" id="sigEdgeScore" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
         </div>
         <div class="form-group">
           <label>Node Size</label>

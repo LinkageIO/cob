@@ -1,11 +1,11 @@
 #!/usr/bin/python3
-import logging
-import camoco as co
+import re
 import sys
 import json
-import re
+import copy
+import logging
 import numpy as np
-
+import camoco as co
 from math import isinf
 from itertools import chain
 
@@ -16,10 +16,6 @@ app = Flask(__name__)
 # Networks to load
 network_names = ['ZmRoot']
 
-# Generate in-memory RefGen Object
-ZM = co.RefGen('Zm5bFGS')
-print('Loaded RefGen: ' + str(ZM));
-
 # Generate in Memory Avalible GWAS datasets list
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
@@ -28,7 +24,7 @@ gwas_sets = {"data" : list(co.available_datasets('GWAS')[
 terms = {}
 for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
-        len(ZM.candidate_genes(term.effective_loci(window_size=50000)))) 
+        len(co.GWAS(ont[0]).refgen.candidate_genes(term.effective_loci(window_size=50000)))) 
         for term in co.GWAS(ont[0]).iter_terms()]}
 
 # Generate network list based on allowed list and load them into memory
@@ -45,7 +41,6 @@ app.logger.setLevel(logging.INFO)
 #---------------------------------------------
 #                 Routes
 #---------------------------------------------
-
 # Sends off the homepage
 @app.route('/')
 def index():
@@ -75,12 +70,20 @@ def Ontology_Terms(ontology):
     return jsonify(terms[ontology])
 
 # Route for sending the CoEx Network Data for graphing from prebuilt term
-@app.route("/term_network/<network>/<ontology>/<term>/<window_size>/<flank_limit>")
-def term_network(network,ontology,term,window_size,flank_limit):
+@app.route("/term_network", methods=['POST'])
+def term_network():
+    # Get data from the form
+    network = str(request.form['network'])
+    ontology = str(request.form['ontology'])
+    term = str(request.form['term'])
+    windowSize = int(request.form['windowSize'])
+    flankLimit = int(request.form['flankLimit'])
+    
+    # Get cob and such
     cob = networks[network]
     genes = cob.refgen.candidate_genes(
-        co.GWAS(ontology)[term].effective_loci(window_size=int(window_size)),
-        flank_limit=int(flank_limit),
+        co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
+        flank_limit=flankLimit,
         chain=True,
         include_parent_locus=True,
         #include_parent_attrs=['numIterations', 'avgEffectSize'],
@@ -95,7 +98,7 @@ def term_network(network,ontology,term,window_size,flank_limit):
     
     # Containers for the node info
     net = {}
-    nodes = []
+    net['nodes'] = []
     parents = set()
     
     # Loop to build the gene nodes
@@ -111,7 +114,7 @@ def term_network(network,ontology,term,window_size,flank_limit):
         except KeyError as e:
             num_interv = 'NAN'
         
-        nodes.append({'data':{
+        net['nodes'].append({'data':{
             'id': gene.id,
             'type': 'gene',
             'snp': gene.attr['parent_locus'],
@@ -129,18 +132,17 @@ def term_network(network,ontology,term,window_size,flank_limit):
         parents.add(gene.attr['parent_locus'])
         
     # Loop to build the SNP nodes
-    for p in parents:
-        parent_list = re.split('<|>|:|-', p)
-        nodes.insert(0, {'data':{
-            'id': p,
+    for parent in parents:
+        parent_attr = re.split('<|>|:|-', parent)
+        net['nodes'].insert(0, {'data':{
+            'id': parent,
             'type': 'snp',
-            'chrom': parent_list[2],
-            'start': parent_list[3],
-            'end': parent_list[4],
+            'chrom': parent_attr[2],
+            'start': parent_attr[3],
+            'end': parent_attr[4],
         }})
 
     # "Loop" to build the edge objects
-    net['nodes'] = nodes
     net['edges'] = [{'data':{
         'source': source,
         'target' : target,
@@ -153,30 +155,39 @@ def term_network(network,ontology,term,window_size,flank_limit):
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
     # Get data from the form
-    net_name = str(request.form['network'])
-    sig_edge = float(request.form['sigEdge'])
-    gene_str = str(request.form['genes']).upper()
-    max_neighbors = int(request.form['maxNeighbors'])
+    network = str(request.form['network'])
+    maxNeighbors = int(request.form['maxNeighbors'])
+    sigEdgeScore = float(request.form['sigEdgeScore'])
+    geneList = str(request.form['geneList']).upper()
     
     # Set up cob
-    cob = networks[net_name]
-    cob.set_sig_edge_zscore(sig_edge)
+    cob = networks[network]
+    cob.set_sig_edge_zscore(sigEdgeScore)
     
     # Get the genes
-    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', gene_str)))
+    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', geneList)))
+    rejected = copy.copy(queried)
     neighbors = set()
     for gene in cob.refgen.from_ids(queried):
+        # Find all the neighbors, sort by score
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
-        if((max_neighbors > -1) and (len(nbs) > max_neighbors)):
-            nbs = nbs[0:(max_neighbors-1)]
+        
+        # If we need to truncate the list, do so
+        if((maxNeighbors > -1) and (len(nbs) > maxNeighbors)):
+            nbs = nbs[0:(maxNeighbors-1)]
+            
+        # Strip everything except the gene IDs and add to the grand neighbor list
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
+        rejected .remove(gene.id)
         if gene.id in new_genes:
             new_genes.remove(gene.id)
         neighbors = neighbors.union(set(new_genes))
+    
+    # Get gene objects from IDs, but save list both lists for later
     genes = queried.union(neighbors)
     genes = cob.refgen.from_ids(genes)
     
-    # Find the candidate genes
+    # Find the candidate genes (Really just here to get extra info, it's cheap)
     genes = cob.refgen.candidate_genes(
         genes,
         window_size=0,
@@ -196,6 +207,7 @@ def custom_network():
     # Containers for the node info
     net = {}
     net['nodes'] = []
+    net['rejected'] = list(rejected)
     
     # Loop to build the gene nodes
     for gene in genes:

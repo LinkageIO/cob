@@ -161,8 +161,8 @@ function updateGraphTable(tableName, nodes){
   
   nodes.forEach(function(cur, idx, arr){
     geneDict = cur.data();
-    geneDict['window_size'] = lastWindow;
-    geneDict['flank_limit'] = lastFlank;
+    geneDict['window_size'] = lastWindowSize;
+    geneDict['flank_limit'] = lastFlankLimit;
     geneData.push(geneDict);
   });
   

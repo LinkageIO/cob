@@ -4,19 +4,19 @@
 // A row on the Ontology Table is selected
 $('#NetworkTable tbody').on('click','tr', function(){
   // Save the selected row
-  CurrentNetwork = $('td', this).eq(0).text();
+  lastNetwork = $('td', this).eq(0).text();
   
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
   
   // Prep the Ontology Table
-  CurrentOntology = '';
+  lastOntology = '';
   $('#GeneSelectWait').addClass("hidden");
   $('#GeneSelect').removeClass("hidden");
   
   // Clean up the Term Table
-  CurrentTerm = '';
+  lastTerm = '';
   $('#Term').addClass('hidden');
   $('#TermWait').removeClass('hidden');
   
@@ -27,32 +27,32 @@ $('#NetworkTable tbody').on('click','tr', function(){
 // A row on the Term Table is selected
 $('#OntologyTable tbody').on('click','tr', function(){
   // Highlight the relevant row
-  CurrentOntology = $('td',this).eq(0).text();
+  lastOntology = $('td',this).eq(0).text();
   
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
   
   // Prep the Term Table
-  CurrentTerm = '';
+  lastTerm = '';
   $('#TermWait').addClass("hidden");
   $('#Term').removeClass("hidden");
   
   // Fetch and build the network table
-  buildTermTable(CurrentOntology);
+  buildTermTable(lastOntology);
 });
 
 // A row on the Network Table is selected
 $('#TermTable tbody').on('click','tr',function(){
-    // Highlight the current line
-    CurrentTerm = $('td',this).eq(0).text();
+    // Highlight the last line
+    lastTerm = $('td',this).eq(0).text();
     
     // Get the new Graph
     loadGraph('new','polywas');
 });
 
 $("#TermGenesButton").click(function(){
-  if($('#TermGenes').val().length > 5){loadGraph('new','force');}
+  if($('#geneList').val().length > 5){loadGraph('new','force');}
   else{window.alert('You need to enter at least one gene.');}
 });
 
@@ -70,7 +70,7 @@ $('#GeneSelectTabs a[href="#TermGenesTab"]').on('show.bs.tab', function(){
      Parameter Update Event Listeners
 ------------------------------------------*/
 // Listener for log spacing toggle
-$('#logSpacingButton').click(function(){logSpacingVal = !(logSpacingVal);});
+$('#logSpacingButton').click(function(){logSpacing = !(logSpacing);});
 
 // Listener for update button
 $('#updateButton').click(function(){
@@ -101,15 +101,15 @@ $('#clearSelectionButton').click(function(){
 function updateGraph(){
   if(cy == null){return;}
   if(isPoly){
-    if(lastWindow === document.forms["polyOpts"]["windowSize"].value && 
-      lastFlank === document.forms["polyOpts"]["flankLimit"].value && isPoly){
+    if(lastWindowSize === document.forms["polyOpts"]["windowSize"].value && 
+      lastFlankLimit === document.forms["polyOpts"]["flankLimit"].value && isPoly){
       loadGraph('update','polywas');
     }
     else{loadGraph('new','polywas');}
   }
   else{
-    if(lastSig === document.forms["forceOpts"]["minEdgeScore"].value &&
-      lastNb === document.forms["forceOpts"]["maxNeighbors"].value && !(isPoly)){
+    if(lastSigEdgeScore === document.forms["forceOpts"]["sigEdgeScore"].value &&
+      lastMaxNeighbors === document.forms["forceOpts"]["maxNeighbors"].value && !(isPoly)){
       loadGraph('update','force');
     }
     else{loadGraph('new','force');}
@@ -120,8 +120,10 @@ function updateGraph(){
 function loadGraph(op, layout){
   $("#cyWait").one('shown.bs.modal', function(){
     // Update the persistent variables
-    lastWindow = document.forms["polyOpts"]["windowSize"].value;
-    lastFlank = document.forms["polyOpts"]["flankLimit"].value;
+    lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
+    lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
+    lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
+    lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
     
     // Make a promise to do the graph
     var pinkySwear = new Promise(function(resolve,reject){
@@ -148,7 +150,7 @@ function loadGraph(op, layout){
      Gene Selection Function
 ---------------------------------*/
 function geneSelect(gene_id){
-  // Get the node object and whether it is currently highlighted 
+  // Get the node object and whether it is lastly highlighted 
   var gene_node = cy.nodes('[id = "'+gene_id+'"]');
   var genes = null;
   var edges = null;
@@ -196,9 +198,9 @@ function updateHUD(){
   }
   else{
     var msg = cy.nodes(':visible[type="gene"]').size()+' genes | '
-      + cy.edges(':visible').size()+' interactions<br>' + CurrentNetwork + ' > ';
+      + cy.edges(':visible').size()+' interactions<br>' + lastNetwork + ' > ';
     if(isPoly){
-      msg = msg + CurrentOntology+' > '+CurrentTerm +' > '+lastWindow+'/'+lastFlank;
+      msg = msg + lastOntology+' > '+lastTerm +' > '+lastWindowSize+'/'+lastFlankLimit;
     }
     else{msg = msg + 'Custom Network';}
     $("#cyTitle").html(msg);
