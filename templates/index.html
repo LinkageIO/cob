@@ -39,9 +39,12 @@
     var CurrentTerm = '';
     var CurrentNetwork = '';
     var cy = null;
+    var isPoly = null;
     var logSpacingVal = true;
     var lastWindow = null;
     var lastFlank = null;
+    var lastSig = null;
+    var lastNb = null;
     
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
@@ -49,8 +52,10 @@
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
     $(document).ready(function(){
       // Some bookkeeping things
-      lastWindow = document.forms["graphOpts"]["windowSize"].value;
-      lastFlank = document.forms["graphOpts"]["flankLimit"].value;
+      lastWindow = document.forms["polyOpts"]["windowSize"].value;
+      lastFlank = document.forms["polyOpts"]["flankLimit"].value;
+      lastSig = document.forms["forceOpts"]["minEdgeScore"].value;
+      lastNb = document.forms["forceOpts"]["maxNeighbors"].value;
       
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
@@ -232,7 +237,7 @@
       
     <!-- Option Adjustment Tab -->
     <div role="tabpanel" class="tab-pane" id="OptsTab"><br>
-      <form id="graphOpts">
+      <form id="polyOpts" class="">
         <div class="form-group">
           <label>Window Size</label>
           <input type="text" class="form-control" id="windowSize" value="50000" pattern="[0-9]+" size="7">
@@ -251,7 +256,7 @@
         </div>
         <div class="form-group">
           <label>Node Size</label>
-          <input type="text" class="form-control" id="nodeSize" value="10" size="2" pattern="[0-9]+">
+          <input type="text" class="form-control" id="polyNodeSize" value="10" size="2" pattern="[0-9]+">
         </div>
         <div class="form-group">
           <label>SNP Colors</label>
@@ -260,10 +265,22 @@
         <div class="form-group">
           <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing</button>
         </div>
+      </form>
+      <form id="forceOpts" class="hidden">
         <div class="form-group">
-          <input type="button" class="btn btn-primary" id="updateButton" value="Update">
+          <label>Max Node Neighbors (-1 for all)</label>
+          <input type="text" class="form-control" id="maxNeighbors" value="15" size="3" pattern="[0-9]+">
+        </div>
+        <div class="form-group">
+          <label>Min Edge Score</label>
+          <input type="text" class="form-control" id="minEdgeScore" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+        </div>
+        <div class="form-group">
+          <label>Node Size</label>
+          <input type="text" class="form-control" id="forceNodeSize" value="15" size="2" pattern="[0-9]+">
         </div>
       </form>
+      <input type="button" class="btn btn-primary" id="updateButton" value="Update">
     </div>
     <!-- End Parameter Adjustment Tab -->
       

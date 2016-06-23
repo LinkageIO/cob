@@ -44,7 +44,6 @@ var register = function(cy){
 
     // Start the layout
     layout.trigger('layoutstart');
-    console.log('Starting Layout');
     cy.startBatch();
 
     // Clean up things from previous layout, if there was one
@@ -208,7 +207,6 @@ var register = function(cy){
     // ==================
     // Log and end the batch operation
     cy.endBatch();
-    console.log('Finished Layout');
     
     // Trigger layoutready when each node has had its position set at least once
     layout.one('layoutready', options.ready);

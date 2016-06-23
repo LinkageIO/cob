@@ -1,17 +1,25 @@
 var newForce = function(resolve, reject){
   $.ajax({
     url: ($SCRIPT_ROOT + 'custom_network'),
-    data: {network: CurrentNetwork, sigEdge: '3', genes: $('#TermGenes').val()},
+    data: {
+      network: CurrentNetwork,
+      sigEdge: document.forms["forceOpts"]["minEdgeScore"].value,
+      maxNeighbors: document.forms["forceOpts"]["maxNeighbors"].value,
+      genes: $('#TermGenes').val(),
+    },
     type: 'POST',
     success: function(data){
-      console.log(data);
       // Kill the old graph and build the new one
       if(cy != null){cy.destroy();cy = null;}
+      isPoly = false;
       initForceCyto(data);
       var genes = cy.nodes();
       
-      // Save the degree for the graph
       cy.startBatch();
+      // Update the styles of the nodes for the new sizes
+      updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
+      
+      // Save the degree for the graph
       genes.forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
       cy.endBatch();
       
@@ -43,22 +51,37 @@ var newForce = function(resolve, reject){
       });
       
       if(cy !== null){resolve();}
-      else{reject('Polywas graph build failed');}
+      else{reject('Force graph build failed');}
     }});
 }
 
 var updateForce = function(resolve, reject){
-  resolve();
+  // Run the layout
+  cy.layout(getForceLayoutOpts());
+  
+  // Update the styles of the nodes for the new sizes
+  updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
+  
+  if(cy !== null){resolve();}
+  else{reject('Force graph update failed');}
 }
 
+// Function to return an object for the layout options
+function getForceLayoutOpts(){
+  return {
+    name: 'cose',
+    animate: false,
+    nodeOverlap: 50,
+    componentSpacing: 35,
+    nodeRepulsion: function(node){return 100000;},
+  }
+}
+
+// Function to initialize the graph with force layout
 function initForceCyto(data){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
-    
-    // Interaction Options
-    //boxSelectionEnabled: true,
-    //autounselectify: false,
     
     // Rendering Options
     pixelRatio: 1,
@@ -66,26 +89,19 @@ function initForceCyto(data){
     textureOnViewport: true,
     wheelSensitivity: 0.5,
     
-    layout: {
-      name: 'cose',
-      animate: false,
-    },
+    layout: getForceLayoutOpts(),
     
     style: [
        {selector: '[origin = "query"]',
         css: {
           'z-index': '2',
           'shape': 'circle',
-          'width': '20',
-          'height': '20',
           'background-color': 'DarkOrchid',
         }},
         {selector: '[origin = "neighbor"]',
          css: {
            'z-index': '1',
            'shape': 'circle',
-           'width': '20',
-           'height': '20',
            'background-color': 'MediumSeaGreen',
          }},
        {selector: 'edge',
@@ -121,3 +137,4 @@ function initForceCyto(data){
      edges: data.edges,
   }});
 }
+

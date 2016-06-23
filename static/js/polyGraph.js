@@ -1,21 +1,13 @@
 // Promise function to build a new polywas graph
 var newPoly = function(resolve, reject){
-  // Update the values
-  lastWindow = document.forms["graphOpts"]["windowSize"].value;
-  lastFlank = document.forms["graphOpts"]["flankLimit"].value;
-  
   // Get the data and build the graph
   $.getJSON($SCRIPT_ROOT + 'term_network/' + CurrentNetwork + '/' + CurrentOntology + '/' + CurrentTerm + '/' + lastWindow + '/' + lastFlank).done(function(data){
     if(cy != null){cy.destroy();cy = null;}
+    isPoly = true;
     initPolyCyto(data);
     
-    cy.style().selector('[type = "snpG"], [type = "gene"]').style({
-      'width': document.forms["graphOpts"]["nodeSize"].value,
-      'height': document.forms["graphOpts"]["nodeSize"].value,
-    }).selector('.pop').style({
-      'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-      'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-    }).update();
+    // Update the styles of the nodes for the new sizes
+    updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
     
     // Set the snp group qtips
     var genes = cy.nodes('[type = "gene"]');
@@ -59,23 +51,10 @@ var newPoly = function(resolve, reject){
 // Promise function to update the polywas graph
 var updatePoly = function(resolve, reject){
   // Run the layout
-  cy.layout({
-    name: 'polywas',
-    minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
-    minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
-    nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-    geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-    logSpacing: logSpacingVal,
-    snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
-  });
+  cy.layout(getPolyLayoutOpts());
   
-  cy.style().selector('[type = "snpG"], [type = "gene"]').style({
-    'width': document.forms["graphOpts"]["nodeSize"].value,
-    'height': document.forms["graphOpts"]["nodeSize"].value,
-  }).selector('.pop').style({
-    'width': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-    'height': (parseInt(document.forms["graphOpts"]["nodeSize"].value)*1.5).toString(),
-  }).update();
+  // Update the styles of the nodes for the new sizes
+  updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
   
   // Set the SNPG qtips
   setSNPGqtips();
@@ -103,6 +82,19 @@ function setSNPGqtips(){
   });
 }
 
+// Function to return an object for the layout options
+function getPolyLayoutOpts(){
+  return {
+    name: 'polywas',
+    minNodeDegree: parseInt(document.forms["polyOpts"]["nodeCutoff"].value), 
+    minEdgeScore: parseFloat(document.forms["polyOpts"]["edgeCutoff"].value),
+    nodeHeight: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
+    geneOffset: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
+    logSpacing: logSpacingVal,
+    snpLevels: parseInt(document.forms["polyOpts"]["snpLevels"].value),
+  }
+}
+
 // Function to initialize the graph with polywas layout
 function initPolyCyto(data){
   // Initialize Cytoscape
@@ -119,15 +111,7 @@ function initPolyCyto(data){
     textureOnViewport: true,
     wheelSensitivity: 0.5,
     
-    layout: {
-      name: 'polywas',
-      minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
-      minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
-      nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-      logSpacing: logSpacingVal,
-      snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
-    },
+    layout: getPolyLayoutOpts(),
     style: [
         {selector: '[type = "chrom"]',
          css: {

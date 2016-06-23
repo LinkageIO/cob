@@ -153,18 +153,27 @@ def term_network(network,ontology,term,window_size,flank_limit):
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
     # Get data from the form
-    cob = networks[str(request.form['network'])]
-    cob.set_sig_edge_zscore(int(request.form['sigEdge']))
-    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', str(request.form['genes']).upper())))
+    net_name = str(request.form['network'])
+    sig_edge = float(request.form['sigEdge'])
+    gene_str = str(request.form['genes']).upper()
+    max_neighbors = int(request.form['maxNeighbors'])
     
-    # Get the genes?
+    # Set up cob
+    cob = networks[net_name]
+    cob.set_sig_edge_zscore(sig_edge)
+    
+    # Get the genes
+    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', gene_str)))
     neighbors = set()
     for gene in cob.refgen.from_ids(queried):
-        nbs = cob.neighbors(gene).reset_index()
-        new_set = set(nbs.gene_a).union(set(nbs.gene_b))
-        if gene.id in new_set:
-            new_set.remove(gene.id)
-        neighbors = neighbors.union(new_set)
+        nbs = cob.neighbors(gene).reset_index().sort_values('score')
+        if((max_neighbors > -1) and (len(nbs) > max_neighbors)):
+            nbs = nbs[0:(max_neighbors-1)]
+        new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
+        print(new_genes)
+        if gene.id in new_genes:
+            new_genes.remove(gene.id)
+        neighbors = neighbors.union(set(new_genes))
     genes = queried.union(neighbors)
     genes = cob.refgen.from_ids(genes)
     
