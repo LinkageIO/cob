@@ -1,4 +1,6 @@
+// Promise function to build a new force directed graph
 var newForce = function(resolve, reject){
+  // Get the data and on completion, build the graph
   $.ajax({
     url: ($SCRIPT_ROOT + 'custom_network'),
     data: {

@@ -65,14 +65,14 @@ function buildTermTable(ontology){
 function buildGeneTable(){
   $('#GeneTable').DataTable({
       "data": [],
-      "deferRender": true,
+      "deferRender": false,
       "dom": '<"GeneTitle">frtipB',
       "order": [[3,'asc'],[5,'asc']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
       "scrollCollapse": true,
-      "scroller": {displayBuffer: 75},
+      "scroller": {displayBuffer: 1000},
       "scrollXInner": "100%",
       "scrollX": "100%",
       "scrollY": ($(window).height()-275),
@@ -99,10 +99,6 @@ function buildGeneTable(){
   
   // Set Listeners
   $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
-  // Code for doing the pop, will attempt to resurect
-  //$('#GeneTable tbody').on('mouseover','tr', function(evt){
-  //  cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
-  //});
 }
 
 // Initially build the subnetwork table
@@ -140,9 +136,15 @@ function buildSubnetTable(){
   
   // Set Listeners
   $('#SubnetTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
-  $('#SubnetTable tbody').on('mouseover','tr', function(evt){
-    cy.nodes('[id = "'+this['id']+'"]').flashClass('pop',750);
-  });
+  $('#SubnetTable tbody').on('mouseover','tr', popGene);
+}
+
+// Make the gene pop, but only if its not cancelled by a subsequent one
+function popGene(evt){
+  window.clearTimeout(popTimerID);
+  popTimerID = window.setTimeout(function(id){
+      cy.nodes('[id = "'+id+'"]').flashClass('pop',750);
+  }, 10, this['id']);
 }
 
 /*------------------------------------
