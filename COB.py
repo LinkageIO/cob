@@ -8,6 +8,7 @@ import numpy as np
 import camoco as co
 from math import isinf
 from itertools import chain
+from genewordsearch.GeneWordSearch import geneAnnotations
 
 # Take a huge swig from the flask 
 from flask import Flask, url_for, jsonify, request, send_from_directory
