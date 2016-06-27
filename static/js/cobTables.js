@@ -81,6 +81,7 @@ function buildGeneTable(){
       "buttons": [{"extend": 'csv',"filename": 'genenetwork',}],
       "columns": [
         {data: 'id', title:'ID'},
+        {data: 'alias', title:'Alias'},
         {data: 'cur_ldegree', title:'Local Degree'},
         {data: 'gdegree', title:'Global Degree'},
         {data: 'chrom', title:'Chrom'},
@@ -118,6 +119,7 @@ function buildSubnetTable(){
       "buttons": [{"extend": 'csv',"filename": 'subnetwork',}],
       "columns": [
         {data: 'id', title:'ID'},
+        {data: 'alias', title:'Alias'},
         {data: 'cur_ldegree', title:'Local Degree'},
         {data: 'gdegree', title:'Global Degree'},
         {data: 'chrom', title:'Chrom'},

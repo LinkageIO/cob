@@ -103,22 +103,32 @@ def term_network():
     parents = set()
     
     # Loop to build the gene nodes
+    aliases = cob.refgen.aliases([gene.id for gene in genes])
     for gene in genes:
+        # Catch for translating the way camoco works to the way We need for COB
         try:
             local_degree = locality.ix[gene.id]['local']
             global_degree = locality.ix[gene.id]['global']
         except KeyError as e:
             local_degree = global_degree = 0
         
+        # Catch for bug in camoco
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
             num_interv = 'NAN'
         
+        # If there are any aliases registered for the gene, add them
+        alias = ''
+        if gene.id in aliases:
+            for a in aliases[gene.id]:
+                alias = alias + a + ' '
+        
         net['nodes'].append({'data':{
             'id': gene.id,
             'type': 'gene',
             'snp': gene.attr['parent_locus'],
+            'alias': alias,
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
@@ -159,18 +169,22 @@ def custom_network():
     network = str(request.form['network'])
     maxNeighbors = int(request.form['maxNeighbors'])
     sigEdgeScore = float(request.form['sigEdgeScore'])
-    geneList = str(request.form['geneList']).upper()
+    geneList = str(request.form['geneList'])
     
     # Set up cob
     cob = networks[network]
     cob.set_sig_edge_zscore(sigEdgeScore)
     
     # Get the genes
-    queried = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', geneList)))
-    rejected = copy.copy(queried)
+    primary = set()
     neighbors = set()
-    for gene in cob.refgen.from_ids(queried):
+    rejected = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', geneList)))
+    for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
+        try: 
+            gene = cob.refgen.from_ids(name)
+        except ValueError:
+            continue
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
         
         # If we need to truncate the list, do so
@@ -178,15 +192,16 @@ def custom_network():
             nbs = nbs[0:(maxNeighbors-1)]
             
         # Strip everything except the gene IDs and add to the grand neighbor list
+        rejected.remove(name)
+        primary.add(gene.id)
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
-        rejected .remove(gene.id)
         if gene.id in new_genes:
             new_genes.remove(gene.id)
         neighbors = neighbors.union(set(new_genes))
     
     # Get gene objects from IDs, but save list both lists for later
-    genes = queried.union(neighbors)
-    genes = cob.refgen.from_ids(genes)
+    genes_set = primary.union(neighbors)
+    genes = cob.refgen.from_ids(genes_set)
     
     # Find the candidate genes (Really just here to get extra info, it's cheap)
     genes = cob.refgen.candidate_genes(
@@ -211,22 +226,32 @@ def custom_network():
     net['rejected'] = list(rejected)
     
     # Loop to build the gene nodes
+    aliases = cob.refgen.aliases(genes_set)
     for gene in genes:
+        # Catch for translating the way camoco works to the way We need for COB
         try:
             local_degree = locality.ix[gene.id]['local']
             global_degree = locality.ix[gene.id]['global']
         except KeyError as e:
             local_degree = global_degree = 0
         
+        # Catch for bug in camoco
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
             num_interv = 'NAN'
         
+        # If there are any aliases registered for the gene, add them
+        alias = ''
+        if gene.id in aliases:
+            for a in aliases[gene.id]:
+                alias = alias + a + ' '
+        
         node = {'data':{
             'id': gene.id,
             'type': 'gene',
             'snp': 'N/A',
+            'alias': alias,
             'origin': 'neighbor',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
@@ -239,10 +264,10 @@ def custom_network():
             #'parent_num_iterations': str(gene.attr['parent_numIterations']),
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
         }}
-        if gene.id in queried:
+        if gene.id in primary:
             node['data']['origin'] = 'query'
         net['nodes'].append(node)
-
+    
     # "Loop" to build the edge objects
     net['edges'] = [{'data':{
         'source': source,
