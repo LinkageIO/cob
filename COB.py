@@ -139,6 +139,7 @@ def term_network():
             'num_siblings': str(gene.attr['num_siblings']),
             #'parent_num_iterations': str(gene.attr['parent_numIterations']),
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+            'annotations': '',
         }})
         parents.add(gene.attr['parent_locus'])
         
@@ -263,6 +264,7 @@ def custom_network():
             'num_siblings': str(gene.attr['num_siblings']),
             #'parent_num_iterations': str(gene.attr['parent_numIterations']),
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+            'annotations': '',
         }}
         if gene.id in primary:
             node['data']['origin'] = 'query'

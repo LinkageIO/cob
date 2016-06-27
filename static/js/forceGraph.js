@@ -11,6 +11,7 @@ var newForce = function(resolve, reject){
     },
     type: 'POST',
     success: function(data){
+      console.log('Recieved Data');
       // Kill the old graph and build the new one
       if(cy != null){cy.destroy();cy = null;}
       isPoly = false;

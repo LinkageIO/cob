@@ -61,53 +61,84 @@ function buildTermTable(ontology){
 /*--------------------------------
       Gene Table Constructors
 ---------------------------------*/
+// Holds definition of columns for both tables
+function polyColumns(){
+  return [
+    {data: 'id', name:'id', title:'ID'},
+    {data: 'alias', name:'alias', title:'Alias'},
+    {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
+    {data: 'gdegree', name:'gdegree', title:'Global Degree'},
+    {data: 'chrom', name:'chrom', title:'Chrom'},
+    {data: 'snp', name:'snp', title:'SNP'},
+    {data: 'start', name:'start', title:'Start'},
+    {data: 'end', name:'end', title:'End'},
+    {data: 'annotations', name:'annotations', title:'Annotations'},
+    {data: 'num_intervening', name:'num_intervening', title:'Num Intervening'},
+    {data: 'rank_intervening', name:'rank_intervening', title:'Rank Intervening'},
+    {data: 'num_siblings', name:'num_siblings', title:'Num Siblings'},
+    {data: 'window_size', name:'window_size', title:'Window Size', visible: false},
+    {data: 'flank_limit', name:'flank_limit', title:'Flank Limit', visible: false},
+    //{data: 'parent_num_iterations', name:'parent_num_iterations', title: 'Num Parent Interactions'},
+    //{data: 'parent_avg_effect_size', name:'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
+  ];
+}
+
+function forceColumns(){
+  return [
+    {data: 'id', name:'id', title:'ID'},
+    {data: 'alias', name:'alias', title:'Alias'},
+    //{data: 'rendered', name:'rendered', title:'Rendered'},
+    {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
+    {data: 'gdegree', name:'gdegree', title:'Global Degree'},
+    {data: 'chrom', name:'chrom', title:'Chrom'},
+    {data: 'start', name:'start', title:'Start'},
+    {data: 'end', name:'end', title:'End'},
+    {data: 'annotations', name:'annotations', title:'Annotations'},
+  ];
+}
+
 // Initially build the Gene Table
-function buildGeneTable(){
-  $('#GeneTable').DataTable({
+function buildGeneTables(){
+  // Decide which set of columns we should use
+  if(isPoly){var cols = polyColumns();}
+  else{var cols = forceColumns();}
+  
+  // Destroy the old tables, remove columns, remove listeners
+  if($.fn.DataTable.isDataTable('#GeneTable')){
+    $('#GeneTable').DataTable().destroy();
+    $('#GeneTable').off().empty();
+  }
+  if($.fn.DataTable.isDataTable('#SubnetTable')){
+    $('#SubnetTable').DataTable().destroy();
+    $('#SubnetTable').off().empty();
+  }
+  
+  // Set up the main gene table
+  var gene_table = $('#GeneTable').DataTable({
       "data": [],
       "deferRender": false,
       "dom": '<"GeneTitle">frtipB',
-      "order": [[3,'asc'],[5,'asc']],
+      "order": [[4,'asc'],[6,'asc']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
       "scrollCollapse": true,
       "scroller": {displayBuffer: 1000},
-      "scrollXInner": "100%",
       "scrollX": "100%",
       "scrollY": ($(window).height()-275),
       "searching": true,
       "select": {"style": 'api'},
       "buttons": [{"extend": 'csv',"filename": 'genenetwork',}],
-      "columns": [
-        {data: 'id', title:'ID'},
-        {data: 'alias', title:'Alias'},
-        {data: 'cur_ldegree', title:'Local Degree'},
-        {data: 'gdegree', title:'Global Degree'},
-        {data: 'chrom', title:'Chrom'},
-        {data: 'snp', title:'SNP'},
-        {data: 'start', title:'Start'},
-        {data: 'end', title:'End'},
-        {data: 'num_intervening', title:'Num Intervening'},
-        {data: 'rank_intervening', title:'Rank Intervening'},
-        {data: 'num_siblings', title:'Num Siblings'},
-        {data: 'window_size', title:'Window Size', visible: false},
-        {data: 'flank_limit', title:'Flank Limit', visible: false},
-        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
-        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
-    ]});
+      "columns": cols,
+    });
   $("div.GeneTitle").html('Gene Data');
+  gene_table.columns('annotations:name').visible(false);
   
-  // Set Listeners
-  $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
-}
-
-// Initially build the subnetwork table
-function buildSubnetTable(){
-  $('#SubnetTable').DataTable({
+  // Set up the subnetwork gene table
+  var sub_table = $('#SubnetTable').DataTable({
       "data": [],
       "dom": '<"SubnetTitle">frtipB',
-      "order": [[3,'asc'],[5,'asc']],
+      "order": [[2,'asc'],[0,'asc']],
       "paging": false,
       "paginate": false,
       "rowId": 'id',
@@ -117,36 +148,22 @@ function buildSubnetTable(){
       "searching": true,
       "select": {"style": 'api'},
       "buttons": [{"extend": 'csv',"filename": 'subnetwork',}],
-      "columns": [
-        {data: 'id', title:'ID'},
-        {data: 'alias', title:'Alias'},
-        {data: 'cur_ldegree', title:'Local Degree'},
-        {data: 'gdegree', title:'Global Degree'},
-        {data: 'chrom', title:'Chrom'},
-        {data: 'snp', title:'SNP'},
-        {data: 'start', title:'Start'},
-        {data: 'end', title:'End'},
-        {data: 'num_intervening', title:'Num Intervening'},
-        {data: 'rank_intervening', title:'Rank Intervening'},
-        {data: 'num_siblings', title:'Num Siblings'},
-        {data: 'window_size', title:'Window Size', visible: false},
-        {data: 'flank_limit', title:'Flank Limit', visible: false},
-        //{data: 'parent_num_iterations', title: 'Num Parent Interactions'},
-        //{data: 'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
-    ]});
+      "columns": cols,
+    });
   $("div.SubnetTitle").html('Subnet Data');
+  sub_table.columns('ldegree:name, gdegree:name, start:name, end:name, num_intervening:name, rank_intervening:name, num_siblings:name, snp:name, rendered:name').visible(false);
   
   // Set Listeners
+  $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
   $('#SubnetTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
-  $('#SubnetTable tbody').on('mouseover','tr', popGene);
-}
-
-// Make the gene pop, but only if its not cancelled by a subsequent one
-function popGene(evt){
-  window.clearTimeout(popTimerID);
-  popTimerID = window.setTimeout(function(id){
-      cy.nodes('[id = "'+id+'"]').flashClass('pop',750);
-  }, 10, this['id']);
+  $('#SubnetTable tbody').on('mouseover','tr', function(evt){
+    if(this['id'].length > 0){
+      window.clearTimeout(popTimerID);
+      popTimerID = window.setTimeout(function(id){
+          cy.nodes('[id = "'+id+'"]').flashClass('pop',750);
+      }, 10, this['id']);
+    }
+  });
 }
 
 /*------------------------------------

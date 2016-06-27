@@ -138,6 +138,7 @@ function loadGraph(op, layout){
     pinkySwear.then(function(result){
       // Update the Table and such
       $('#navTabs a[href="#GeneTab"]').tab('show');
+      buildGeneTables();
       updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
       updateHUD();
       $("#cyWait").modal('hide');
