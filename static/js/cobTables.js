@@ -6,7 +6,7 @@ function buildNetworkTable(){
   $('#NetworkTable').DataTable().destroy();
   $('#NetworkTable').DataTable({
       "ajax": ($SCRIPT_ROOT + 'available_datasets/Expr'),
-      "bAutoWidth": false, 
+      "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
       "scrollCollapse": true,
@@ -25,7 +25,7 @@ function buildOntologyTable(){
   $('#OntologyTable').DataTable().destroy();
   $('#OntologyTable').DataTable({
       "ajax": ($SCRIPT_ROOT + 'available_datasets/GWAS'),
-      "bAutoWidth": false, 
+      "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
       "scrollCollapse": true,
@@ -44,7 +44,7 @@ function buildTermTable(ontology){
   $('#TermTable').DataTable().destroy();
   $('#TermTable').DataTable({
       "ajax": ($SCRIPT_ROOT + 'terms/' + ontology),
-      "bAutoWidth": false, 
+      "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
       "scrollCollapse": true,
@@ -102,7 +102,7 @@ function buildGeneTables(){
   // Decide which set of columns we should use
   if(isPoly){var cols = polyColumns();}
   else{var cols = forceColumns();}
-  
+
   // Destroy the old tables, remove columns, remove listeners
   if($.fn.DataTable.isDataTable('#GeneTable')){
     $('#GeneTable').DataTable().destroy();
@@ -112,7 +112,7 @@ function buildGeneTables(){
     $('#SubnetTable').DataTable().destroy();
     $('#SubnetTable').off().empty();
   }
-  
+
   // Set up the main gene table
   var gene_table = $('#GeneTable').DataTable({
       "data": [],
@@ -133,7 +133,7 @@ function buildGeneTables(){
     });
   $("div.GeneTitle").html('Gene Data');
   gene_table.columns('annotations:name').visible(false);
-  
+
   // Set up the subnetwork gene table
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
@@ -152,7 +152,7 @@ function buildGeneTables(){
     });
   $("div.SubnetTitle").html('Subnet Data');
   sub_table.columns('ldegree:name, gdegree:name, start:name, end:name, num_intervening:name, rank_intervening:name, num_siblings:name, snp:name, rendered:name').visible(false);
-  
+
   // Set Listeners
   $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
   $('#SubnetTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
@@ -172,24 +172,24 @@ function buildGeneTables(){
 function updateGraphTable(tableName, nodes){
   // Save original tab
   var oldTab = $('.active [role="tab"]').attr('href');
-  
+
   // Switch to needed tab, needed for column scaling
   $('#navTabs a[href="#'+tableName+'Tab"]').tab('show');
-  
+
   // Format the node data for the DataTable
   var geneData = [];
   var geneDict = null;
-  
+
   nodes.forEach(function(cur, idx, arr){
     geneDict = cur.data();
     geneDict['window_size'] = lastWindowSize;
     geneDict['flank_limit'] = lastFlankLimit;
     geneData.push(geneDict);
   });
-  
+
   // Clear old data and add new
   $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
-  
+
   // Return to original tab
   $('#navTabs a[href="'+oldTab+'"]').tab('show');
 }
