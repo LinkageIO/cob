@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import re
+import os
 import sys
 import json
 import copy
@@ -20,7 +21,8 @@ app = Flask(__name__)
 network_names = ['ZmRoot']
 
 # Folder with annotation files
-anote_folder =  'annotations/'
+anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
+os.makedirs(anote_folder, exist_ok=True)
 
 # Generate network list based on allowed list and load them into memory
 networks = {x:co.COB(x) for x in network_names}
@@ -253,7 +255,7 @@ def custom_network():
     # If there are no good genes, error out
     if(len(genes) <= 0):
         abort(400)
-    
+
     # Find the candidate genes (Really just here to get extra info, it's cheap)
     genes = cob.refgen.candidate_genes(
         genes,
