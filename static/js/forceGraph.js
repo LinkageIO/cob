@@ -10,38 +10,42 @@ var newForce = function(resolve, reject){
       geneList: $('#geneList').val(),
     },
     type: 'POST',
+    statusCode: {400: function(){reject('No input genes were present in the network.');}},
     success: function(data){
       // Kill the old graph and build the new one
       if(cy != null){cy.destroy();cy = null;}
       isPoly = false;
       initForceCyto(data);
       var genes = cy.nodes();
-      
+
       cy.startBatch();
       // Update the styles of the nodes for the new sizes
       updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
-      
+
       // Save the degree for the graph
       genes.forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
       cy.endBatch();
-      
+
       // Set up the gene node tap listener
       genes.on('tap', function(evt){
         // Only scroll to the gene if it isn't highlighted already
         if(!(evt.cyTarget.hasClass('highlighted'))){
           $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-        
+
         // Run the selection algorithm
         geneSelect(evt.cyTarget.data('id'));
       });
-      
+
       // Set the gene qTip listeners (only needs to be done once per full graph redo)
       genes.qtip({
         content: function(){
           var data = this.data();
-          return 'ID: '+data['id'].toString()+'<br>'+
-          'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-          'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          res = 'ID: '+data['id'].toString()+'<br>';
+          if(data['alias'].length > 0){
+            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
+          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
+          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          return res;
         },
         position: {my: 'bottom center', at: 'top center'},
         style: {
@@ -51,11 +55,11 @@ var newForce = function(resolve, reject){
         show: {event: 'mouseover'},
         hide: {event: 'mouseout'},
       });
-      
+
       if(data.rejected.length > 0){
         window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');
       }
-      
+
       if(cy !== null){resolve();}
       else{reject('Force graph build failed');}
     }});
@@ -64,10 +68,10 @@ var newForce = function(resolve, reject){
 var updateForce = function(resolve, reject){
   // Run the layout
   cy.layout(getForceLayoutOpts());
-  
+
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
-  
+
   if(cy !== null){resolve();}
   else{reject('Force graph update failed');}
 }
@@ -88,15 +92,15 @@ function initForceCyto(data){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
-    
+
     // Rendering Options
     pixelRatio: 1,
     hideEdgesOnViewport: false,
     textureOnViewport: true,
     wheelSensitivity: 0.5,
-    
+
     layout: getForceLayoutOpts(),
-    
+
     style: [
        {selector: '[origin = "query"]',
         css: {
@@ -143,4 +147,3 @@ function initForceCyto(data){
      edges: data.edges,
   }});
 }
-
