@@ -13,7 +13,7 @@ from genewordsearch.DBBuilder import geneWordBuilder
 from genewordsearch.GeneWordSearch import geneWords
 
 # Take a huge swig from the flask
-from flask import Flask, url_for, jsonify, request, send_from_directory
+from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 app = Flask(__name__)
 
 # Networks to load
@@ -225,7 +225,7 @@ def custom_network():
     # Get the genes
     primary = set()
     neighbors = set()
-    rejected = set(filter((lambda x: x != ''), re.split('\r| |,|\t|\n', geneList)))
+    rejected = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
         try:
@@ -250,6 +250,10 @@ def custom_network():
     genes_set = primary.union(neighbors)
     genes = cob.refgen.from_ids(genes_set)
 
+    # If there are no good genes, error out
+    if(len(genes) <= 0):
+        abort(400)
+    
     # Find the candidate genes (Really just here to get extra info, it's cheap)
     genes = cob.refgen.candidate_genes(
         genes,

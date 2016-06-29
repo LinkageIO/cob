@@ -23,17 +23,17 @@
   <!-- qTip2 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous">
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
-  
+
   <!-- Cytoscape and extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.6.12/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
-  
+
   <!-- Loaf COB -->
   <script>
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
     $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')
     }).appendTo('head');
-    
+
     // Set some global variables for reference
     var lastOntology = '';
     var lastTerm = '';
@@ -42,7 +42,7 @@
     var isPoly = null;
     var logSpacing = true;
     var popTimerID = 1;
-    
+
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
@@ -53,21 +53,21 @@
       var lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
       var lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
       var lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-      
+
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
         $.getScript(($SCRIPT_ROOT + 'static/js/cobTables.js'), function(){
           // Make sure the table is visible
           $('#NetworkWait').addClass("hidden");
           $('#Network').removeClass("hidden");
-          
+
           // Build some tables!
           buildNetworkTable();
         });
       });
     });
   </script>
-  
+
   <style>
     #cob {
       float: left;
@@ -131,7 +131,7 @@
 
 <!-- Actual Body -->
 <body>
-  
+
 <!-- Cytoscape Wait Modal -->
 <style></style>
 <div class="modal fade" id="cyWait" tabindex="-1" role="dialog">
@@ -142,7 +142,7 @@
       </div>
       <div class="modal-body" id="geneStatus">
         <p>We are now getting the node data (if needed) and running the layout algorithm.</p>
-        <p>For bigger networks this can take upwards of 30 seconds so please 
+        <p>For bigger networks this can take upwards of 30 seconds so please
         be patient, the page goes unresponsive while processing the layout.</p>
       </div>
     </div>
@@ -161,10 +161,10 @@
     <li role="presentation"><a aria-controls="GeneTab" href="#GeneTab" role="tab" data-toggle="tab">Genes</a></li>
     <li role="presentation"><a aria-controls="SubnetTab" href="#SubnetTab" role="tab" data-toggle="tab">Subnetwork</a></li>
   </ul>
-  
+
   <!-- Section for all of the Tab Content -->
   <div class="tab-content">
-    
+
     <!-- Network Selection Tab -->
     <div role="tabpanel" class="tab-pane active" id="NetworkTab">
       <!-- Section For Network Selection -->
@@ -181,7 +181,7 @@
           <tbody></tbody>
         </table>
       </div>
-    
+
       <!-- Section For Term Selection -->
       <br>
       <h5 id="GeneSelectWait">This selection will appear once you select a network above.</h5>
@@ -216,7 +216,7 @@
               </table>
             </div>
           </div>
-        
+
           <div role="tabpanel" class="tab-pane" id="TermGenesTab">
             <br>
             <div id="TermGenes">
@@ -228,36 +228,54 @@
           </div>
         </div>
       </div>
-      
+
     </div>
     <!-- End Network Selection Tab -->
-      
+
     <!-- Option Adjustment Tab -->
     <div role="tabpanel" class="tab-pane" id="OptsTab"><br>
       <form id="polyOpts" class="">
         <div class="form-group">
           <label>Window Size</label>
-          <input type="text" class="form-control" id="windowSize" value="50000" pattern="[0-9]+" size="7">
+          <input type="text" class="form-control" id="windowSize" value="50000" size="7">
+          <div class="alert alert-danger hidden" id="windowSizeError" role="alert">
+              Window Size must be between 0 and 1,000,000.
+          </div>
         </div>
         <div class="form-group">
           <label>Flank Limit</label>
-          <input type="text" class="form-control" id="flankLimit" value="2" size="3" pattern="[0-9]+">
+          <input type="text" class="form-control" id="flankLimit" value="2" size="3">
+          <div class="alert alert-danger hidden" id="flankLimitError" role="alert">
+              Flank Limit must be between 0 and 20.
+          </div>
         </div>
         <div class="form-group">
           <label>Minimum Node Degree</label>
-          <input type="text" class="form-control" id="nodeCutoff" value="1" size="2" pattern="[0-9]+">
+          <input type="text" class="form-control" id="nodeCutoff" value="1" size="2">
+          <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
+              Minimum Node Degree must be between 0 and 20.
+          </div>
         </div>
         <div class="form-group">
           <label>Minimum Edge Score</label>
-          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4">
+          <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
+              Minimum Edge Score must be between 3.0 and 20.0.
+          </div>
         </div>
         <div class="form-group">
           <label>Node Size</label>
-          <input type="text" class="form-control" id="polyNodeSize" value="10" size="2" pattern="[0-9]+">
+          <input type="text" class="form-control" id="polyNodeSize" value="10" size="2">
+          <div class="alert alert-danger hidden" id="polyNodeSizeError" role="alert">
+              Node Size must be between 5 and 50.
+          </div>
         </div>
         <div class="form-group">
-          <label>SNP Colors</label>
-          <input type="text" class="form-control" id="snpLevels" value="3" size="2" pattern="[1-4]+">
+          <label>Number of SNP Colors</label>
+          <input type="text" class="form-control" id="snpLevels" value="3" size="2">
+          <div class="alert alert-danger hidden" id="snpLevelsError" role="alert">
+              Number of SNP Colors must be between 1 and 5.
+          </div>
         </div>
         <div class="form-group">
           <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing</button>
@@ -266,21 +284,30 @@
       <form id="forceOpts" class="hidden">
         <div class="form-group">
           <label>Max Node Neighbors (-1 for all)</label>
-          <input type="text" class="form-control" id="maxNeighbors" value="15" size="3" pattern="[0-9]+">
+          <input type="text" class="form-control" id="maxNeighbors" value="15" size="3">
+          <div class="alert alert-danger hidden" id="maxNeighborsError" role="alert">
+              Max Node Neighbors must be above -1.
+          </div>
         </div>
         <div class="form-group">
           <label>Min Significant Edge Score</label>
-          <input type="text" class="form-control" id="sigEdgeScore" value="3.0" size="4" pattern="([0-9]+[0-9]|[3-9])\.*[0-9]*">
+          <input type="text" class="form-control" id="sigEdgeScore" value="3.0" size="4">
+          <div class="alert alert-danger hidden" id="sigEdgeScoreError" role="alert">
+              Min Significant Edge Score must be between 0.0 and 20.0.
+          </div>
         </div>
         <div class="form-group">
           <label>Node Size</label>
-          <input type="text" class="form-control" id="forceNodeSize" value="15" size="2" pattern="[0-9]+">
+          <input type="text" class="form-control" id="forceNodeSize" value="15" size="2">
+          <div class="alert alert-danger hidden" id="forceNodeSizeError" role="alert">
+              Node Size must be between 5 and 50.
+          </div>
         </div>
       </form>
       <input type="button" class="btn btn-primary" id="updateButton" value="Update">
     </div>
     <!-- End Parameter Adjustment Tab -->
-      
+
     <!-- Gene Table Tab -->
     <div role="tabpanel" class="tab-pane" id="GeneTab"><br>
       <table class="table" id="GeneTable">
@@ -288,7 +315,7 @@
       </table>
     </div>
     <!-- End Gene Table Tab -->
-    
+
     <!-- Sub Network Table Tab -->
     <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
       <table class="table" id="SubnetTable">
@@ -296,7 +323,7 @@
       </table>
     </div>
     <!-- End Gene Table Tab -->
-      
+
     </div>
   </div>
 </div>

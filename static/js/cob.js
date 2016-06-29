@@ -98,6 +98,40 @@ $('#clearSelectionButton').click(function(){
 /*---------------------------------------
       Load the Graph and Tables
 ---------------------------------------*/
+function checkOpts(layout){
+    var badFields = [];
+
+    if(layout === 'polywas'){
+        // Pull all of the options into numbers
+        var windowSize = parseInt(document.forms["polyOpts"]["windowSize"].value);
+        var flankLimit = parseInt(document.forms["polyOpts"]["flankLimit"].value);
+        var nodeCutoff = parseInt(document.forms["polyOpts"]["nodeCutoff"].value);
+        var edgeCutoff = parseFloat(document.forms["polyOpts"]["edgeCutoff"].value);
+        var polyNodeSize = parseInt(document.forms["polyOpts"]["polyNodeSize"].value);
+        var snpLevels = parseInt(document.forms["polyOpts"]["snpLevels"].value);
+
+        // Check each for snity and record if it's bad
+        if(!((windowSize >= 0)&&(windowSize <= 1000000))){badFields.push('windowSize');}
+        if(!((flankLimit >= 0)&&(flankLimit <= 20))){badFields.push('flankLimit');}
+        if(!((nodeCutoff >= 0)&&(nodeCutoff <= 20))){badFields.push('nodeCutoff');}
+        if(!((edgeCutoff >= 3.0)&&(edgeCutoff <= 20.0))){badFields.push('edgeCutoff');}
+        if(!((polyNodeSize >= 5)&&(polyNodeSize <= 50))){badFields.push('polyNodeSize');}
+        if(!((snpLevels >= 1)&&(snpLevels <= 5))){badFields.push('snpLevels');}
+    }
+    else{
+        // Pull all of the options into numbers
+        var maxNeighbors = parseInt(document.forms["forceOpts"]["maxNeighbors"].value);
+        var sigEdgeScore = parseFloat(document.forms["forceOpts"]["sigEdgeScore"].value);
+        var forceNodeSize = parseInt(document.forms["forceOpts"]["forceNodeSize"].value);
+
+        // Check each for snity and record if it's bad
+        if(!(maxNeighbors >= -1)){badFields.push('maxNeighbors');}
+        if(!((sigEdgeScore >= 0.0)&&(sigEdgeScore <= 20.0))){badFields.push('sigEdgeScore');}
+        if(!((forceNodeSize >= 5)&&(forceNodeSize <= 50))){badFields.push('forceNodeSize');}
+    }
+    return badFields;
+}
+
 function updateGraph(){
   if(cy == null){return;}
   if(isPoly){
@@ -118,33 +152,41 @@ function updateGraph(){
 
 // Get data and build the new graph
 function loadGraph(op, layout){
-  $("#cyWait").one('shown.bs.modal', function(){
-    // Update the persistent variables
-    lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
-    lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
-    lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
-    lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
+    $('.alert').addClass('hidden')
+    var badFields = checkOpts(layout);
+    if(badFields.length > 0){
+        badFields.forEach(function(cur, idx, arr){$('#'+cur+'Error').removeClass('hidden');});
+        $('#navTabs a[href="#OptsTab"]').tab('show');
+        return;
+    }
 
-    // Make a promise to do the graph
-    var pinkySwear = new Promise(function(resolve,reject){
-      if(op === 'new'){
-        if(layout === 'polywas'){newPoly(resolve,reject);}
-        else{newForce(resolve,reject);}}
-      else{
-        if(layout === 'polywas'){updatePoly(resolve,reject);}
-        else{updateForce(resolve,reject);}}
+    $("#cyWait").one('shown.bs.modal', function(){
+        // Update the persistent variables
+        lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
+        lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
+        lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
+        lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
+
+        // Make a promise to do the graph
+        var pinkySwear = new Promise(function(resolve,reject){
+          if(op === 'new'){
+            if(layout === 'polywas'){newPoly(resolve,reject);}
+            else{newForce(resolve,reject);}}
+          else{
+            if(layout === 'polywas'){updatePoly(resolve,reject);}
+            else{updateForce(resolve,reject);}}
+        });
+
+        pinkySwear.then(function(result){
+            // Update the Table and such
+            $('#navTabs a[href="#GeneTab"]').tab('show');
+            buildGeneTables();
+            updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
+            updateHUD();
+            $("#cyWait").modal('hide');
+        },function(err){$("#cyWait").modal('hide');window.alert(err);});
     });
-
-    pinkySwear.then(function(result){
-      // Update the Table and such
-      $('#navTabs a[href="#GeneTab"]').tab('show');
-      buildGeneTables();
-      updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
-      updateHUD();
-      $("#cyWait").modal('hide');
-    },function(err){console.log(err);});
-  });
-  $("#cyWait").modal('show');
+    $("#cyWait").modal('show');
 }
 
 /*--------------------------------
