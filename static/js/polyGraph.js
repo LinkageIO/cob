@@ -36,10 +36,13 @@ var newPoly = function(resolve, reject){
       genes.qtip({
         content: function(){
           var data = this.data();
-          return 'ID: '+data['id'].toString()+'<br>'+
-          'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-          'SNP: '+data['snp'].toString()+'<br>'+
-          'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          res = 'ID: '+data['id'].toString()+'<br>';
+          if(data['alias'].length > 0){
+            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
+          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
+          res += 'SNP: '+data['snp'].toString()+'<br>';
+          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          return res;
         },
         position: {my: 'bottom center', at: 'top center'},
         style: {

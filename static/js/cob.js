@@ -5,21 +5,21 @@
 $('#NetworkTable tbody').on('click','tr', function(){
   // Save the selected row
   lastNetwork = $('td', this).eq(0).text();
-  
+
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
-  
+
   // Prep the Ontology Table
   lastOntology = '';
   $('#GeneSelectWait').addClass("hidden");
   $('#GeneSelect').removeClass("hidden");
-  
+
   // Clean up the Term Table
   lastTerm = '';
   $('#Term').addClass('hidden');
   $('#TermWait').removeClass('hidden');
-  
+
   // Fetch and build the next table
   buildOntologyTable();
 });
@@ -28,16 +28,16 @@ $('#NetworkTable tbody').on('click','tr', function(){
 $('#OntologyTable tbody').on('click','tr', function(){
   // Highlight the relevant row
   lastOntology = $('td',this).eq(0).text();
-  
+
   // Clean up the graph
   if(cy != null){cy.destroy();cy = null;}
   updateHUD();
-  
+
   // Prep the Term Table
   lastTerm = '';
   $('#TermWait').addClass("hidden");
   $('#Term').removeClass("hidden");
-  
+
   // Fetch and build the network table
   buildTermTable(lastOntology);
 });
@@ -46,13 +46,13 @@ $('#OntologyTable tbody').on('click','tr', function(){
 $('#TermTable tbody').on('click','tr',function(){
     // Highlight the last line
     lastTerm = $('td',this).eq(0).text();
-    
+
     // Get the new Graph
     loadGraph('new','polywas');
 });
 
 $("#TermGenesButton").click(function(){
-  if($('#geneList').val().length > 5){loadGraph('new','force');}
+  if($('#geneList').val().length > 1){loadGraph('new','force');}
   else{window.alert('You need to enter at least one gene.');}
 });
 
@@ -101,7 +101,7 @@ $('#clearSelectionButton').click(function(){
 function updateGraph(){
   if(cy == null){return;}
   if(isPoly){
-    if(lastWindowSize === document.forms["polyOpts"]["windowSize"].value && 
+    if(lastWindowSize === document.forms["polyOpts"]["windowSize"].value &&
       lastFlankLimit === document.forms["polyOpts"]["flankLimit"].value && isPoly){
       loadGraph('update','polywas');
     }
@@ -124,7 +124,7 @@ function loadGraph(op, layout){
     lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
     lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
     lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-    
+
     // Make a promise to do the graph
     var pinkySwear = new Promise(function(resolve,reject){
       if(op === 'new'){
@@ -134,10 +134,11 @@ function loadGraph(op, layout){
         if(layout === 'polywas'){updatePoly(resolve,reject);}
         else{updateForce(resolve,reject);}}
     });
-    
+
     pinkySwear.then(function(result){
       // Update the Table and such
       $('#navTabs a[href="#GeneTab"]').tab('show');
+      buildGeneTables();
       updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
       updateHUD();
       $("#cyWait").modal('hide');
@@ -150,39 +151,39 @@ function loadGraph(op, layout){
      Gene Selection Function
 ---------------------------------*/
 function geneSelect(gene_id){
-  // Get the node object and whether it is lastly highlighted 
+  // Get the node object and whether it is lastly highlighted
   var gene_node = cy.nodes('[id = "'+gene_id+'"]');
   var genes = null;
   var edges = null;
   var isHigh = gene_node.hasClass('highlighted');
-  
+
   // Run all the graph mods as a batch
   cy.batch(function(){
     // Deselect all neighbors and edges
     cy.nodes('.neighbors').toggleClass('neighbors', false);
     cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
-    
+
     // If it's highlighted, unselect it
     if(isHigh){
       gene_node.toggleClass('highlighted', false);
       $('#GeneTable').DataTable().row('#'+gene_id).deselect();
     }
-    
+
     // Otherwise just add it to the list
     else{
       gene_node.toggleClass('highlighted', true);
       $('#GeneTable').DataTable().row('#'+gene_id).select();
     }
-    
+
     // Reselect all necessary edges and neighbors
     genes = cy.nodes('.highlighted');
     edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
     edges.connectedNodes().toggleClass('neighbors', true);
   });
-    
+
   // Update the subnetwork Table
   updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbors'));
-  
+
   // Select the highlighted ones
   genes.forEach(function(cur, idx, arr){
     $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();

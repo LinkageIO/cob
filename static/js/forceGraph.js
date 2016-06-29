@@ -11,6 +11,7 @@ var newForce = function(resolve, reject){
     },
     type: 'POST',
     success: function(data){
+      console.log('Recieved Data');
       // Kill the old graph and build the new one
       if(cy != null){cy.destroy();cy = null;}
       isPoly = false;
@@ -39,9 +40,12 @@ var newForce = function(resolve, reject){
       genes.qtip({
         content: function(){
           var data = this.data();
-          return 'ID: '+data['id'].toString()+'<br>'+
-          'Local Degree: '+data['cur_ldegree'].toString()+'<br>'+
-          'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          res = 'ID: '+data['id'].toString()+'<br>';
+          if(data['alias'].length > 0){
+            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
+          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
+          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
+          return res;
         },
         position: {my: 'bottom center', at: 'top center'},
         style: {
