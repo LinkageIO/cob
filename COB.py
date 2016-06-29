@@ -136,9 +136,14 @@ def term_network():
     net['nodes'] = []
     parents = set()
 
+    # Find alises and annotations if present
+    alias_db = cob.refgen.aliases([gene.id for gene in genes])
+    try:
+        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
+    except ValueError:
+        anote_db = {}
+
     # Loop to build the gene nodes
-    aliases = cob.refgen.aliases([gene.id for gene in genes])
-    anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
@@ -155,15 +160,15 @@ def term_network():
 
         # If there are any aliases registered for the gene, add them
         alias = ''
-        if gene.id in aliases:
-            for a in aliases[gene.id]:
-                alias = alias + a + ' '
+        if gene.id in alias_db:
+            for a in alias_db[gene.id]:
+                alias += a + ' '
 
         # Pull any annotations from our databases
-        anotes = ''
+        anote = ''
         if gene.id in anote_db:
-            for anote in anote_db[gene.id]:
-                anotes += anote + ' '
+            for a in anote_db[gene.id]:
+                anote += a + ' '
 
         net['nodes'].append({'data':{
             'id': gene.id,
@@ -180,7 +185,7 @@ def term_network():
             'num_siblings': str(gene.attr['num_siblings']),
             #'parent_num_iterations': str(gene.attr['parent_numIterations']),
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anotes,
+            'annotations': anote,
         }})
         parents.add(gene.attr['parent_locus'])
 
@@ -267,9 +272,14 @@ def custom_network():
     net['nodes'] = []
     net['rejected'] = list(rejected)
 
+    # Find alises and annotations if present
+    alias_db = cob.refgen.aliases([gene.id for gene in genes])
+    try:
+        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
+    except ValueError:
+        anote_db = {}
+
     # Loop to build the gene nodes
-    aliases = cob.refgen.aliases(genes_set)
-    anote_db = geneWords(genes_set, cob.refgen.organism, raw=True)
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
@@ -286,15 +296,15 @@ def custom_network():
 
         # If there are any aliases registered for the gene, add them
         alias = ''
-        if gene.id in aliases:
-            for a in aliases[gene.id]:
-                alias = alias + a + ' '
+        if gene.id in alias_db:
+            for a in alias_db[gene.id]:
+                alias += a + ' '
 
         # Pull any annotations from our databases
-        anotes = ''
+        anote = ''
         if gene.id in anote_db:
-            for anote in anote_db[gene.id]:
-                anotes += anote + ' '
+            for a in anote_db[gene.id]:
+                anote += a + ' '
 
         node = {'data':{
             'id': gene.id,
@@ -312,7 +322,7 @@ def custom_network():
             'num_siblings': str(gene.attr['num_siblings']),
             #'parent_num_iterations': str(gene.attr['parent_numIterations']),
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anotes,
+            'annotations': anote,
         }}
         if gene.id in primary:
             node['data']['origin'] = 'query'
