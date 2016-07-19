@@ -8,6 +8,7 @@
 
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/typeahead.js/0.11.1/typeahead.bundle.min.js" integrity="sha256-RWiU4omUU7tQ2M3wmRQNW9UL50MB4CucbRPCbsQv+X0=" crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
@@ -42,6 +43,7 @@
     var isPoly = null;
     var logSpacing = true;
     var popTimerID = 1;
+    var ids = [];
 
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
@@ -63,6 +65,9 @@
 
           // Build some tables!
           buildNetworkTable();
+          
+          // Set up empty typeahead instance
+          $('#geneList').typeahead({name:'empty',local: []});
         });
       });
     });
@@ -221,7 +226,7 @@
             <br>
             <div id="TermGenes">
               <label for="geneList">Enter query genes:</label>
-              <textarea class="form-control" rows="25" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a">GRMZM2G159456, GRMZM2G152135, GRMZM2G010044, rad51a</textarea>
+              <input type="text" class="typeahead form-control" rows="25" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a"></input>
             </div>
             <br>
             <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">

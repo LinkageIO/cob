@@ -101,6 +101,18 @@ def available_datasets(type=None,*args):
         return jsonify({"data" : list(co.available_datasets(type)[
                     ['Name','Description']].itertuples(index=False))})
 
+# Route for sending available typeahead data
+@app.route("/available_genes/<path:network>")
+def available_genes(network,*args):
+    cob = networks[network]
+    ids = list(cob._expr.index.values)
+    als = cob.refgen.aliases(ids)
+    for k,v in als.items():
+        ids += v
+    res = {}
+    res['geneIDs'] = list(set(ids))
+    return jsonify(res)
+
 # Route for finding and sending the available terms
 @app.route("/terms/<path:ontology>")
 def Ontology_Terms(ontology):
