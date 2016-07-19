@@ -10,8 +10,8 @@ import numpy as np
 import camoco as co
 from math import isinf
 from itertools import chain
-from genewordsearch.DBBuilder import geneWordBuilder
 from genewordsearch.GeneWordSearch import geneWords
+from genewordsearch.DBBuilder import geneWordBuilder
 
 # Take a huge swig from the flask
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
@@ -130,8 +130,7 @@ def term_network():
 
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes)
-    subnet.reset_index(inplace=True)
+    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -158,6 +157,7 @@ def term_network():
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
+            #print('Num Attr fail on gene: ' + str(gene.id))
             num_interv = 'NAN'
 
         # If there are any aliases registered for the gene, add them
@@ -197,16 +197,16 @@ def term_network():
         net['nodes'].insert(0, {'data':{
             'id': parent,
             'type': 'snp',
-            'chrom': parent_attr[2],
-            'start': parent_attr[3],
-            'end': parent_attr[4],
+            'chrom': str(parent_attr[2]),
+            'start': str(parent_attr[3]),
+            'end': str(parent_attr[4]),
         }})
 
     # "Loop" to build the edge objects
     net['edges'] = [{'data':{
         'source': source,
         'target' : target,
-        'weight' : weight
+        'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
 
     # Return it as a JSON object
@@ -270,8 +270,7 @@ def custom_network():
 
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes)
-    subnet.reset_index(inplace=True)
+    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -338,7 +337,7 @@ def custom_network():
     net['edges'] = [{'data':{
         'source': source,
         'target' : target,
-        'weight' : weight
+        'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
 
     # Return it as a JSON object
