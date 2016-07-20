@@ -8,6 +8,7 @@
 
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.6.1/jquery.textcomplete.min.js"></script>
 
   <!-- Bootstrap-->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
@@ -42,6 +43,7 @@
     var isPoly = null;
     var logSpacing = true;
     var popTimerID = 1;
+    var ids = [];
 
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
@@ -221,7 +223,7 @@
             <br>
             <div id="TermGenes">
               <label for="geneList">Enter query genes:</label>
-              <textarea class="form-control" rows="25" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a">GRMZM2G159456, GRMZM2G152135, GRMZM2G010044, rad51a</textarea>
+              <textarea type="text" class="form-control" rows="25" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a">GRMZM2G159456, GRMZM2G152135, GRMZM2G010044, rad51a</textarea>
             </div>
             <br>
             <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">
@@ -283,7 +285,7 @@
       </form>
       <form id="forceOpts" class="hidden">
         <div class="form-group">
-          <label>Max Node Neighbors (-1 for all)</label>
+          <label>Max Node Neighbors (-1 for all: May crash if gene is well connected!)</label>
           <input type="text" class="form-control" id="maxNeighbors" value="15" size="3">
           <div class="alert alert-danger hidden" id="maxNeighborsError" role="alert">
               Max Node Neighbors must be above -1.

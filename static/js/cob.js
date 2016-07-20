@@ -19,9 +19,27 @@ $('#NetworkTable tbody').on('click','tr', function(){
   lastTerm = '';
   $('#Term').addClass('hidden');
   $('#TermWait').removeClass('hidden');
-
+  
   // Fetch and build the next table
   buildOntologyTable();
+  
+  // Set up the typeahead engine for custom network
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'available_genes/' + lastNetwork),
+    success: function(data){
+        $('#geneList').textcomplete('destroy');
+        $('#geneList').textcomplete([{
+            match: /(^|\b)(\w{2,})$/,
+            search: function(term, callback){
+               callback($.map(data.geneIDs, function(word){
+                   return word.toLowerCase().indexOf(term.toLowerCase()) === 0 ? word : null;
+            }));},
+            replace: function(word){return word + ', ';}
+       }],{
+           maxCount: 15,
+           noResultsMessage: 'No gene IDs or aliases found.',
+       });}
+  });
 });
 
 // A row on the Term Table is selected

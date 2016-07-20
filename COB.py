@@ -10,8 +10,8 @@ import numpy as np
 import camoco as co
 from math import isinf
 from itertools import chain
-from genewordsearch.DBBuilder import geneWordBuilder
 from genewordsearch.GeneWordSearch import geneWords
+from genewordsearch.DBBuilder import geneWordBuilder
 
 # Take a huge swig from the flask
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
@@ -25,11 +25,24 @@ anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
 os.makedirs(anote_folder, exist_ok=True)
 
 # Generate network list based on allowed list and load them into memory
+print('Preloading networks into memory...')
 networks = {x:co.COB(x) for x in network_names}
 network_list = {'data': [[net.name, net.description] for name,net in networks.items()]}
 print('Availible Networks: ' + str(networks))
 
+# Prefetch the gene neames for all the networks
+print('Fetching gene names for networks...')
+network_genes = {}
+for name, net in networks.items():
+    ids = list(net._expr.index.values)
+    als = net.refgen.aliases(ids)
+    for k,v in als.items():
+        ids += v
+    network_genes[name] = list(set(ids))
+print('Found gene names')
+
 # Pull all annotation files from folder
+print('Processing gene annotation files in ' + anote_folder + '...')
 orgs = set()
 for name,net in networks.items():
     orgs.add(net.refgen.organism)
@@ -56,12 +69,15 @@ for org in orgs:
     # Actually run the database builder
     geneWordBuilder(org, fileList, geneCols, desCols, delimeters, headers)
     print('Finished these annotation files: ' + str(fileList))
+print('Processed all annotations')
 
 # Generate in Memory Avalible GWAS datasets list
+print('Finding available GWAS datasets...')
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
 
 # Generate in memory term lists
+print('Finding all available terms...')
 terms = {}
 for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
@@ -101,9 +117,14 @@ def available_datasets(type=None,*args):
         return jsonify({"data" : list(co.available_datasets(type)[
                     ['Name','Description']].itertuples(index=False))})
 
+# Route for sending available typeahead data
+@app.route("/available_genes/<path:network>")
+def available_genes(network):
+    return jsonify({'geneIDs': network_genes[network]})
+
 # Route for finding and sending the available terms
 @app.route("/terms/<path:ontology>")
-def Ontology_Terms(ontology):
+def ontology_terms(ontology):
     return jsonify(terms[ontology])
 
 # Route for sending the CoEx Network Data for graphing from prebuilt term
@@ -130,8 +151,7 @@ def term_network():
 
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes)
-    subnet.reset_index(inplace=True)
+    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -158,6 +178,7 @@ def term_network():
         try:
             num_interv = str(gene.attr['num_intervening'])
         except KeyError as e:
+            #print('Num Attr fail on gene: ' + str(gene.id))
             num_interv = 'NAN'
 
         # If there are any aliases registered for the gene, add them
@@ -197,16 +218,16 @@ def term_network():
         net['nodes'].insert(0, {'data':{
             'id': parent,
             'type': 'snp',
-            'chrom': parent_attr[2],
-            'start': parent_attr[3],
-            'end': parent_attr[4],
+            'chrom': str(parent_attr[2]),
+            'start': str(parent_attr[3]),
+            'end': str(parent_attr[4]),
         }})
 
     # "Loop" to build the edge objects
     net['edges'] = [{'data':{
         'source': source,
         'target' : target,
-        'weight' : weight
+        'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
 
     # Return it as a JSON object
@@ -238,7 +259,7 @@ def custom_network():
 
         # If we need to truncate the list, do so
         if((maxNeighbors > -1) and (len(nbs) > maxNeighbors)):
-            nbs = nbs[0:(maxNeighbors-1)]
+            nbs = nbs[0:(maxNeighbors)]
 
         # Strip everything except the gene IDs and add to the grand neighbor list
         rejected.remove(name)
@@ -270,8 +291,7 @@ def custom_network():
 
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes)
-    subnet.reset_index(inplace=True)
+    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -338,7 +358,7 @@ def custom_network():
     net['edges'] = [{'data':{
         'source': source,
         'target' : target,
-        'weight' : weight
+        'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
 
     # Return it as a JSON object
