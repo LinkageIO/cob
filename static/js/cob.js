@@ -37,7 +37,6 @@ $('#NetworkTable tbody').on('click','tr', function(){
             replace: function(word){return word + ', ';}
        }],{
            maxCount: 15,
-           dropdownClassName: 'dropdown-menu',
            noResultsMessage: 'No gene IDs or aliases found.',
        });}
   });
