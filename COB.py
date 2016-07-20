@@ -25,11 +25,24 @@ anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
 os.makedirs(anote_folder, exist_ok=True)
 
 # Generate network list based on allowed list and load them into memory
+print('Preloading networks into memory...')
 networks = {x:co.COB(x) for x in network_names}
 network_list = {'data': [[net.name, net.description] for name,net in networks.items()]}
 print('Availible Networks: ' + str(networks))
 
+# Prefetch the gene neames for all the networks
+print('Fetching gene names for networks...')
+network_genes = {}
+for name, net in networks.items():
+    ids = list(net._expr.index.values)
+    als = net.refgen.aliases(ids)
+    for k,v in als.items():
+        ids += v
+    network_genes[name] = list(set(ids))
+print('Found gene names')
+
 # Pull all annotation files from folder
+print('Processing gene annotation files in ' + anote_folder + '...')
 orgs = set()
 for name,net in networks.items():
     orgs.add(net.refgen.organism)
@@ -56,12 +69,15 @@ for org in orgs:
     # Actually run the database builder
     geneWordBuilder(org, fileList, geneCols, desCols, delimeters, headers)
     print('Finished these annotation files: ' + str(fileList))
+print('Processed all annotations')
 
 # Generate in Memory Avalible GWAS datasets list
+print('Finding available GWAS datasets...')
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
 
 # Generate in memory term lists
+print('Finding all available terms...')
 terms = {}
 for ont in gwas_sets['data']:
     terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
@@ -103,19 +119,12 @@ def available_datasets(type=None,*args):
 
 # Route for sending available typeahead data
 @app.route("/available_genes/<path:network>")
-def available_genes(network,*args):
-    cob = networks[network]
-    ids = list(cob._expr.index.values)
-    als = cob.refgen.aliases(ids)
-    for k,v in als.items():
-        ids += v
-    res = {}
-    res['geneIDs'] = list(set(ids))
-    return jsonify(res)
+def available_genes(network):
+    return jsonify({'geneIDs': network_genes[network]})
 
 # Route for finding and sending the available terms
 @app.route("/terms/<path:ontology>")
-def Ontology_Terms(ontology):
+def ontology_terms(ontology):
     return jsonify(terms[ontology])
 
 # Route for sending the CoEx Network Data for graphing from prebuilt term
@@ -250,7 +259,7 @@ def custom_network():
 
         # If we need to truncate the list, do so
         if((maxNeighbors > -1) and (len(nbs) > maxNeighbors)):
-            nbs = nbs[0:(maxNeighbors-1)]
+            nbs = nbs[0:(maxNeighbors)]
 
         # Strip everything except the gene IDs and add to the grand neighbor list
         rejected.remove(name)
