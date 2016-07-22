@@ -225,7 +225,7 @@ def term_network():
             'end': str(parent_attr[4]),
         }})
 
-    # "Loop" to build the edge objects
+    # Use the helper to get the edges
     geneList = [gene.id for gene in genes]
     net['edges'] = getEdges(geneList, cob)
 
@@ -365,6 +365,7 @@ def custom_network():
         # Add it to list
         net['nodes'].append(node)
     
+    # Use the helper to get edges
     net['edges'] = getEdges(geneList, cob)
     
     return jsonify(net)

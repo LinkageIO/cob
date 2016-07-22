@@ -184,7 +184,7 @@ function loadGraph(op,layout,nodes,edges){
         lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
         lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
         lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-        console.log('Int the loadGraph');
+        
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
           if(op === 'new'){
@@ -210,13 +210,34 @@ function loadGraph(op,layout,nodes,edges){
 /*--------------------------------
      Gene Selection Function
 ---------------------------------*/
-function geneSelect(gene_id){
+function geneSelect(geneID){
   // Get the node object and whether it is lastly highlighted
-  var gene_node = cy.nodes('[id = "'+gene_id+'"]');
-  if(gene_node === undefined){addGeneForce(gene_id);return;}
+  var ind = geneNodes.findIndex(function(cur,idx,arr){
+    return cur['data']['id'] === geneID;});
+  if(geneNodes[ind]['data']['render'] != 'x'){
+    // Save the highlighted genes
+    var highlighted = []
+    cy.nodes('.highlighted').forEach(function(cur,idx,arr){
+      highlighted.push(cur.data('id'));
+    });
+    console.log(highlighted);
+    
+    // Reload the graph with new gene
+    geneNodes[ind]['data']['render'] = 'x';
+    loadGraph('new','force',geneNodes);
+    
+    // Rehighlight all the genes
+    cy.startBatch();
+    highlighted.forEach(function(cur,idx,arr){
+      cy.nodes('[id = "'+cur['id']+'"]').toggleClass('highlighted', true);
+    });
+    cy.endBatch();
+  }
+  
+  var geneNode = cy.nodes('[id = "'+geneID+'"]');
   var genes = null;
   var edges = null;
-  var isHigh = gene_node.hasClass('highlighted');
+  var isHigh = geneNode.hasClass('highlighted');
 
   // Run all the graph mods as a batch
   cy.batch(function(){
@@ -226,14 +247,14 @@ function geneSelect(gene_id){
 
     // If it's highlighted, unselect it
     if(isHigh){
-      gene_node.toggleClass('highlighted', false);
-      $('#GeneTable').DataTable().row('#'+gene_id).deselect();
+      geneNode.toggleClass('highlighted', false);
+      $('#GeneTable').DataTable().row('#'+geneID).deselect();
     }
 
     // Otherwise just add it to the list
     else{
-      gene_node.toggleClass('highlighted', true);
-      $('#GeneTable').DataTable().row('#'+gene_id).select();
+      geneNode.toggleClass('highlighted', true);
+      $('#GeneTable').DataTable().row('#'+geneID).select();
     }
 
     // Reselect all necessary edges and neighbors

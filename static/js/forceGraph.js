@@ -12,14 +12,17 @@ var newForce = function(resolve, reject, nodes, edges){
       type: 'POST',
       statusCode: {400: function(){reject('No input genes were present in the network.');}},
       success: function(data){
-        geneNodes = data.nodes;
         buildNewForce(resolve,reject,data.nodes,data.edges,data.rejected);
       }
     });
   }
   else if(edges === undefined){
     var geneList = ''
-    nodes.forEach(function(cur,idx,arr){geneList += cur['id'] + ', ';});
+    nodes.forEach(function(cur,idx,arr){
+      if(cur['data']['render'] === 'x'){
+        geneList += cur['data']['id'] + ', ';
+      }
+    });
     $.ajax({
       url: ($SCRIPT_ROOT + 'gene_connections'),
       data: {
@@ -29,8 +32,7 @@ var newForce = function(resolve, reject, nodes, edges){
       },
       type: 'POST',
       success: function(data){
-        edges = data.edges;
-        buildNewForce(resolve,reject,nodes,edges,[]);
+        buildNewForce(resolve,reject,nodes,data.edges,[]);
       }
     });
   }
@@ -43,6 +45,7 @@ function buildNewForce(resolve,reject,nodes,edges,rejected){
   // Kill the old graph and build the new one
   if(cy != null){cy.destroy();cy = null;}
   isPoly = false;
+  geneNodes = nodes;
   nodes = nodes.filter(function(cur,idx,arr){return (cur['data']['render'] === 'x');});
   initForceCyto(nodes,edges);
   var genes = cy.nodes();

@@ -57,9 +57,9 @@ var newPoly = function(resolve, reject){
       // Set the SNPG qtips
       setSNPGqtips();
       
-      if(cy !== null){resolve(data.nodes);}
+      if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
       else{reject('Polywas graph build failed');}
-    }
+    } 
   });
 }
 
@@ -74,7 +74,7 @@ var updatePoly = function(resolve, reject){
   // Set the SNPG qtips
   setSNPGqtips();
   
-  if(cy !== null){resolve(geneNodes);}
+  if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
   else{reject('Polywas graph update failed');}
 }
 
