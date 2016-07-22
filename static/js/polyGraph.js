@@ -169,7 +169,7 @@ function initPolyCyto(data){
            'opacity': '0.5',
            'line-color': 'grey'
          }},
-       {selector: '.neighbors',
+       {selector: '.neighbor',
          css: {
            'background-color': '#ff6400',
        }},

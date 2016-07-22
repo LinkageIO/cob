@@ -117,7 +117,7 @@ function buildGeneTables(){
   var gene_table = $('#GeneTable').DataTable({
       "data": [],
       "deferRender": false,
-      "dom": '<"GeneTitle">frtipB',
+      "dom": '<"GeneTitle">frtpB',
       "order": [[4,'asc'],[6,'asc']],
       "paging": true,
       "paginate": true,
@@ -128,7 +128,10 @@ function buildGeneTables(){
       "scrollY": ($(window).height()-275),
       "searching": true,
       "select": {"style": 'api'},
-      "buttons": [{"extend": 'csv',"filename": 'genenetwork',}],
+      "buttons": [
+        {"extend": 'csv',"filename": 'genenetwork'},
+        {"text": 'Graph Subnet', "action": makeSubnet},
+      ],
       "columns": cols,
     });
   $("div.GeneTitle").html('Gene Data');
@@ -137,7 +140,7 @@ function buildGeneTables(){
   // Set up the subnetwork gene table
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
-      "dom": '<"SubnetTitle">frtipB',
+      "dom": '<"SubnetTitle">frtpB',
       "order": [[2,'asc'],[0,'asc']],
       "paging": false,
       "paginate": false,
@@ -147,7 +150,10 @@ function buildGeneTables(){
       "scrollY": $(window).height()-275,
       "searching": true,
       "select": {"style": 'api'},
-      "buttons": [{"extend": 'csv',"filename": 'subnetwork',}],
+      "buttons": [
+        {"extend": 'csv',"filename": 'subnetwork'},
+        {"text": 'Graph Subnet', "action": makeSubnet},
+      ],
       "columns": cols,
     });
   $("div.SubnetTitle").html('Subnet Data');
@@ -192,4 +198,29 @@ function updateGraphTable(tableName, nodes){
 
   // Return to original tab
   $('#navTabs a[href="'+oldTab+'"]').tab('show');
+}
+
+function makeSubnet(e,dt,node,config){
+  var nodeList = [];
+  var edgeList = [];
+  var dataDict = null;
+  $('#geneList').html('');
+  cy.nodes('.highlighted').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    dataDict['origin'] = 'query';
+    $('#geneList').append(dataDict['id']+', ');
+    nodeList.push({'data':dataDict});
+  });
+  cy.nodes('.neighbor').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    dataDict['origin'] = 'neighbor';
+    nodeList.push({'data':dataDict});
+  });
+  cy.edges('.highlightedEdge').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    edgeList.push({'data':dataDict});
+  });
+  loadGraph('new','force',{'nodes':nodeList,'edges':edgeList});
+  $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
+  return;
 }

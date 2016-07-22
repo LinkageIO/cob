@@ -198,6 +198,7 @@ def term_network():
             'type': 'gene',
             'snp': gene.attr['parent_locus'],
             'alias': alias,
+            'origin': 'N/A',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),

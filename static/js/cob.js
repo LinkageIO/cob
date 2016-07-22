@@ -106,7 +106,7 @@ $("#polyOpts, #forceOpts").keypress(function(evt){
 $('#clearSelectionButton').click(function(){
   if(cy == null){return;}
   cy.nodes('.highlighted').toggleClass('highlighted', false)
-  cy.nodes('.neighbors').toggleClass('neighbors', false);
+  cy.nodes('.neighbor').toggleClass('neighbor', false);
   cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
   $('#GeneTable').DataTable().rows('*').deselect();
   $('#SubnetTable').DataTable().clear().draw();
@@ -169,7 +169,7 @@ function updateGraph(){
 }
 
 // Get data and build the new graph
-function loadGraph(op, layout){
+function loadGraph(op, layout, geneData){
     $('.alert').addClass('hidden')
     var badFields = checkOpts(layout);
     if(badFields.length > 0){
@@ -184,10 +184,12 @@ function loadGraph(op, layout){
         lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
         lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
         lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-
+        
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
-          if(op === 'new'){
+          if(geneData){
+            newForce(resolve,reject,geneData);}
+          else if(op === 'new'){
             if(layout === 'polywas'){newPoly(resolve,reject);}
             else{newForce(resolve,reject);}}
           else{
@@ -220,7 +222,7 @@ function geneSelect(gene_id){
   // Run all the graph mods as a batch
   cy.batch(function(){
     // Deselect all neighbors and edges
-    cy.nodes('.neighbors').toggleClass('neighbors', false);
+    cy.nodes('.neighbor').toggleClass('neighbor', false);
     cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
 
     // If it's highlighted, unselect it
@@ -238,11 +240,11 @@ function geneSelect(gene_id){
     // Reselect all necessary edges and neighbors
     genes = cy.nodes('.highlighted');
     edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
-    edges.connectedNodes().toggleClass('neighbors', true);
+    edges.connectedNodes().not('.highlighted').toggleClass('neighbor', true);
   });
 
   // Update the subnetwork Table
-  updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbors'));
+  updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbor'));
 
   // Select the highlighted ones
   genes.forEach(function(cur, idx, arr){
