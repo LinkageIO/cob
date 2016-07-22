@@ -151,7 +151,6 @@ def term_network():
 
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -196,12 +195,14 @@ def term_network():
         net['nodes'].append({'data':{
             'id': gene.id,
             'type': 'gene',
+            'render': 'x',
             'snp': gene.attr['parent_locus'],
             'alias': alias,
             'origin': 'N/A',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
+            'cur_ldegree': str(0),
             'ldegree': str(local_degree),
             'gdegree': str(global_degree),
             'num_intervening': num_interv,
@@ -225,11 +226,8 @@ def term_network():
         }})
 
     # "Loop" to build the edge objects
-    net['edges'] = [{'data':{
-        'source': source,
-        'target' : target,
-        'weight' : str(weight)
-    }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
+    geneList = [gene.id for gene in genes]
+    net['edges'] = getEdges(geneList, cob)
 
     # Return it as a JSON object
     return jsonify(net)
@@ -249,6 +247,7 @@ def custom_network():
     # Get the genes
     primary = set()
     neighbors = set()
+    dontRender = set()
     rejected = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
@@ -258,22 +257,20 @@ def custom_network():
             continue
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
 
-        # If we need to truncate the list, do so
-        if((maxNeighbors > -1) and (len(nbs) > maxNeighbors)):
-            nbs = nbs[0:(maxNeighbors)]
-
         # Strip everything except the gene IDs and add to the grand neighbor list
         rejected.remove(name)
         primary.add(gene.id)
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
         if gene.id in new_genes:
             new_genes.remove(gene.id)
+        for nb in new_genes[maxNeighbors:]:
+            dontRender.add(nb)
         neighbors = neighbors.union(set(new_genes))
 
     # Get gene objects from IDs, but save list both lists for later
     genes_set = primary.union(neighbors)
     genes = cob.refgen.from_ids(genes_set)
-
+    
     # If there are no good genes, error out
     if(len(genes) <= 0):
         abort(400)
@@ -289,10 +286,11 @@ def custom_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-
+    
+    genes = list(filter((lambda x: x.id in genes_set), genes))
+    geneList = []
     # Values needed for later computations
     locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
 
     # Containers for the node info
     net = {}
@@ -336,12 +334,14 @@ def custom_network():
         node = {'data':{
             'id': gene.id,
             'type': 'gene',
+            'render': 'x',
             'snp': 'N/A',
             'alias': alias,
             'origin': 'neighbor',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
+            'cur_ldegree': str(0),
             'ldegree': str(local_degree),
             'gdegree': str(global_degree),
             'num_intervening': num_interv,
@@ -351,16 +351,51 @@ def custom_network():
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
             'annotations': anote,
         }}
+        
+        # Denote the query genes
         if gene.id in primary:
             node['data']['origin'] = 'query'
+        
+        # Denote whetther or not to render it
+        if gene.id in dontRender:
+            node['data']['render'] = ' '
+        else:
+            geneList.append(gene.id)
+        
+        # Add it to list
         net['nodes'].append(node)
+    
+    net['edges'] = getEdges(geneList, cob)
+    
+    return jsonify(net)
 
+@app.route("/gene_connections", methods=['POST'])
+def gene_connections():
+    # Get data from the form
+    network = str(request.form['network'])
+    sigEdgeScore = float(request.form['sigEdgeScore'])
+    geneList = str(request.form['geneList'])
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    # Set up the network
+    cob = networks[network]
+    cob.set_sig_edge_zscore(sigEdgeScore)
+    
+    # Return it as a JSON object
+    return jsonify({'edges':getEdges(geneList, cob)})
+
+def getEdges(geneList, cob):
+    # Find the Edges for the genes we will render
+    subnet = cob.subnetwork(
+        cob.refgen.from_ids(geneList),
+        names_as_index=False,
+        names_as_cols=True)
+    
     # "Loop" to build the edge objects
-    net['edges'] = [{'data':{
+    edges = [{'data':{
         'source': source,
         'target' : target,
         'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
-
-    # Return it as a JSON object
-    return jsonify(net)
+    
+    return edges

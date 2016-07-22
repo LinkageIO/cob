@@ -85,9 +85,9 @@ function polyColumns(){
 
 function forceColumns(){
   return [
+    {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
-    //{data: 'rendered', name:'rendered', title:'Rendered'},
     {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
     {data: 'gdegree', name:'gdegree', title:'Global Degree'},
     {data: 'chrom', name:'chrom', title:'Chrom'},
@@ -118,7 +118,7 @@ function buildGeneTables(){
       "data": [],
       "deferRender": false,
       "dom": '<"GeneTitle">frtpB',
-      "order": [[4,'asc'],[6,'asc']],
+      "order": [[0,'dec'],[1,'dec']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
@@ -175,7 +175,7 @@ function buildGeneTables(){
 /*------------------------------------
       Gene and Subnet Table Updater
 ------------------------------------*/
-function updateGraphTable(tableName, nodes){
+function updateGraphTable(tableName, genes){
   // Save original tab
   var oldTab = $('.active [role="tab"]').attr('href');
 
@@ -186,8 +186,9 @@ function updateGraphTable(tableName, nodes){
   var geneData = [];
   var geneDict = null;
 
-  nodes.forEach(function(cur, idx, arr){
-    geneDict = cur.data();
+  genes.forEach(function(cur, idx, arr){
+    if('cy' in cur){geneDict = cur.data();}
+    else{geneDict = cur['data'];}
     geneDict['window_size'] = lastWindowSize;
     geneDict['flank_limit'] = lastFlankLimit;
     geneData.push(geneDict);
@@ -220,7 +221,8 @@ function makeSubnet(e,dt,node,config){
     dataDict = cur.data();
     edgeList.push({'data':dataDict});
   });
-  loadGraph('new','force',{'nodes':nodeList,'edges':edgeList});
+  geneNodes = nodeList;
+  loadGraph('new','force', nodeList, edgeList);
   $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
   return;
 }

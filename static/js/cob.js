@@ -169,8 +169,8 @@ function updateGraph(){
 }
 
 // Get data and build the new graph
-function loadGraph(op, layout, geneData){
-    $('.alert').addClass('hidden')
+function loadGraph(op,layout,nodes,edges){
+    $('.alert').addClass('hidden');
     var badFields = checkOpts(layout);
     if(badFields.length > 0){
         badFields.forEach(function(cur, idx, arr){$('#'+cur+'Error').removeClass('hidden');});
@@ -184,14 +184,12 @@ function loadGraph(op, layout, geneData){
         lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
         lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
         lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-        
+        console.log('Int the loadGraph');
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
-          if(geneData){
-            newForce(resolve,reject,geneData);}
-          else if(op === 'new'){
+          if(op === 'new'){
             if(layout === 'polywas'){newPoly(resolve,reject);}
-            else{newForce(resolve,reject);}}
+            else{newForce(resolve,reject,nodes,edges);}}
           else{
             if(layout === 'polywas'){updatePoly(resolve,reject);}
             else{updateForce(resolve,reject);}}
@@ -201,7 +199,7 @@ function loadGraph(op, layout, geneData){
             // Update the Table and such
             $('#navTabs a[href="#GeneTab"]').tab('show');
             buildGeneTables();
-            updateGraphTable('Gene',cy.nodes('[type = "gene"]:visible'));
+            updateGraphTable('Gene',result);
             updateHUD();
             $("#cyWait").modal('hide');
         },function(err){$("#cyWait").modal('hide');window.alert(err);});
@@ -215,6 +213,7 @@ function loadGraph(op, layout, geneData){
 function geneSelect(gene_id){
   // Get the node object and whether it is lastly highlighted
   var gene_node = cy.nodes('[id = "'+gene_id+'"]');
+  if(gene_node === undefined){addGeneForce(gene_id);return;}
   var genes = null;
   var edges = null;
   var isHigh = gene_node.hasClass('highlighted');

@@ -14,7 +14,8 @@ var newPoly = function(resolve, reject){
     success: function(data){
       if(cy != null){cy.destroy();cy = null;}
       isPoly = true;
-      initPolyCyto(data);
+      geneNodes = data.nodes;
+      initPolyCyto(data.nodes,data.edges);
       
       // Update the styles of the nodes for the new sizes
       updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
@@ -56,7 +57,7 @@ var newPoly = function(resolve, reject){
       // Set the SNPG qtips
       setSNPGqtips();
       
-      if(cy !== null){resolve();}
+      if(cy !== null){resolve(data.nodes);}
       else{reject('Polywas graph build failed');}
     }
   });
@@ -73,7 +74,7 @@ var updatePoly = function(resolve, reject){
   // Set the SNPG qtips
   setSNPGqtips();
   
-  if(cy !== null){resolve();}
+  if(cy !== null){resolve(geneNodes);}
   else{reject('Polywas graph update failed');}
 }
 
@@ -110,7 +111,7 @@ function getPolyLayoutOpts(){
 }
 
 // Function to initialize the graph with polywas layout
-function initPolyCyto(data){
+function initPolyCyto(nodes,edges){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -191,7 +192,7 @@ function initPolyCyto(data){
          }},
      ],
    elements: {
-     nodes: data.nodes,
-     edges: data.edges,
+     nodes: nodes,
+     edges: edges,
   }});
 }

@@ -1,10 +1,6 @@
 // Promise function to build a new force directed graph
-var newForce = function(resolve, reject, data){
-  if(data !== undefined){
-    buildNewForce(resolve,reject,data.nodes,data.edges,[]);
-  }
-  else{
-  // Get the data and on completion, build the graph
+var newForce = function(resolve, reject, nodes, edges){
+  if((nodes === undefined) && (edges === undefined)){
     $.ajax({
       url: ($SCRIPT_ROOT + 'custom_network'),
       data: {
@@ -16,9 +12,30 @@ var newForce = function(resolve, reject, data){
       type: 'POST',
       statusCode: {400: function(){reject('No input genes were present in the network.');}},
       success: function(data){
+        geneNodes = data.nodes;
         buildNewForce(resolve,reject,data.nodes,data.edges,data.rejected);
       }
     });
+  }
+  else if(edges === undefined){
+    var geneList = ''
+    nodes.forEach(function(cur,idx,arr){geneList += cur['id'] + ', ';});
+    $.ajax({
+      url: ($SCRIPT_ROOT + 'gene_connections'),
+      data: {
+        network: lastNetwork,
+        sigEdgeScore: lastSigEdgeScore,
+        geneList: geneList,
+      },
+      type: 'POST',
+      success: function(data){
+        edges = data.edges;
+        buildNewForce(resolve,reject,nodes,edges,[]);
+      }
+    });
+  }
+  else{
+    buildNewForce(resolve,reject,nodes,edges,[]);
   }
 }
 
@@ -26,6 +43,7 @@ function buildNewForce(resolve,reject,nodes,edges,rejected){
   // Kill the old graph and build the new one
   if(cy != null){cy.destroy();cy = null;}
   isPoly = false;
+  nodes = nodes.filter(function(cur,idx,arr){return (cur['data']['render'] === 'x');});
   initForceCyto(nodes,edges);
   var genes = cy.nodes();
 
@@ -67,9 +85,11 @@ function buildNewForce(resolve,reject,nodes,edges,rejected){
     hide: {event: 'mouseout'},
   });
   
+  // If there we're any rejected genes, alert the user
   if(rejected.length > 0){
     window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');}
-  if(cy !== null){resolve();}
+    
+  if(cy !== null){resolve(geneNodes);}
   else{reject('Force graph build failed');}
 }
 
@@ -80,9 +100,10 @@ var updateForce = function(resolve, reject){
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
 
-  if(cy !== null){resolve();}
+  if(cy !== null){resolve(geneNodes);}
   else{reject('Force graph update failed');}
 }
+
 
 // Function to return an object for the layout options
 function getForceLayoutOpts(){
