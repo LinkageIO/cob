@@ -59,11 +59,12 @@ function buildTermTable(ontology){
 }
 
 /*--------------------------------
-      Gene Table Constructors
+      Column Definitions
 ---------------------------------*/
-// Holds definition of columns for both tables
+// Column definitions for polywas graphs
 function polyColumns(){
   return [
+    {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
     {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
@@ -83,6 +84,7 @@ function polyColumns(){
   ];
 }
 
+// Column definitions for force graphs
 function forceColumns(){
   return [
     {data: 'render', name:'rendered', title:'Vis'},
@@ -97,7 +99,9 @@ function forceColumns(){
   ];
 }
 
-// Initially build the Gene Table
+/*--------------------------------
+      Gene Table Constructors
+---------------------------------*/
 function buildGeneTables(){
   // Decide which set of columns we should use
   if(isPoly){var cols = polyColumns();}
@@ -118,7 +122,7 @@ function buildGeneTables(){
       "data": [],
       "deferRender": false,
       "dom": '<"GeneTitle">frtpB',
-      "order": [[0,'dec'],[1,'dec']],
+      "order": [[0,'dec'],[5,'asc'],[6,'dec']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
@@ -134,14 +138,11 @@ function buildGeneTables(){
       ],
       "columns": cols,
     });
-  $("div.GeneTitle").html('Gene Data');
-  gene_table.columns('annotations:name').visible(false);
-
+  
   // Set up the subnetwork gene table
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
       "dom": '<"SubnetTitle">frtpB',
-      "order": [[2,'asc'],[0,'asc']],
       "paging": false,
       "paginate": false,
       "rowId": 'id',
@@ -156,27 +157,35 @@ function buildGeneTables(){
       ],
       "columns": cols,
     });
+  
+  // Set the inline titles on the tables
+  $("div.GeneTitle").html('Gene Data');
   $("div.SubnetTitle").html('Subnet Data');
+  
+  // Hide the columns we don't need in the respective tables
+  gene_table.columns('annotations:name').visible(false);
   sub_table.columns('ldegree:name, gdegree:name, start:name, end:name, num_intervening:name, rank_intervening:name, num_siblings:name, snp:name, rendered:name').visible(false);
 
-  // Set Listeners
+  // Set listeners for selection
   $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
   $('#SubnetTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
+  
+  // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
     if(this['id'].length > 0){
       window.clearTimeout(popTimerID);
       popTimerID = window.setTimeout(function(id){
-          cy.nodes('[id = "'+id+'"]').flashClass('pop',750);
+          cy.getElementById(id).flashClass('pop',750);
       }, 10, this['id']);
     }
   });
 }
 
-/*------------------------------------
+/*---------------------------------------
       Gene and Subnet Table Updater
-------------------------------------*/
+---------------------------------------*/
 function updateGraphTable(tableName, genes){
-  // Save original tab
+  // Save original tab name
   var oldTab = $('.active [role="tab"]').attr('href');
 
   // Switch to needed tab, needed for column scaling
@@ -185,7 +194,8 @@ function updateGraphTable(tableName, genes){
   // Format the node data for the DataTable
   var geneData = [];
   var geneDict = null;
-
+  
+  // For each element, add the variables we need
   genes.forEach(function(cur, idx, arr){
     if('cy' in cur){geneDict = cur.data();}
     else{geneDict = cur['data'];}
@@ -201,28 +211,45 @@ function updateGraphTable(tableName, genes){
   $('#navTabs a[href="'+oldTab+'"]').tab('show');
 }
 
+/*---------------------------------------
+      Build Subnet Graph Function
+---------------------------------------*/
 function makeSubnet(e,dt,node,config){
   var nodeList = [];
   var edgeList = [];
   var dataDict = null;
+  
+  // Clear the genelist box for the new main genes
   $('#geneList').html('');
+  
+  // Find the main gene objects from the current graph
   cy.nodes('.highlighted').forEach(function(cur, idx, arr){
     dataDict = cur.data();
     dataDict['origin'] = 'query';
     $('#geneList').append(dataDict['id']+', ');
     nodeList.push({'data':dataDict});
   });
+  
+  // Find the neighbor gene object from the current graph
   cy.nodes('.neighbor').forEach(function(cur, idx, arr){
     dataDict = cur.data();
     dataDict['origin'] = 'neighbor';
     nodeList.push({'data':dataDict});
   });
+  
+  // Find the edge data objects from the current graph
   cy.edges('.highlightedEdge').forEach(function(cur, idx, arr){
     dataDict = cur.data();
     edgeList.push({'data':dataDict});
   });
+  
+  // Save the new gene object list
   geneNodes = nodeList;
-  loadGraph('new','force', nodeList, edgeList);
+  
+  // Switch to the gene list tab, also triggers option page to shift
   $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
+  
+  // Load the new graph using the found nodes and edges
+  loadGraph('new','force', nodeList, edgeList);
   return;
 }

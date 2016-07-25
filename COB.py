@@ -266,7 +266,7 @@ def custom_network():
         for nb in new_genes[maxNeighbors:]:
             dontRender.add(nb)
         neighbors = neighbors.union(set(new_genes))
-
+    
     # Get gene objects from IDs, but save list both lists for later
     genes_set = primary.union(neighbors)
     genes = cob.refgen.from_ids(genes_set)

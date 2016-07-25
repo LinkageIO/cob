@@ -1,5 +1,10 @@
-// Promise function to build a new force directed graph
-var newForce = function(resolve, reject, nodes, edges){
+// Promise function to build a new force directed graph 
+// This front end handles missing args, calls helper to build
+function newForce(resolve, reject, nodes, edges){
+  // Destroy the old graph if there is one
+  if(cy != null){cy.destroy();cy = null;}
+  isPoly = false;
+  
   if((nodes === undefined) && (edges === undefined)){
     $.ajax({
       url: ($SCRIPT_ROOT + 'custom_network'),
@@ -12,7 +17,12 @@ var newForce = function(resolve, reject, nodes, edges){
       type: 'POST',
       statusCode: {400: function(){reject('No input genes were present in the network.');}},
       success: function(data){
-        buildNewForce(resolve,reject,data.nodes,data.edges,data.rejected);
+        // If there we're any rejected genes, alert the user
+        if(data.rejected.length > 0){
+          window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');}
+      
+        // Build the graph
+        _newForce(resolve,reject,data.nodes,data.edges);
       }
     });
   }
@@ -32,81 +42,49 @@ var newForce = function(resolve, reject, nodes, edges){
       },
       type: 'POST',
       success: function(data){
-        buildNewForce(resolve,reject,nodes,data.edges,[]);
+        // Build the graph
+        _newForce(resolve,reject,nodes,data.edges);
       }
     });
   }
   else{
-    buildNewForce(resolve,reject,nodes,edges,[]);
+    // Build the graph
+    _newForce(resolve,reject,nodes,edges);
   }
 }
 
-function buildNewForce(resolve,reject,nodes,edges,rejected){
-  // Kill the old graph and build the new one
-  if(cy != null){cy.destroy();cy = null;}
-  isPoly = false;
+// Internals that actually build the new graph
+function _newForce(resolve,reject,nodes,edges,rejected){
+  // Save the nodes, Init the graph
   geneNodes = nodes;
-  nodes = nodes.filter(function(cur,idx,arr){return (cur['data']['render'] === 'x');});
-  initForceCyto(nodes,edges);
-  var genes = cy.nodes();
-
-  cy.startBatch();
+  initForceCyto(nodes.filter(function(cur,idx,arr){
+    return (cur['data']['render'] === 'x');
+  }),edges);
+  
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
 
   // Save the degree for the graph
-  genes.forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
-  cy.endBatch();
-
-  // Set up the gene node tap listener
-  genes.on('tap', function(evt){
-    // Only scroll to the gene if it isn't highlighted already
-    if(!(evt.cyTarget.hasClass('highlighted'))){
-      $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-
-    // Run the selection algorithm
-    geneSelect(evt.cyTarget.data('id'));
-  });
-
-  // Set the gene qTip listeners (only needs to be done once per full graph redo)
-  genes.qtip({
-    content: function(){
-      var data = this.data();
-      res = 'ID: '+data['id'].toString()+'<br>';
-      if(data['alias'].length > 0){
-        res += 'Alias(es): '+data['alias'].toString()+'<br>';}
-      res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-      res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
-      return res;
-    },
-    position: {my: 'bottom center', at: 'top center'},
-    style: {
-      classes: 'qtip-dark qtip-rounded qtip-shadow',
-      tip: {width: 10, height: 5},
-    },
-    show: {event: 'mouseover'},
-    hide: {event: 'mouseout'},
-  });
+  cy.nodes().forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
+  setGeneListeners();
   
-  // If there we're any rejected genes, alert the user
-  if(rejected.length > 0){
-    window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');}
-    
+  // Check for a graph and resolve
   if(cy !== null){resolve(geneNodes);}
   else{reject('Force graph build failed');}
 }
 
-var updateForce = function(resolve, reject){
+// Promise function handle updating exiisting force graph
+function updateForce(resolve, reject){
   // Run the layout
   cy.layout(getForceLayoutOpts());
 
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
-
+  
+  // Check for a graph and resolve
   if(cy !== null){resolve(geneNodes);}
   else{reject('Force graph update failed');}
 }
-
 
 // Function to return an object for the layout options
 function getForceLayoutOpts(){

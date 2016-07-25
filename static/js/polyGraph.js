@@ -1,5 +1,10 @@
-// Promise function to build a new polywas graph
+// Promise function to build a new polywas graph 
+// This front end handles missing args, calls helper to build
 var newPoly = function(resolve, reject){
+  // Destroy the old graph if there is one
+  if(cy != null){cy.destroy();cy = null;}
+  isPoly = true;
+  
   // Get the data and build the graph
   $.ajax({
     url: ($SCRIPT_ROOT + 'term_network'),
@@ -12,59 +17,30 @@ var newPoly = function(resolve, reject){
     },
     type: 'POST',
     success: function(data){
-      if(cy != null){cy.destroy();cy = null;}
-      isPoly = true;
-      geneNodes = data.nodes;
-      initPolyCyto(data.nodes,data.edges);
-      
-      // Update the styles of the nodes for the new sizes
-      updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
-      
-      // Set the snp group qtips
-      var genes = cy.nodes('[type = "gene"]');
-      
-      // Set up the gene node tap listener
-      genes.on('tap', function(evt){
-        // Only scroll to the gene if it isn't highlighted already
-        if(!(evt.cyTarget.hasClass('highlighted'))){
-          $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-        
-        // Run the selection algorithm
-        geneSelect(evt.cyTarget.data('id'));
-      });
-      
-      // Set the gene qTip listeners (only needs to be done once per full graph redo)
-      genes.qtip({
-        content: function(){
-          var data = this.data();
-          res = 'ID: '+data['id'].toString()+'<br>';
-          if(data['alias'].length > 0){
-            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
-          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-          res += 'SNP: '+data['snp'].toString()+'<br>';
-          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
-          return res;
-        },
-        position: {my: 'bottom center', at: 'top center'},
-        style: {
-          classes: 'qtip-dark qtip-rounded qtip-shadow',
-          tip: {width: 10, height: 5},
-        },
-        show: {event: 'mouseover'},
-        hide: {event: 'mouseout'},
-      });
-      
-      // Set the SNPG qtips
-      setSNPGqtips();
-      
-      if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
-      else{reject('Polywas graph build failed');}
+      _newPoly(resolve, reject, data.nodes, data.edges);
     } 
   });
 }
 
+function _newPoly(resolve, reject, nodes, edges){
+  // Save the nodes, Init the graph
+  geneNodes = nodes;
+  initPolyCyto(nodes,edges);
+  
+  // Update the styles of the nodes for the new sizes
+  updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
+  
+  // Set up the graph event listeners
+  setGeneListeners();
+  setSNPGqtips();
+  
+  // Check for a graph and resolve
+  if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
+  else{reject('Polywas graph build failed');}
+}
+
 // Promise function to update the polywas graph
-var updatePoly = function(resolve, reject){
+function updatePoly(resolve, reject){
   // Run the layout
   cy.layout(getPolyLayoutOpts());
   
