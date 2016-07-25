@@ -371,6 +371,9 @@ function setupTextComplete(network, selector){
   return;
 }
 
+/*------------------------------------------
+      Set Listeners for Genes in Graph
+------------------------------------------*/
 function setGeneListeners(){
   // Get all the genes
   var genes = cy.nodes('[type = "gene"]');
