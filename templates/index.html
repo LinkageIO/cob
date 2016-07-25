@@ -113,7 +113,7 @@
       right: 0;
       z-index: 10;
     }
-    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle, .SubnetTitle {
+    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle, .SubnetTitle, .GWSTitle {
       float: left;
       font-size: x-large;
     }
@@ -164,6 +164,7 @@
     <li role="presentation"><a aria-controls="opts" href="#OptsTab" role="tab" data-toggle="tab">Options</a></li>
     <li role="presentation"><a aria-controls="GeneTab" href="#GeneTab" role="tab" data-toggle="tab">Genes</a></li>
     <li role="presentation"><a aria-controls="SubnetTab" href="#SubnetTab" role="tab" data-toggle="tab">Subnetwork</a></li>
+    <li role="presentation"><a aria-controls="GWSTab" href="#GWSTab" role="tab" data-toggle="tab">GeneWordSearch</a></li>
   </ul>
 
   <!-- Section for all of the Tab Content -->
@@ -320,14 +321,22 @@
     </div>
     <!-- End Gene Table Tab -->
 
-    <!-- Sub Network Table Tab -->
+    <!-- Subnetwork Table Tab -->
     <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
       <table class="table" id="SubnetTable">
       <tbody></tbody>
       </table>
     </div>
-    <!-- End Gene Table Tab -->
-
+    <!-- End Subnetwork Table Tab -->
+    
+    <!-- GeneWordSearch Table Tab -->
+    <div role="tabpanel" class="tab-pane" id="GWSTab"><br>
+      <table class="table" id="GWSTable">
+      <tbody></tbody>
+      </table>
+    </div>
+    <!-- End GeneWordSearch Table Tab -->
+    
     </div>
   </div>
 </div>

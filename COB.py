@@ -10,8 +10,10 @@ import numpy as np
 import camoco as co
 from math import isinf
 from itertools import chain
+from genewordsearch.Classes import WordFreq
 from genewordsearch.GeneWordSearch import geneWords
 from genewordsearch.DBBuilder import geneWordBuilder
+from genewordsearch.GeneWordSearch import geneWordSearch
 
 # Take a huge swig from the flask
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
@@ -384,6 +386,21 @@ def gene_connections():
     
     # Return it as a JSON object
     return jsonify({'edges':getEdges(geneList, cob)})
+
+@app.route("/gene_word_search", methods=['POST'])
+def gene_word_search():
+    probCutoff = float(request.form['probCutoff'])
+    organism = networks[str(request.form['network'])].refgen.organism
+    geneList = str(request.form['geneList'])
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    # Run the analysis and return the JSONified results
+    try:
+        results = geneWordSearch(geneList, organism, minChance=probCutoff)
+    except KeyError:
+        abort(400)
+    ans = WordFreq.to_JSON_array(results[0])
+    return jsonify(result=ans)
 
 def getEdges(geneList, cob):
     # Find the Edges for the genes we will render

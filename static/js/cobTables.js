@@ -135,6 +135,7 @@ function buildGeneTables(){
       "buttons": [
         {"extend": 'csv',"filename": 'genenetwork'},
         {"text": 'Graph Subnet', "action": makeSubnet},
+        {"text": 'GWS', "action": gws},
       ],
       "columns": cols,
     });
@@ -154,6 +155,7 @@ function buildGeneTables(){
       "buttons": [
         {"extend": 'csv',"filename": 'subnetwork'},
         {"text": 'Graph Subnet', "action": makeSubnet},
+        {"text": 'GWS', "action": gws},
       ],
       "columns": cols,
     });
@@ -252,4 +254,60 @@ function makeSubnet(e,dt,node,config){
   // Load the new graph using the found nodes and edges
   loadGraph('new','force', nodeList, edgeList);
   return;
+}
+
+/*-------------------------------------------
+      Build GeneWordSearch Table Function
+-------------------------------------------*/
+function gws(e,dt,node,config){
+  var geneList = dt.rows().ids().reduce(function(pre,cur){return pre + ', ' + cur;});
+  
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'gene_word_search'),
+    data: {
+      network: lastNetwork,
+      probCutoff: 0.05,
+      geneList: geneList,
+    },
+    type: 'POST',
+    statusCode: {400: function(){
+      alert('At least one of the genes inputted is not present in the database');
+    }},
+    success: function(data){
+      // Nav to tab
+      $('#navTabs a[href="#GWSTab"]').tab('show');
+      
+      // Destroy old table if there
+      if($.fn.DataTable.isDataTable('#GWSTable')){
+        $('#GWSTable').DataTable().destroy();
+        $('#GWSTable').off().empty();
+      }
+      
+      // Build new table from data
+      $('#GWSTable').DataTable({
+        "data": JSON.parse(data.result),
+        "dom": '<"GWSTitle">frtipB',
+        "order": [[2,'asc']],
+        "paging": false,
+        "paginate": false,
+        "rowId": 'id',
+        "scrollCollapse": true,
+        "scrollX": "100%",
+        "scrollY": $(window).height()-275,
+        "searching": true,
+        "buttons": [
+          {"extend": 'csv',"filename": 'gws_result'},
+        ],
+        "columns": [
+          {'data':'word', 'name':'word', 'title':'Word'},
+          {'data':'pval', 'name':'pval', 'title':'P Val'},
+          {'data':'corpval', 'name':'corpval', 'title':'Corrected P'},
+          {'data':'length', 'name':'length', 'title':'Length'},
+          {'data':'totwords', 'name':'totwords', 'title':'Total Words'},
+          {'data':'overlap', 'name':'overlap', 'title':'Overlap'},
+        ]
+      });
+      $("div.GWSTitle").html('GeneWordSearch Results');
+    }
+  });
 }
