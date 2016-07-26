@@ -249,7 +249,7 @@ def custom_network():
     # Get the genes
     primary = set()
     neighbors = set()
-    dontRender = set()
+    render = set()
     rejected = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
@@ -258,15 +258,22 @@ def custom_network():
         except ValueError:
             continue
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
-
+        
         # Strip everything except the gene IDs and add to the grand neighbor list
         rejected.remove(name)
         primary.add(gene.id)
+        render.add(gene.id)
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
+        
+        # Build the set of genes that should be rendered
+        nbs = nbs[:maxNeighbors]
+        render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
+        
+        # Remove the query gene if it's present
         if gene.id in new_genes:
             new_genes.remove(gene.id)
-        for nb in new_genes[maxNeighbors:]:
-            dontRender.add(nb)
+        
+        # Add to the set of neighbor genes
         neighbors = neighbors.union(set(new_genes))
     
     # Get gene objects from IDs, but save list both lists for later
@@ -290,7 +297,6 @@ def custom_network():
         include_num_siblings=True)
     
     genes = list(filter((lambda x: x.id in genes_set), genes))
-    geneList = []
     # Values needed for later computations
     locality = cob.locality(genes)
 
@@ -336,14 +342,14 @@ def custom_network():
         node = {'data':{
             'id': gene.id,
             'type': 'gene',
-            'render': 'x',
+            'render': ' ',
             'snp': 'N/A',
             'alias': alias,
             'origin': 'neighbor',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
-            'cur_ldegree': str(0),
+            'cur_ldegree': str(local_degree),
             'ldegree': str(local_degree),
             'gdegree': str(global_degree),
             'num_intervening': num_interv,
@@ -359,16 +365,14 @@ def custom_network():
             node['data']['origin'] = 'query'
         
         # Denote whetther or not to render it
-        if gene.id in dontRender:
-            node['data']['render'] = ' '
-        else:
-            geneList.append(gene.id)
+        if gene.id in render:
+            node['data']['render'] = 'x'
         
         # Add it to list
         net['nodes'].append(node)
     
     # Use the helper to get edges
-    net['edges'] = getEdges(geneList, cob)
+    net['edges'] = getEdges(list(render), cob)
     
     return jsonify(net)
 
@@ -384,8 +388,13 @@ def gene_connections():
     cob = networks[network]
     cob.set_sig_edge_zscore(sigEdgeScore)
     
+    # Get the edges!
+    edges = getEdges(geneList, cob)
+    
+    # Filter the ones that are not attached to the new one
+    
     # Return it as a JSON object
-    return jsonify({'edges':getEdges(geneList, cob)})
+    return jsonify({'edges': edges})
 
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
@@ -399,8 +408,11 @@ def gene_word_search():
         results = geneWordSearch(geneList, organism, minChance=probCutoff)
     except KeyError:
         abort(400)
-    ans = WordFreq.to_JSON_array(results[0])
-    return jsonify(result=ans)
+    try:
+        results = WordFreq.to_JSON_array(results[0])
+    except IndexError:
+        abort(400)
+    return jsonify(result=results)
 
 def getEdges(geneList, cob):
     # Find the Edges for the genes we will render

@@ -138,7 +138,7 @@ function checkOpts(layout){
         var forceNodeSize = parseInt(document.forms["forceOpts"]["forceNodeSize"].value);
 
         // Check each for snity and record if it's bad
-        if(!(maxNeighbors >= -1)){badFields.push('maxNeighbors');}
+        if(!((maxNeighbors >= 0)&&(maxNeighbors <= 150))){badFields.push('maxNeighbors');}
         if(!((sigEdgeScore >= 0.0)&&(sigEdgeScore <= 20.0))){badFields.push('sigEdgeScore');}
         if(!((forceNodeSize >= 5)&&(forceNodeSize <= 50))){badFields.push('forceNodeSize');}
     }
@@ -202,7 +202,7 @@ function loadGraph(op,layout,nodes,edges){
             // Update the table and such
             $('#navTabs a[href="#GeneTab"]').tab('show');
             buildGeneTables();
-            updateGraphTable('Gene',result);
+            updateGraphTable('Gene', result);
             updateHUD();
             $('#cyWait').modal('hide');
             
@@ -248,7 +248,7 @@ function geneSelect(geneID){
     
     // Reload the graph with new gene
     geneNodes[ind]['data']['render'] = 'x';
-    loadGraph('new','force',geneNodes);
+    loadGraph('new', 'force', geneNodes);
   }
   
   // If we have one matching gene

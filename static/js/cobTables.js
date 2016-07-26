@@ -245,6 +245,12 @@ function makeSubnet(e,dt,node,config){
     edgeList.push({'data':dataDict});
   });
   
+  // Make sure there are genes to work with
+  if(nodeList.length === 0){
+    window.alert('There must be genes highlighted to graph the subnetwork');
+    return;
+  }
+  
   // Save the new gene object list
   geneNodes = nodeList;
   
@@ -260,8 +266,21 @@ function makeSubnet(e,dt,node,config){
       Build GeneWordSearch Table Function
 -------------------------------------------*/
 function gws(e,dt,node,config){
-  var geneList = dt.rows().ids().reduce(function(pre,cur){return pre + ', ' + cur;});
+  // Destroy old table if there
+  if($.fn.DataTable.isDataTable('#GWSTable')){
+    $('#GWSTable').DataTable().destroy();
+    $('#GWSTable').off().empty();
+  }
   
+  // Build the gene query list
+  var geneList = dt.rows().ids();
+  if(geneList.length === 0){
+    window.alert('There must be genes in the table to query GeneWordSearch.');
+    return;
+  }
+  geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});
+  
+  // Run the request to get results
   $.ajax({
     url: ($SCRIPT_ROOT + 'gene_word_search'),
     data: {
@@ -271,17 +290,12 @@ function gws(e,dt,node,config){
     },
     type: 'POST',
     statusCode: {400: function(){
-      alert('At least one of the genes inputted is not present in the database');
+      window.alert('There were no significant GeneWordSearch results for this query.');
+      return;
     }},
     success: function(data){
       // Nav to tab
       $('#navTabs a[href="#GWSTab"]').tab('show');
-      
-      // Destroy old table if there
-      if($.fn.DataTable.isDataTable('#GWSTable')){
-        $('#GWSTable').DataTable().destroy();
-        $('#GWSTable').off().empty();
-      }
       
       // Build new table from data
       $('#GWSTable').DataTable({

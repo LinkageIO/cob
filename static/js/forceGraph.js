@@ -54,7 +54,7 @@ function newForce(resolve, reject, nodes, edges){
 }
 
 // Internals that actually build the new graph
-function _newForce(resolve,reject,nodes,edges,rejected){
+function _newForce(resolve,reject,nodes,edges){
   // Save the nodes, Init the graph
   geneNodes = nodes;
   initForceCyto(nodes.filter(function(cur,idx,arr){
