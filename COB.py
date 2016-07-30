@@ -7,6 +7,7 @@ import copy
 import glob
 import logging
 import numpy as np
+import pandas as pd
 import camoco as co
 from math import isinf
 from itertools import chain
@@ -26,6 +27,10 @@ network_names = ['ZmRoot']
 anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
 os.makedirs(anote_folder, exist_ok=True)
 
+# ----------------------------------------
+#    Load things to memeory to prepare
+# ----------------------------------------
+
 # Generate network list based on allowed list and load them into memory
 print('Preloading networks into memory...')
 networks = {x:co.COB(x) for x in network_names}
@@ -37,46 +42,28 @@ print('Fetching gene names for networks...')
 network_genes = {}
 for name, net in networks.items():
     ids = list(net._expr.index.values)
-    als = net.refgen.aliases(ids)
+    als = co.RefGen(net._global('parent_refgen')).aliases(ids)
     for k,v in als.items():
         ids += v
     network_genes[name] = list(set(ids))
 print('Found gene names')
 
-# Pull all annotation files from folder
-print('Processing gene annotation files in ' + anote_folder + '...')
-orgs = set()
-for name,net in networks.items():
-    orgs.add(net.refgen.organism)
-
-# Process all of the annotations in the default folder
-for org in orgs:
-    # Variables for the loop
-    fileList = glob.glob(anote_folder + org + '*.[tc]sv')
-    geneCols = []
-    desCols = []
-    delimeters = []
-    headers = []
-
-    # For each file, find/set the parameters
-    for fd in fileList:
-        geneCols.append(1)
-        desCols.append('2 end')
-        if(fd[-3:] == 'tsv'):
-            delimeters.append('tab')
-        else:
-            delimeters.append(',')
-        headers.append(True)
-
-    # Actually run the database builder
-    geneWordBuilder(org, fileList, geneCols, desCols, delimeters, headers)
-    print('Finished these annotation files: ' + str(fileList))
-print('Processed all annotations')
-
 # Generate in Memory Avalible GWAS datasets list
 print('Finding available GWAS datasets...')
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
+
+# Find all of the GWAS data we have available
+print('Finding GWAS Data...')
+gwas_data_db = {}
+for gwas in co.available_datasets('GWASData')['Name']:
+    gwas_data_db[gwas] = co.GWASData(gwas) 
+
+# Find any functional annotations we have 
+print('Finding functional annotations...')
+func_data_db = {}
+for func in co.available_datasets('RefGenFunc')['Name']:
+    func_data_db[func] = co.RefGenFunc(func)
 
 # Generate in memory term lists
 print('Finding all available terms...')
@@ -132,15 +119,14 @@ def ontology_terms(ontology):
 # Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/term_network", methods=['POST'])
 def term_network():
-    # Get data from the form
-    network = str(request.form['network'])
+    # Get data from the form and derive some stuff
+    cob = networks[str(request.form['network'])]
     ontology = str(request.form['ontology'])
     term = str(request.form['term'])
     windowSize = int(request.form['windowSize'])
     flankLimit = int(request.form['flankLimit'])
-
-    # Get cob and such
-    cob = networks[network]
+    
+    # Get the candidates
     genes = cob.refgen.candidate_genes(
         co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
@@ -150,100 +136,31 @@ def term_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-
-    # Values needed for later computations
-    locality = cob.locality(genes)
-
-    # Containers for the node info
+    
+    # Find gwas data if it is there
+    gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
+        term=term,windowSize=windowSize,flankLimit=flankLimit)
+    
+    # Build up the network
     net = {}
-    net['nodes'] = []
-    parents = set()
-
-    # Find alises and annotations if present
-    alias_db = cob.refgen.aliases([gene.id for gene in genes])
-    try:
-        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
-    except ValueError:
-        anote_db = {}
-
-    # Loop to build the gene nodes
-    for gene in genes:
-        # Catch for translating the way camoco works to the way We need for COB
-        try:
-            local_degree = locality.ix[gene.id]['local']
-            global_degree = locality.ix[gene.id]['global']
-        except KeyError as e:
-            local_degree = global_degree = 0
-
-        # Catch for bug in camoco
-        try:
-            num_interv = str(gene.attr['num_intervening'])
-        except KeyError as e:
-            #print('Num Attr fail on gene: ' + str(gene.id))
-            num_interv = 'NAN'
-
-        # If there are any aliases registered for the gene, add them
-        alias = ''
-        if gene.id in alias_db:
-            for a in alias_db[gene.id]:
-                alias += a + ' '
-
-        # Pull any annotations from our databases
-        anote = ''
-        if gene.id in anote_db:
-            for a in anote_db[gene.id]:
-                anote += a + ' '
-
-        net['nodes'].append({'data':{
-            'id': gene.id,
-            'type': 'gene',
-            'render': 'x',
-            'snp': gene.attr['parent_locus'],
-            'alias': alias,
-            'origin': 'N/A',
-            'chrom': str(gene.chrom),
-            'start': str(gene.start),
-            'end': str(gene.end),
-            'cur_ldegree': str(0),
-            'ldegree': str(local_degree),
-            'gdegree': str(global_degree),
-            'num_intervening': num_interv,
-            'rank_intervening': str(gene.attr['intervening_rank']),
-            'num_siblings': str(gene.attr['num_siblings']),
-            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anote,
-        }})
-        parents.add(gene.attr['parent_locus'])
-
-    # Loop to build the SNP nodes
-    for parent in parents:
-        parent_attr = re.split('<|>|:|-', parent)
-        net['nodes'].insert(0, {'data':{
-            'id': parent,
-            'type': 'snp',
-            'chrom': str(parent_attr[2]),
-            'start': str(parent_attr[3]),
-            'end': str(parent_attr[4]),
-        }})
-
-    # Use the helper to get the edges
-    geneList = [gene.id for gene in genes]
-    net['edges'] = getEdges(geneList, cob)
-
+    net['nodes'] = getNodes(genes, cob, parents=True, gwas_data=gwas_data)
+    net['edges'] = getEdges([gene.id for gene in genes], cob)
+    
+    # Log Data Point to COB Log
+    cob.log(term + ': Found ' +
+        str(len(net['nodes'])) + ' nodes, ' +
+        str(len(net['edges'])) + ' edges')
+    
     # Return it as a JSON object
     return jsonify(net)
 
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
     # Get data from the form
-    network = str(request.form['network'])
+    cob = networks[str(request.form['network'])]
     maxNeighbors = int(request.form['maxNeighbors'])
     sigEdgeScore = float(request.form['sigEdgeScore'])
     geneList = str(request.form['geneList'])
-
-    # Set up cob
-    cob = networks[network]
     cob.set_sig_edge_zscore(sigEdgeScore)
 
     # Get the genes
@@ -280,11 +197,7 @@ def custom_network():
     genes_set = primary.union(neighbors)
     genes = cob.refgen.from_ids(genes_set)
     
-    # If there are no good genes, error out
-    if(len(genes) <= 0):
-        abort(400)
-
-    # Find the candidate genes (Really just here to get extra info, it's cheap)
+    # Get the candidates
     genes = cob.refgen.candidate_genes(
         genes,
         window_size=0,
@@ -296,83 +209,23 @@ def custom_network():
         include_rank_intervening=True,
         include_num_siblings=True)
     
+    # Filter the candidates down to the provided list of genes
     genes = list(filter((lambda x: x.id in genes_set), genes))
-    # Values needed for later computations
-    locality = cob.locality(genes)
-
-    # Containers for the node info
-    net = {}
-    net['nodes'] = []
-    net['rejected'] = list(rejected)
-
-    # Find alises and annotations if present
-    alias_db = cob.refgen.aliases([gene.id for gene in genes])
-    try:
-        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
-    except ValueError:
-        anote_db = {}
-
-    # Loop to build the gene nodes
-    for gene in genes:
-        # Catch for translating the way camoco works to the way We need for COB
-        try:
-            local_degree = locality.ix[gene.id]['local']
-            global_degree = locality.ix[gene.id]['global']
-        except KeyError as e:
-            local_degree = global_degree = 0
-
-        # Catch for bug in camoco
-        try:
-            num_interv = str(gene.attr['num_intervening'])
-        except KeyError as e:
-            num_interv = 'NAN'
-
-        # If there are any aliases registered for the gene, add them
-        alias = ''
-        if gene.id in alias_db:
-            for a in alias_db[gene.id]:
-                alias += a + ' '
-
-        # Pull any annotations from our databases
-        anote = ''
-        if gene.id in anote_db:
-            for a in anote_db[gene.id]:
-                anote += a + ' '
-
-        node = {'data':{
-            'id': gene.id,
-            'type': 'gene',
-            'render': ' ',
-            'snp': 'N/A',
-            'alias': alias,
-            'origin': 'neighbor',
-            'chrom': str(gene.chrom),
-            'start': str(gene.start),
-            'end': str(gene.end),
-            'cur_ldegree': str(local_degree),
-            'ldegree': str(local_degree),
-            'gdegree': str(global_degree),
-            'num_intervening': num_interv,
-            'rank_intervening': str(gene.attr['intervening_rank']),
-            'num_siblings': str(gene.attr['num_siblings']),
-            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anote,
-        }}
-        
-        # Denote the query genes
-        if gene.id in primary:
-            node['data']['origin'] = 'query'
-        
-        # Denote whetther or not to render it
-        if gene.id in render:
-            node['data']['render'] = 'x'
-        
-        # Add it to list
-        net['nodes'].append(node)
     
-    # Use the helper to get edges
+    # If there are no good genes, error out
+    if(len(genes) <= 0):
+        abort(400)
+
+    # Build up the objects
+    net = {}
+    net['nodes'] = getNodes(genes, cob, primary=primary, render=render)
+    net['rejected'] = list(rejected)
     net['edges'] = getEdges(list(render), cob)
+    
+    # Log Data Point to COB Log
+    cob.log('Custom Term: Found ' +
+        str(len(net['nodes'])) + ' nodes, ' +
+        str(len(net['edges'])) + ' edges')
     
     return jsonify(net)
 
@@ -413,6 +266,115 @@ def gene_word_search():
     except IndexError:
         abort(400)
     return jsonify(result=results)
+
+# --------------------------------------------
+#     Functions to get the nodes and edges
+# --------------------------------------------
+def getNodes(genes, cob, primary=None, render=None, parents=False, gwas_data=pd.DataFrame()):
+    # Cache the locality
+    locality = cob.locality(genes)
+    
+    # Containers for the node info
+    nodes = []
+    parent_set = set()
+
+    # Look for alises
+    aliases = co.RefGen(cob._global('parent_refgen')).aliases([gene.id for gene in genes])
+    
+    # Look for annotations
+    if cob._global('parent_refgen') in func_data_db:
+        func_data = func_data_db[cob._global('parent_refgen')][[gene.id for gene in genes]]
+    else:
+        func_data = {}
+
+    for gene in genes:
+        # Catch for translating the way camoco works to the way We need for COB
+        try:
+            local_degree = locality.ix[gene.id]['local']
+            global_degree = locality.ix[gene.id]['global']
+        except KeyError as e:
+            local_degree = global_degree = 0
+
+        # Catch for bug in camoco
+        try:
+            num_interv = str(gene.attr['num_intervening'])
+        except KeyError as e:
+            #print('Num Attr fail on gene: ' + str(gene.id))
+            num_interv = 'NAN'
+
+        # Pull any aliases from our database
+        alias = ''
+        if gene.id in aliases:
+            for a in aliases[gene.id]:
+                alias += a + ' '
+        
+        # Fetch the FDR if we can
+        fdr = np.nan
+        if gene.id in gwas_data.index:
+            fdr = gwas_data.loc[gene.id]['fdr']
+            
+        # Pull any annotations from our databases
+        anote = ''
+        if gene.id in func_data:
+            for a in func_data[gene.id]:
+                anote += a + ' '
+        
+        # Build the data object from our data
+        node = {'data':{
+            'id': gene.id,
+            'type': 'gene',
+            'render': 'x',
+            'snp': gene.attr['parent_locus'],
+            'alias': alias,
+            'origin': 'N/A',
+            'chrom': str(gene.chrom),
+            'start': str(gene.start),
+            'end': str(gene.end),
+            'cur_ldegree': str(0),
+            'ldegree': str(local_degree),
+            'gdegree': str(global_degree),
+            'fdr': str(fdr),
+            'num_intervening': num_interv,
+            'rank_intervening': str(gene.attr['intervening_rank']),
+            'num_siblings': str(gene.attr['num_siblings']),
+            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
+            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+            'annotations': anote,
+        }}
+        
+        # Denote the query genes
+        if primary:
+            if gene.id in primary:
+                node['data']['origin'] = 'query'
+            else:
+                node['data']['origin'] = 'neighbor'
+        
+        # Denote whether or not to render it if there is a list
+        if render:
+            if gene.id in render:
+                node['data']['render'] = 'x'
+            else:
+                node['data']['render'] = ' '
+        
+        if parents:
+            parent_set.add(gene.attr['parent_locus'])
+        
+        # Save the node to the list
+        nodes.append(node)
+        
+    # If needed, build nodes for the parent SNPS
+    if parents:
+        for parent in parent_set:
+            parent_attr = re.split('<|>|:|-', parent)
+            nodes.insert(0, {'data':{
+                'id': parent,
+                'type': 'snp',
+                'chrom': str(parent_attr[2]),
+                'start': str(parent_attr[3]),
+                'end': str(parent_attr[4]),
+            }})
+        
+    return nodes
 
 def getEdges(geneList, cob):
     # Find the Edges for the genes we will render

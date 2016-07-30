@@ -67,6 +67,7 @@ function polyColumns(){
     {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
+    {data: 'fdr', name:'fdr', title:'FDR'},
     {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
     {data: 'gdegree', name:'gdegree', title:'Global Degree'},
     {data: 'chrom', name:'chrom', title:'Chrom'},
@@ -135,7 +136,7 @@ function buildGeneTables(){
       "buttons": [
         {"extend": 'csv',"filename": 'genenetwork'},
         {"text": 'Graph Subnet', "action": makeSubnet},
-        {"text": 'GWS', "action": gws},
+        //{"text": 'GWS', "action": gws},
       ],
       "columns": cols,
     });
@@ -155,7 +156,7 @@ function buildGeneTables(){
       "buttons": [
         {"extend": 'csv',"filename": 'subnetwork'},
         {"text": 'Graph Subnet', "action": makeSubnet},
-        {"text": 'GWS', "action": gws},
+        //{"text": 'GWS', "action": gws},
       ],
       "columns": cols,
     });
@@ -265,6 +266,7 @@ function makeSubnet(e,dt,node,config){
 /*-------------------------------------------
       Build GeneWordSearch Table Function
 -------------------------------------------*/
+/*
 function gws(e,dt,node,config){
   // Destroy old table if there
   if($.fn.DataTable.isDataTable('#GWSTable')){
@@ -325,3 +327,4 @@ function gws(e,dt,node,config){
     }
   });
 }
+*/
