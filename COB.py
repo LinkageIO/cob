@@ -235,7 +235,13 @@ def custom_network():
     net = {}
     net['nodes'] = getNodes(genes, cob, 'custom', primary=primary, render=render, nodeCutoff=nodeCutoff)
     net['rejected'] = list(rejected)
-    net['edges'] = getEdges(list(render), cob)
+    
+    # Get the edges of the nodes that will be rendered
+    render_list = []
+    for node in net['nodes']:
+        if node['data']['render'] == 'x':
+            render_list.append(node['data']['id'])
+    net['edges'] = getEdges(render_list, cob)
     
     # Log Data Point to COB Log
     cob.log('Custom Term: Found ' +

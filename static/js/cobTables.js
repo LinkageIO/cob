@@ -99,7 +99,7 @@ function buildGeneTables(){
       "data": [],
       "deferRender": false,
       "dom": '<"GeneTitle">frtpB',
-      "order": [[0,'dec'],[5,'asc'],[6,'dec']],
+      "order": [[0,'dec'],[6,'asc'],[8,'asc']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
@@ -272,7 +272,7 @@ function makeSubnet(e,dt,node,config){
   $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
   
   // Load the new graph using the found nodes and edges
-  loadGraph('new','force', nodeList, edgeList);
+  loadGraph(true,false,undefined,nodeList,edgeList);
   return;
 }
 

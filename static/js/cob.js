@@ -7,7 +7,7 @@ $('#NetworkTable tbody').on('click','tr', function(){
   lastNetwork = $('td', this).eq(0).text();
 
   // Clean up the graph
-  if(cy != null){cy.destroy();cy = null;}
+  if(cy !== null){cy.destroy();cy = null;}
   updateHUD();
 
   // Prep the Ontology Table
@@ -24,7 +24,7 @@ $('#NetworkTable tbody').on('click','tr', function(){
   buildOntologyTable();
   
   // Set up the text completion engine for the gene list
-  setupTextComplete(lastNetwork, '#geneList')
+  setupTextComplete(lastNetwork, '#geneList');
 });
 
 // A row on the Term Table is selected
@@ -33,7 +33,7 @@ $('#OntologyTable tbody').on('click','tr', function(){
   lastOntology = $('td',this).eq(0).text();
 
   // Clean up the graph
-  if(cy != null){cy.destroy();cy = null;}
+  if(cy !== null){cy.destroy();cy = null;}
   updateHUD();
 
   // Prep the Term Table
@@ -51,7 +51,7 @@ $('#TermTable tbody').on('click','tr',function(){
     lastTerm = $('td',this).eq(0).text();
 
     // Get the new Graph
-    loadGraph('new','polywas');
+    loadGraph(true,true,true);
 });
 
 /*----------------------------------------------
@@ -59,7 +59,7 @@ $('#TermTable tbody').on('click','tr',function(){
 ----------------------------------------------*/
 // Build graph button is clicked
 $("#TermGenesButton").click(function(){
-  if($('#geneList').val().length > 1){loadGraph('new','force');}
+  if($('#geneList').val().length > 1){loadGraph(true,false,false);}
   else{window.alert('You need to enter at least one gene.');}
 });
 
@@ -83,7 +83,7 @@ $("#graphOpts").keypress(function(evt){
 
 // Clear Selection Button is pressed
 $('#clearSelectionButton').click(function(){
-  if(cy == null){return;}
+  if(cy === null){return;}
   
   // Remove the classes that highlight nodes
   cy.nodes('.highlighted').toggleClass('highlighted', false)
@@ -122,8 +122,7 @@ $('#toggleLayoutButton').click(function(){
   });
   
   // Update the graph with the new layout
-  if(isPoly()){loadGraph('new','force',geneNodes,edgeList);}
-  else{loadGraph('new','polywas',geneNodes,edgeList);}
+  loadGraph(true,(!(isPoly())),undefined,geneNodes,edgeList);
 });
 
 /*---------------------------------------
@@ -160,26 +159,20 @@ function checkOpts(){
 }
 
 function updateGraph(){
-  if(cy == null){return;}
-  if(lastEdgeCutoff === document.forms["graphOpts"]["edgeCutoff"].value &&
-    lastVisNeighbors === document.forms["graphOpts"]["visNeighbors"].value &&
-    lastWindowSize === document.forms["graphOpts"]["windowSize"].value &&
-    lastFlankLimit === document.forms["graphOpts"]["flankLimit"].value &&
-    lastNodeCutoff === document.forms["graphOpts"]["nodeCutoff"].value){
-    if(isPoly()){loadGraph('update','polywas');}
-    else{loadGraph('update','force');}
-  }
-  else{
-    if(isTerm()){loadGraph('new','polywas');}
-    else{loadGraph('new','force');}
-  }
+  if(cy === null){return;}
+  var newGraph = (lastEdgeCutoff !== document.forms["graphOpts"]["edgeCutoff"].value ||
+    lastVisNeighbors !== document.forms["graphOpts"]["visNeighbors"].value ||
+    lastWindowSize !== document.forms["graphOpts"]["windowSize"].value ||
+    lastFlankLimit !== document.forms["graphOpts"]["flankLimit"].value ||
+    lastNodeCutoff !== document.forms["graphOpts"]["nodeCutoff"].value);
+  loadGraph(newGraph,isPoly(),isTerm());
 }
 
 // Get data and build the new graph
-function loadGraph(op,layout,nodes,edges){
+function loadGraph(newGraph,poly,term,nodes,edges){
     // Check all of the relevant options and prompt if any have bad inputs
     $('.alert').addClass('hidden');
-    var badFields = checkOpts(layout);
+    var badFields = checkOpts();
     if(badFields.length > 0){
         badFields.forEach(function(cur, idx, arr){$('#'+cur+'Error').removeClass('hidden');});
         $('#navTabs a[href="#OptsTab"]').tab('show');
@@ -197,11 +190,14 @@ function loadGraph(op,layout,nodes,edges){
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
-          if(op === 'new'){
-            if(layout === 'polywas'){newPoly(resolve,reject,nodes,edges);}
+          if(newGraph && (nodes === undefined || edges === undefined)){
+            if(term){getTermNet(resolve,reject,poly);}
+            else{getCustomNet(resolve,reject,poly);}}
+          else if(newGraph){
+            if(poly){newPoly(resolve,reject,nodes,edges);}
             else{newForce(resolve,reject,nodes,edges);}}
           else{
-            if(layout === 'polywas'){updatePoly(resolve,reject);}
+            if(poly){updatePoly(resolve,reject);}
             else{updateForce(resolve,reject);}}
         });
 

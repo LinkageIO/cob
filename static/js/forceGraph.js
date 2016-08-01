@@ -1,39 +1,8 @@
 // Promise function to build a new force directed graph 
-// This front end handles missing args, calls helper to build
-function newForce(resolve, reject, nodes, edges){
+function newForce(resolve,reject,nodes,edges){
   // Destroy the old graph if there is one
   if(cy != null){cy.destroy();cy = null;}
   
-  if((nodes === undefined) || (edges === undefined)){
-    $.ajax({
-      url: ($SCRIPT_ROOT + 'custom_network'),
-      data: {
-        network: lastNetwork,
-        edgeCutoff: lastEdgeCutoff,
-        nodeCutoff: lastNodeCutoff,
-        maxNeighbors: lastVisNeighbors,
-        geneList: $('#geneList').val(),
-      },
-      type: 'POST',
-      statusCode: {400: function(){reject('No input genes were present in the network.');}},
-      success: function(data){
-        // If there we're any rejected genes, alert the user
-        if(data.rejected.length > 0){
-          window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');}
-      
-        // Build the graph
-        _newForce(resolve,reject,data.nodes,data.edges);
-      }
-    });
-  }
-  else{
-    // Build the graph
-    _newForce(resolve,reject,nodes,edges);
-  }
-}
-
-// Internals that actually build the new graph
-function _newForce(resolve,reject,nodes,edges){
   // Save the nodes, Init the graph
   geneNodes = nodes;
   initForceCyto(nodes.filter(function(cur,idx,arr){

@@ -47,6 +47,7 @@
     var graphLoadedEvent = jQuery.Event('graphLoaded');
 
     // Load in the scripts
+    $.getScript(($SCRIPT_ROOT + 'static/js/getNetwork.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));

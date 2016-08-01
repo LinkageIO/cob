@@ -1,34 +1,8 @@
 // Promise function to build a new polywas graph 
-// This front end handles missing args, calls helper to build
-var newPoly = function(resolve, reject, nodes, edges){
+function newPoly(resolve, reject, nodes, edges){
   // Destroy the old graph if there is one
   if(cy != null){cy.destroy();cy = null;}
   
-  if((nodes === undefined) || (edges === undefined)){
-    // Get the data and build the graph
-    $.ajax({
-      url: ($SCRIPT_ROOT + 'term_network'),
-      data: {
-        network: lastNetwork,
-        ontology: lastOntology,
-        term: lastTerm,
-        windowSize: lastWindowSize,
-        flankLimit: lastFlankLimit,
-        edgeCutoff: lastEdgeCutoff,
-        nodeCutoff: lastNodeCutoff,
-      },
-      type: 'POST',
-      success: function(data){
-        _newPoly(resolve, reject, data.nodes, data.edges);
-      } 
-    });
-  }
-  else{
-    _newPoly(resolve, reject, nodes, edges);
-  }
-}
-
-function _newPoly(resolve, reject, nodes, edges){
   // Save the nodes, Init the graph
   geneNodes = nodes;
   initPolyCyto(nodes.filter(function(cur,idx,arr){
