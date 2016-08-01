@@ -59,8 +59,6 @@ function setSNPGqtips(){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
-    minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
     nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
     geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
     logSpacing: logSpacing,

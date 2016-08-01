@@ -10,8 +10,6 @@ var register = function(cy){
     nodeHeight: 30, // Diameter of the SNP nodes
     geneOffset: 30, // Distance between stacked genes
     radWidth: 0.015, // Thickness of the chromosomes lines
-    minEdgeScore: 3.0, // Minimum edge score to be rendered (3.0 is min val)
-    minNodeDegree: 1, // Minimum local degree for a node to be rendered
     logSpacing: false, // Log or linear SNP layout along chromosome
     geneSelector: '[type = "gene"]', // Selector that denotes gene nodes
     snpLevels: 3, // How many colors to stripe the snps
