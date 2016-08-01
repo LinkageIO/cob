@@ -131,6 +131,7 @@ $('#toggleLayoutButton').click(function(){
 ---------------------------------------*/
 // Function to determine whether or not this is a polywas graph currently
 function isPoly(){return cy.options().layout.name === 'polywas';}
+function isTerm(){return !(geneNodes[0]['data']['term'] === 'custom');}
 
 // Validate the parameter values
 function checkOpts(){
@@ -160,15 +161,16 @@ function checkOpts(){
 
 function updateGraph(){
   if(cy == null){return;}
-  if(lastWindowSize === document.forms["graphOpts"]["windowSize"].value &&
-    lastFlankLimit === document.forms["graphOpts"]["flankLimit"].value && 
-    lastEdgeCutoff === document.forms["graphOpts"]["edgeCutoff"].value &&
-    lastVisNeighbors === document.forms["graphOpts"]["visNeighbors"].value){
+  if(lastEdgeCutoff === document.forms["graphOpts"]["edgeCutoff"].value &&
+    lastVisNeighbors === document.forms["graphOpts"]["visNeighbors"].value &&
+    lastWindowSize === document.forms["graphOpts"]["windowSize"].value &&
+    lastFlankLimit === document.forms["graphOpts"]["flankLimit"].value &&
+    lastNodeCutoff === document.forms["graphOpts"]["nodeCutoff"].value){
     if(isPoly()){loadGraph('update','polywas');}
     else{loadGraph('update','force');}
   }
   else{
-    if(isPoly()){loadGraph('new','polywas');}
+    if(isTerm()){loadGraph('new','polywas');}
     else{loadGraph('new','force');}
   }
 }
@@ -187,10 +189,11 @@ function loadGraph(op,layout,nodes,edges){
     // After the wait dialog is open, load the graph
     $("#cyWait").one('shown.bs.modal', function(){
         // Update the persistent variables
-        lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
-        lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
         lastEdgeCutoff = document.forms["graphOpts"]["edgeCutoff"].value;
         lastVisNeighbors = document.forms["graphOpts"]["visNeighbors"].value;
+        lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
+        lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
+        lastNodeCutoff = document.forms["graphOpts"]["nodeCutoff"].value;
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
@@ -317,7 +320,7 @@ function updateHUD(){
     msg += lastNetwork + ' > ';
     
     // If it's a polywas graph, add term details
-    if(isPoly()){
+    if(isTerm()){
       msg += lastOntology + ' > '
       msg += lastTerm +' > '
       msg += lastWindowSize + '/' + lastFlankLimit;

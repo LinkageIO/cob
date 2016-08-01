@@ -9,7 +9,8 @@ function newForce(resolve, reject, nodes, edges){
       url: ($SCRIPT_ROOT + 'custom_network'),
       data: {
         network: lastNetwork,
-        sigEdgeScore: lastEdgeCutoff,
+        edgeCutoff: lastEdgeCutoff,
+        nodeCutoff: lastNodeCutoff,
         maxNeighbors: lastVisNeighbors,
         geneList: $('#geneList').val(),
       },
@@ -89,16 +90,20 @@ function initForceCyto(nodes, edges){
     layout: getForceLayoutOpts(),
 
     style: [
+      {selector: '[type = "gene"]',
+       css: {
+         'z-index': '1',
+         'shape': 'circle',
+         'background-color': '#337ab7',
+       }},
        {selector: '[origin = "query"]',
         css: {
-          'z-index': '2',
-          'shape': 'circle',
+          'z-index': '3',
           'background-color': 'DarkOrchid',
         }},
         {selector: '[origin = "neighbor"]',
          css: {
-           'z-index': '1',
-           'shape': 'circle',
+           'z-index': '2',
            'background-color': 'MediumSeaGreen',
          }},
        {selector: 'edge',

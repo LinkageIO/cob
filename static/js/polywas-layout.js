@@ -55,6 +55,7 @@ var register = function(cy){
     var nodes = cy.nodes();
     var genes = nodes.filter(options.geneSelector);
     
+    /*
     // Hide edges that are not above the threshold
     options.eles.edges().filter(function(i, ele){
         return (parseFloat(ele.data('weight')) < options.minEdgeScore);
@@ -64,7 +65,7 @@ var register = function(cy){
     genes = genes.difference(genes.filter(function(i, ele){
       return (parseInt(ele.data('ldegree')) < options.minNodeDegree);
     }).style({'display': 'none'}));
-    
+    */
     // Find the new degree for the visible genes
     genes.forEach(function(cur, idx, arr){
       cur.data('cur_ldegree', cur.connectedEdges(':visible').length);

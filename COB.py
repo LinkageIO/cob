@@ -125,8 +125,9 @@ def term_network():
     term = str(request.form['term'])
     windowSize = int(request.form['windowSize'])
     flankLimit = int(request.form['flankLimit'])
-    sigEdgeScore = float(request.form['sigEdgeScore'])
-    cob.set_sig_edge_zscore(sigEdgeScore)
+    edgeCutoff = float(request.form['edgeCutoff'])
+    nodeCutoff = int(request.form['nodeCutoff'])
+    cob.set_sig_edge_zscore(edgeCutoff)
     
     # Get the candidates
     genes = cob.refgen.candidate_genes(
@@ -146,14 +147,18 @@ def term_network():
     if ontology in gwas_data_db:
         gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
-        net['nodes'] = getNodes(genes, cob, gwas_data=gwas_data)
+        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff)
     
     # Otherwise just run it without
     else:
-        net['nodes'] = getNodes(genes, cob)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff)
     
-    # Get the edges
-    net['edges'] = getEdges([gene.id for gene in genes], cob)
+    # Get the edges of the nodes that will be rendered
+    render_list = []
+    for node in net['nodes']:
+        if node['data']['render'] == 'x':
+            render_list.append(node['data']['id'])
+    net['edges'] = getEdges(render_list, cob)
     
     # Log Data Point to COB Log
     cob.log(term + ': Found ' +
@@ -168,9 +173,10 @@ def custom_network():
     # Get data from the form
     cob = networks[str(request.form['network'])]
     maxNeighbors = int(request.form['maxNeighbors'])
-    sigEdgeScore = float(request.form['sigEdgeScore'])
+    edgeCutoff = float(request.form['edgeCutoff'])
+    nodeCutoff = int(request.form['nodeCutoff'])
     geneList = str(request.form['geneList'])
-    cob.set_sig_edge_zscore(sigEdgeScore)
+    cob.set_sig_edge_zscore(edgeCutoff)
 
     # Get the genes
     primary = set()
@@ -227,7 +233,7 @@ def custom_network():
 
     # Build up the objects
     net = {}
-    net['nodes'] = getNodes(genes, cob, primary=primary, render=render)
+    net['nodes'] = getNodes(genes, cob, 'custom', primary=primary, render=render, nodeCutoff=nodeCutoff)
     net['rejected'] = list(rejected)
     net['edges'] = getEdges(list(render), cob)
     
@@ -280,7 +286,8 @@ def gene_word_search():
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-def getNodes(genes, cob, primary=None, render=None, gwas_data=pd.DataFrame()):
+def getNodes(genes, cob, term, primary=None, render=None,
+    gwas_data=pd.DataFrame(), nodeCutoff=0):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -334,6 +341,7 @@ def getNodes(genes, cob, primary=None, render=None, gwas_data=pd.DataFrame()):
             'id': gene.id,
             'type': 'gene',
             'render': 'x',
+            'term': term,
             'snp': gene.attr['parent_locus'],
             'alias': alias,
             'origin': 'N/A',
@@ -361,7 +369,12 @@ def getNodes(genes, cob, primary=None, render=None, gwas_data=pd.DataFrame()):
         
         # Denote whether or not to render it if there is a list
         if render:
-            if gene.id in render:
+            if (gene.id in render) and (local_degree >= nodeCutoff):
+                node['data']['render'] = 'x'
+            else:
+                node['data']['render'] = ' '
+        else:
+            if local_degree >= nodeCutoff:
                 node['data']['render'] = 'x'
             else:
                 node['data']['render'] = ' '

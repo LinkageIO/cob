@@ -59,11 +59,11 @@ function buildTermTable(ontology){
 }
 
 /*--------------------------------
-      Column Definitions
+      Gene Table Constructors
 ---------------------------------*/
-// Column definitions for polywas graphs
-function polyColumns(){
-  return [
+function buildGeneTables(){
+  // Enumerated column data!
+  var cols = [
     {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
@@ -83,32 +83,7 @@ function polyColumns(){
     //{data: 'parent_num_iterations', name:'parent_num_iterations', title: 'Num Parent Interactions'},
     //{data: 'parent_avg_effect_size', name:'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
   ];
-}
-
-// Column definitions for force graphs
-function forceColumns(){
-  return [
-    {data: 'render', name:'rendered', title:'Vis'},
-    {data: 'id', name:'id', title:'ID'},
-    {data: 'alias', name:'alias', title:'Alias'},
-    {data: 'fdr', name:'fdr', title:'FDR'},
-    {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
-    {data: 'gdegree', name:'gdegree', title:'Global Degree'},
-    {data: 'chrom', name:'chrom', title:'Chrom'},
-    {data: 'start', name:'start', title:'Start'},
-    {data: 'end', name:'end', title:'End'},
-    {data: 'annotations', name:'annotations', title:'Annotations'},
-  ];
-}
-
-/*--------------------------------
-      Gene Table Constructors
----------------------------------*/
-function buildGeneTables(){
-  // Decide which set of columns we should use
-  if(isPoly()){var cols = polyColumns();}
-  else{var cols = forceColumns();}
-
+  
   // Destroy the old tables, remove columns, remove listeners
   if($.fn.DataTable.isDataTable('#GeneTable')){
     $('#GeneTable').DataTable().destroy();
@@ -207,6 +182,9 @@ function updateGraphTable(tableName, genes){
   var geneData = [];
   var geneDict = null;
   var hasFDR = false;
+  var hasNumInter = false;
+  var hasRankInter = false;
+  var hasNumSiblings = false; 
   
   // For each element, add the variables we need
   cy.startBatch();
@@ -217,21 +195,34 @@ function updateGraphTable(tableName, genes){
     }
     else{
       var node = cy.getElementById(cur['data']['id']);
-      if(node.length > 0){cur['data']['cur_ldegree'] = node.degree();}
-      else{cur['data']['cur_ldegree'] = 0;}
+      if(node.length > 0){
+        cur['data']['cur_ldegree'] = node.degree();
+        cur['data']['render'] = 'x';
+      }
+      else{
+        cur['data']['cur_ldegree'] = 0;
+        cur['data']['render'] = ' ';
+      }
       geneDict = cur['data'];
     }
     geneDict['window_size'] = lastWindowSize;
     geneDict['flank_limit'] = lastFlankLimit;
     if(geneDict['fdr'] !== 'nan'){hasFDR = true;}
+    if(geneDict['num_intervening'] > -1){hasNumInter = true;}
+    if(geneDict['rank_intervening'] > 2.0){hasRankInter = true;}
+    if(geneDict['num_siblings'] > 2){hasNumSiblings = true;}
     geneData.push(geneDict);
   });
   cy.endBatch();
 
   // Clear old data and add new
-  $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
-  $('#'+tableName+'Table').DataTable().columns('fdr:name').visible(hasFDR);
-
+  var tbl = $('#'+tableName+'Table').DataTable();
+  tbl.clear().rows.add(geneData).draw();
+  tbl.columns('fdr:name').visible(hasFDR);
+  tbl.columns('num_intervening:name').visible(hasNumInter);
+  tbl.columns('rank_intervening:name').visible(hasRankInter);
+  tbl.columns('num_siblings:name').visible(hasNumSiblings);
+  
   // Return to original tab
   $('#navTabs a[href="'+oldTab+'"]').tab('show');
 }

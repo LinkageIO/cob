@@ -14,7 +14,8 @@ var newPoly = function(resolve, reject, nodes, edges){
         term: lastTerm,
         windowSize: lastWindowSize,
         flankLimit: lastFlankLimit,
-        sigEdgeScore: lastEdgeCutoff,
+        edgeCutoff: lastEdgeCutoff,
+        nodeCutoff: lastNodeCutoff,
       },
       type: 'POST',
       success: function(data){
