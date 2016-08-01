@@ -69,6 +69,14 @@ for func in co.available_datasets('RefGenFunc')['Name']:
     func_data_db[func].to_csv(os.path.join(scratch_folder,(func+'.tsv')))
     geneWordBuilder(func,[os.path.join(scratch_folder,(func+'.tsv'))],[1],['2 end'],['tab'],[True])
 
+# Find any GO ontologies we have for the networks we have
+print('Finding applicable GO Ontologies...')
+GOnt_db = {}
+for name in co.available_datasets('GOnt')['Name']:
+    gont = co.GOnt(name)
+    if gont.refgen.name not in GOnt_db:
+        GOnt_db[gont.refgen.name] = gont
+
 # Generate in memory term lists
 print('Finding all available terms...')
 terms = {}
@@ -278,16 +286,51 @@ def gene_connections():
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
     probCutoff = float(request.form['probCutoff'])
-    organism = networks[str(request.form['network'])]._global('parent_refgen')
+    cob = networks[str(request.form['network'])]
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
     # Run the analysis and return the JSONified results
-    results = geneWordSearch(geneList, organism, minChance=probCutoff)
+    if cob._global('parent_refgen') in func_data_db:
+        results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=probCutoff)
+    else:
+        abort(460)
     if len(results[0]) == 0:
-        abort(400)
+        abort(461)
     results = WordFreq.to_JSON_array(results[0])
     return jsonify(result=results)
+
+@app.route("/go_enrichment", methods=['POST'])
+def go_enrichment():
+    probCutoff = float(request.form['probCutoff'])
+    cob = networks[str(request.form['network'])]
+    geneList = str(request.form['geneList'])
+    minTerm = int(request.form['minTerm'])
+    maxTerm = int(request.form['maxTerm'])
+    
+    # Parse the genes
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    # Get the things for enrichment
+    genes = cob.refgen.from_ids(geneList)
+    if cob._global('parent_refgen') in GOnt_db:
+        gont = GOnt_db[cob._global('parent_refgen')]
+    else:
+        abort(460)
+
+    # Run the enrichment
+    cob.log('Running GO Enrichment...')
+    enr = gont.enrichment(genes, pval_cutoff=probCutoff, min_term_size=minTerm, max_term_size=maxTerm)
+    if len(enr) == 0:
+        abort(461)
+    
+    # Extract the results for returning
+    terms = []
+    for term in enr:
+        terms.append({'id':term.id,'name':term.name,'desc':term.desc})
+    df = pd.DataFrame(terms).drop_duplicates(subset='id')
+    cob.log('Found {} enriched terms.', str(df.shape[0]))
+    return jsonify(df.to_json(orient='index'))
 
 # --------------------------------------------
 #     Functions to get the nodes and edges
