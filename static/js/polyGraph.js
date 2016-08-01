@@ -1,41 +1,48 @@
 // Promise function to build a new polywas graph 
 // This front end handles missing args, calls helper to build
-var newPoly = function(resolve, reject){
+var newPoly = function(resolve, reject, nodes, edges){
   // Destroy the old graph if there is one
   if(cy != null){cy.destroy();cy = null;}
-  isPoly = true;
   
-  // Get the data and build the graph
-  $.ajax({
-    url: ($SCRIPT_ROOT + 'term_network'),
-    data: {
-      network: lastNetwork,
-      ontology: lastOntology,
-      term: lastTerm,
-      windowSize: lastWindowSize,
-      flankLimit: lastFlankLimit,
-    },
-    type: 'POST',
-    success: function(data){
-      _newPoly(resolve, reject, data.nodes, data.edges);
-    } 
-  });
+  if((nodes === undefined) || (edges === undefined)){
+    // Get the data and build the graph
+    $.ajax({
+      url: ($SCRIPT_ROOT + 'term_network'),
+      data: {
+        network: lastNetwork,
+        ontology: lastOntology,
+        term: lastTerm,
+        windowSize: lastWindowSize,
+        flankLimit: lastFlankLimit,
+        sigEdgeScore: lastEdgeCutoff,
+      },
+      type: 'POST',
+      success: function(data){
+        _newPoly(resolve, reject, data.nodes, data.edges);
+      } 
+    });
+  }
+  else{
+    _newPoly(resolve, reject, nodes, edges);
+  }
 }
 
 function _newPoly(resolve, reject, nodes, edges){
   // Save the nodes, Init the graph
   geneNodes = nodes;
-  initPolyCyto(nodes,edges);
+  initPolyCyto(nodes.filter(function(cur,idx,arr){
+    return (cur['data']['render'] === 'x');
+  }),edges);
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
+  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
   
   // Set up the graph event listeners
   setGeneListeners();
   setSNPGqtips();
   
   // Check for a graph and resolve
-  if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
+  if(cy !== null){resolve();}
   else{reject('Polywas graph build failed');}
 }
 
@@ -45,12 +52,12 @@ function updatePoly(resolve, reject){
   cy.layout(getPolyLayoutOpts());
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
+  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
   
   // Set the SNPG qtips
   setSNPGqtips();
   
-  if(cy !== null){resolve(cy.nodes('[type = "gene"]:visible'));}
+  if(cy !== null){resolve();}
   else{reject('Polywas graph update failed');}
 }
 
@@ -77,12 +84,12 @@ function setSNPGqtips(){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    minNodeDegree: parseInt(document.forms["polyOpts"]["nodeCutoff"].value), 
-    minEdgeScore: parseFloat(document.forms["polyOpts"]["edgeCutoff"].value),
-    nodeHeight: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
-    geneOffset: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
+    minNodeDegree: parseInt(document.forms["graphOpts"]["nodeCutoff"].value), 
+    minEdgeScore: parseFloat(document.forms["graphOpts"]["edgeCutoff"].value),
+    nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
+    geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
     logSpacing: logSpacing,
-    snpLevels: parseInt(document.forms["polyOpts"]["snpLevels"].value),
+    snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
   }
 }
 

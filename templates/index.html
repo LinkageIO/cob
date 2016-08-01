@@ -40,7 +40,6 @@
     var lastTerm = '';
     var lastNetwork = '';
     var cy = null;
-    var isPoly = null;
     var logSpacing = true;
     var popTimerID = 1;
     var ids = [];
@@ -53,11 +52,11 @@
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
     $(document).ready(function(){
       // Some bookkeeping things
-      var lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
-      var lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
-      var lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
-      var lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
-
+      var lastEdgeCutoff = document.forms["graphOpts"]["edgeCutoff"].value;
+      var lastVisNeighbors = document.forms["graphOpts"]["visNeighbors"].value;
+      var lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
+      var lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
+      
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
         $.getScript(($SCRIPT_ROOT + 'static/js/cobTables.js'), function(){
@@ -106,7 +105,7 @@
       left: 33%;
       font-size: 1.5em;
     }
-    #clearButton{
+    #graphButtons{
       position: absolute;
       margin: 3px;
       bottom: 0;
@@ -239,74 +238,58 @@
 
     <!-- Option Adjustment Tab -->
     <div role="tabpanel" class="tab-pane" id="OptsTab"><br>
-      <form id="polyOpts" class="">
+      <form id="graphOpts" class="">
         <div class="form-group">
-          <label>Window Size</label>
+          <label>Minimum Edge Cutoff</label>
+          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4">
+          <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
+              Minimum Edge Score must be between 1.0 and 20.0.
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Node Size</label>
+          <input type="text" class="form-control" id="nodeSize" value="10" size="2">
+          <div class="alert alert-danger hidden" id="nodeSizeError" role="alert">
+              Node Size must be between 5 and 50.
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Visible Neighbors (For Custom)</label>
+          <input type="text" class="form-control" id="visNeighbors" value="25" size="3">
+          <div class="alert alert-danger hidden" id="visNeighborsError" role="alert">
+              Visible Neighbors must be between 0 and 150.
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Window Size (For Term)</label>
           <input type="text" class="form-control" id="windowSize" value="50000" size="7">
           <div class="alert alert-danger hidden" id="windowSizeError" role="alert">
               Window Size must be between 0 and 1,000,000.
           </div>
         </div>
         <div class="form-group">
-          <label>Flank Limit</label>
+          <label>Flank Limit (For Term)</label>
           <input type="text" class="form-control" id="flankLimit" value="2" size="3">
           <div class="alert alert-danger hidden" id="flankLimitError" role="alert">
               Flank Limit must be between 0 and 20.
           </div>
         </div>
         <div class="form-group">
-          <label>Minimum Node Degree</label>
+          <label>Minimum Node Degree (For Term)</label>
           <input type="text" class="form-control" id="nodeCutoff" value="1" size="2">
           <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
               Minimum Node Degree must be between 0 and 20.
           </div>
         </div>
         <div class="form-group">
-          <label>Minimum Edge Score</label>
-          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4">
-          <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
-              Minimum Edge Score must be between 3.0 and 20.0.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Node Size</label>
-          <input type="text" class="form-control" id="polyNodeSize" value="10" size="2">
-          <div class="alert alert-danger hidden" id="polyNodeSizeError" role="alert">
-              Node Size must be between 5 and 50.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Number of SNP Colors</label>
+          <label>Number of SNP Colors (For Term)</label>
           <input type="text" class="form-control" id="snpLevels" value="3" size="2">
           <div class="alert alert-danger hidden" id="snpLevelsError" role="alert">
               Number of SNP Colors must be between 1 and 5.
           </div>
         </div>
         <div class="form-group">
-          <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing</button>
-        </div>
-      </form>
-      <form id="forceOpts" class="hidden">
-        <div class="form-group">
-          <label>Visible Neighbors</label>
-          <input type="text" class="form-control" id="maxNeighbors" value="25" size="3">
-          <div class="alert alert-danger hidden" id="maxNeighborsError" role="alert">
-              Visible Neighbors must be between 0 and 150.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Min Significant Edge Score</label>
-          <input type="text" class="form-control" id="sigEdgeScore" value="3.0" size="4">
-          <div class="alert alert-danger hidden" id="sigEdgeScoreError" role="alert">
-              Min Significant Edge Score must be between 0.0 and 20.0.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Node Size</label>
-          <input type="text" class="form-control" id="forceNodeSize" value="15" size="2">
-          <div class="alert alert-danger hidden" id="forceNodeSizeError" role="alert">
-              Node Size must be between 5 and 50.
-          </div>
+          <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing (For Term)</button>
         </div>
       </form>
       <input type="button" class="btn btn-primary" id="updateButton" value="Update">
@@ -346,6 +329,9 @@
 
 <!-- Box for title indicating current network -->
 <div id='cyTitle'></div>
-<div id='clearButton'><input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection"></div>
+<div id='graphButtons'>
+  <input type="button" class="btn btn-primary" id="toggleLayoutButton" value="Toggle Layout">
+  <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+</div>
 </body>
 </html>

@@ -91,6 +91,7 @@ function forceColumns(){
     {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
+    {data: 'fdr', name:'fdr', title:'FDR'},
     {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
     {data: 'gdegree', name:'gdegree', title:'Global Degree'},
     {data: 'chrom', name:'chrom', title:'Chrom'},
@@ -105,7 +106,7 @@ function forceColumns(){
 ---------------------------------*/
 function buildGeneTables(){
   // Decide which set of columns we should use
-  if(isPoly){var cols = polyColumns();}
+  if(isPoly()){var cols = polyColumns();}
   else{var cols = forceColumns();}
 
   // Destroy the old tables, remove columns, remove listeners
@@ -170,8 +171,16 @@ function buildGeneTables(){
   sub_table.columns('ldegree:name, gdegree:name, start:name, end:name, num_intervening:name, rank_intervening:name, num_siblings:name, snp:name, rendered:name').visible(false);
 
   // Set listeners for selection
-  $('#GeneTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
-  $('#SubnetTable tbody').on('click','tr', function(evt){geneSelect(this['id']);});
+  $('#GeneTable tbody').on('click','tr', function(evt){
+    var ele = cy.getElementById(this['id']);
+    if(ele.length === 1){geneSelect(ele);}
+    else{addGene(this['id']);}
+  });
+  $('#SubnetTable tbody').on('click','tr', function(evt){
+    var ele = cy.getElementById(this['id']);
+    if(ele.length === 1){geneSelect(ele);}
+    else{addGene(this['id']);}
+  });
   
   // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
@@ -197,18 +206,31 @@ function updateGraphTable(tableName, genes){
   // Format the node data for the DataTable
   var geneData = [];
   var geneDict = null;
+  var hasFDR = false;
   
   // For each element, add the variables we need
+  cy.startBatch();
   genes.forEach(function(cur, idx, arr){
-    if('cy' in cur){geneDict = cur.data();}
-    else{geneDict = cur['data'];}
+    if('cy' in cur){
+      cur.data('cur_ldegree', cur.connectedEdges(':visible').length);
+      geneDict = cur.data();
+    }
+    else{
+      var node = cy.getElementById(cur['data']['id']);
+      if(node.length > 0){cur['data']['cur_ldegree'] = node.degree();}
+      else{cur['data']['cur_ldegree'] = 0;}
+      geneDict = cur['data'];
+    }
     geneDict['window_size'] = lastWindowSize;
     geneDict['flank_limit'] = lastFlankLimit;
+    if(geneDict['fdr'] !== 'nan'){hasFDR = true;}
     geneData.push(geneDict);
   });
+  cy.endBatch();
 
   // Clear old data and add new
   $('#'+tableName+'Table').DataTable().clear().rows.add(geneData).draw();
+  $('#'+tableName+'Table').DataTable().columns('fdr:name').visible(hasFDR);
 
   // Return to original tab
   $('#navTabs a[href="'+oldTab+'"]').tab('show');

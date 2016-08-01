@@ -3,15 +3,14 @@
 function newForce(resolve, reject, nodes, edges){
   // Destroy the old graph if there is one
   if(cy != null){cy.destroy();cy = null;}
-  isPoly = false;
   
-  if((nodes === undefined) && (edges === undefined)){
+  if((nodes === undefined) || (edges === undefined)){
     $.ajax({
       url: ($SCRIPT_ROOT + 'custom_network'),
       data: {
         network: lastNetwork,
-        sigEdgeScore: lastSigEdgeScore,
-        maxNeighbors: lastMaxNeighbors,
+        sigEdgeScore: lastEdgeCutoff,
+        maxNeighbors: lastVisNeighbors,
         geneList: $('#geneList').val(),
       },
       type: 'POST',
@@ -23,27 +22,6 @@ function newForce(resolve, reject, nodes, edges){
       
         // Build the graph
         _newForce(resolve,reject,data.nodes,data.edges);
-      }
-    });
-  }
-  else if(edges === undefined){
-    var geneList = ''
-    nodes.forEach(function(cur,idx,arr){
-      if(cur['data']['render'] === 'x'){
-        geneList += cur['data']['id'] + ', ';
-      }
-    });
-    $.ajax({
-      url: ($SCRIPT_ROOT + 'gene_connections'),
-      data: {
-        network: lastNetwork,
-        sigEdgeScore: lastSigEdgeScore,
-        geneList: geneList,
-      },
-      type: 'POST',
-      success: function(data){
-        // Build the graph
-        _newForce(resolve,reject,nodes,data.edges);
       }
     });
   }
@@ -62,14 +40,13 @@ function _newForce(resolve,reject,nodes,edges){
   }),edges);
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
+  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
 
   // Save the degree for the graph
-  cy.nodes().forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
   setGeneListeners();
   
   // Check for a graph and resolve
-  if(cy !== null){resolve(geneNodes);}
+  if(cy !== null){resolve();}
   else{reject('Force graph build failed');}
 }
 
@@ -79,10 +56,10 @@ function updateForce(resolve, reject){
   cy.layout(getForceLayoutOpts());
 
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
+  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
   
   // Check for a graph and resolve
-  if(cy !== null){resolve(geneNodes);}
+  if(cy !== null){resolve();}
   else{reject('Force graph update failed');}
 }
 
@@ -93,7 +70,7 @@ function getForceLayoutOpts(){
     animate: false,
     nodeOverlap: 50,
     componentSpacing: 35,
-    nodeRepulsion: function(node){return 100000;},
+    nodeRepulsion: function(node){return 50000;},
   }
 }
 

@@ -63,18 +63,6 @@ $("#TermGenesButton").click(function(){
   else{window.alert('You need to enter at least one gene.');}
 });
 
-// Term Table Tab is selected (default position)
-$('#GeneSelectTabs a[href="#TermTableTab"]').on('show.bs.tab', function(){
-  $('#polyOpts').removeClass('hidden');
-  $('#forceOpts').addClass('hidden');
-});
-
-// Term Genes Tab is selected 
-$('#GeneSelectTabs a[href="#TermGenesTab"]').on('show.bs.tab', function(){
-  $('#forceOpts').removeClass('hidden');
-  $('#polyOpts').addClass('hidden');
-});
-
 /*------------------------------------------
      Parameter Update Event Listeners
 ------------------------------------------*/
@@ -87,13 +75,13 @@ $('#updateButton').click(function(){
 });
 
 // Enter is pressed in an option field
-$("#polyOpts, #forceOpts").keypress(function(evt){
+$("#graphOpts").keypress(function(evt){
   if(evt.which !== 13){return;}
   evt.preventDefault();
   updateGraph();
 });
 
-// CLear Selection Button is pressed
+// Clear Selection Button is pressed
 $('#clearSelectionButton').click(function(){
   if(cy == null){return;}
   
@@ -109,62 +97,74 @@ $('#clearSelectionButton').click(function(){
   $('#SubnetTable').DataTable().clear().draw();
 });
 
+// Toggle Layout button is pressed
+$('#toggleLayoutButton').click(function(){
+  
+  // Save the highlighted gene names
+  var high = [];
+  cy.nodes('.highlighted').forEach(function(cur, idx, arr){
+    high.push(cur.id());
+  });
+  
+  // Reselect the nodes after the graph update
+  $(window).one('graphLoaded', {'high':high}, function(evt){
+    var high = [];
+    evt.data.high.forEach(function(cur,idx,arr){high.push(cy.getElementById(cur))});
+    high = cy.collection(high);
+    geneSelect(high);
+  });
+  
+  // Find the edge data objects from the current graph
+  var edgeList = [];
+  cy.edges(':visible').forEach(function(cur, idx, arr){
+    var dataDict = cur.data();
+    edgeList.push({'data':dataDict});
+  });
+  
+  // Update the graph with the new layout
+  if(isPoly()){loadGraph('new','force',geneNodes,edgeList);}
+  else{loadGraph('new','polywas',geneNodes,edgeList);}
+});
+
 /*---------------------------------------
       Load the Graph and Tables
 ---------------------------------------*/
-function checkOpts(layout){
+function checkOpts(){
     var badFields = [];
-    if(layout === 'polywas'){
-        // Pull all of the options into numbers
-        var windowSize = parseInt(document.forms["polyOpts"]["windowSize"].value);
-        var flankLimit = parseInt(document.forms["polyOpts"]["flankLimit"].value);
-        var nodeCutoff = parseInt(document.forms["polyOpts"]["nodeCutoff"].value);
-        var edgeCutoff = parseFloat(document.forms["polyOpts"]["edgeCutoff"].value);
-        var polyNodeSize = parseInt(document.forms["polyOpts"]["polyNodeSize"].value);
-        var snpLevels = parseInt(document.forms["polyOpts"]["snpLevels"].value);
-
-        // Check each for snity and record if it's bad
-        if(!((windowSize >= 0)&&(windowSize <= 1000000))){badFields.push('windowSize');}
-        if(!((flankLimit >= 0)&&(flankLimit <= 20))){badFields.push('flankLimit');}
-        if(!((nodeCutoff >= 0)&&(nodeCutoff <= 20))){badFields.push('nodeCutoff');}
-        if(!((edgeCutoff >= 3.0)&&(edgeCutoff <= 20.0))){badFields.push('edgeCutoff');}
-        if(!((polyNodeSize >= 5)&&(polyNodeSize <= 50))){badFields.push('polyNodeSize');}
-        if(!((snpLevels >= 1)&&(snpLevels <= 5))){badFields.push('snpLevels');}
-    }
-    else{
-        // Pull all of the options into numbers
-        var maxNeighbors = parseInt(document.forms["forceOpts"]["maxNeighbors"].value);
-        var sigEdgeScore = parseFloat(document.forms["forceOpts"]["sigEdgeScore"].value);
-        var forceNodeSize = parseInt(document.forms["forceOpts"]["forceNodeSize"].value);
-
-        // Check each for snity and record if it's bad
-        if(!((maxNeighbors >= 0)&&(maxNeighbors <= 150))){badFields.push('maxNeighbors');}
-        if(!((sigEdgeScore >= 0.0)&&(sigEdgeScore <= 20.0))){badFields.push('sigEdgeScore');}
-        if(!((forceNodeSize >= 5)&&(forceNodeSize <= 50))){badFields.push('forceNodeSize');}
-    }
+    
+    // Fetch all the values
+    var edgeCutoff = parseFloat(document.forms["graphOpts"]["edgeCutoff"].value);
+    var nodeSize = parseInt(document.forms["graphOpts"]["nodeSize"].value);
+    var visNeighbors = parseInt(document.forms["graphOpts"]["visNeighbors"].value);
+    var windowSize = parseInt(document.forms["graphOpts"]["windowSize"].value);
+    var flankLimit = parseInt(document.forms["graphOpts"]["flankLimit"].value);
+    var nodeCutoff = parseInt(document.forms["graphOpts"]["nodeCutoff"].value);
+    var snpLevels = parseInt(document.forms["graphOpts"]["snpLevels"].value);
+    
+    // Check each for sanity and record if it's bad
+    if(!((edgeCutoff >= 1.0)&&(edgeCutoff <= 20.0))){badFields.push('edgeCutoff');}
+    if(!((nodeSize >= 5)&&(nodeSize <= 50))){badFields.push('nodeSize');}
+    if(!((visNeighbors >= 0)&&(visNeighbors <= 150))){badFields.push('visNeighbors');}
+    if(!((windowSize >= 0)&&(windowSize <= 1000000))){badFields.push('windowSize');}
+    if(!((flankLimit >= 0)&&(flankLimit <= 20))){badFields.push('flankLimit');}
+    if(!((nodeCutoff >= 0)&&(nodeCutoff <= 20))){badFields.push('nodeCutoff');}
+    if(!((snpLevels >= 1)&&(snpLevels <= 5))){badFields.push('snpLevels');}
+    
+    // Return the problemeatic ones
     return badFields;
 }
 
 function updateGraph(){
   if(cy == null){return;}
-  // If it's a polwas graph
-  if(isPoly){
-    // If these options are the same, no need to do full reload
-    if(lastWindowSize === document.forms["polyOpts"]["windowSize"].value &&
-      lastFlankLimit === document.forms["polyOpts"]["flankLimit"].value && isPoly){
-      loadGraph('update','polywas');
-    }
-    // Otherwise we have to just blow it up and start over
-    else{loadGraph('new','polywas');}
+  if(lastWindowSize === document.forms["graphOpts"]["windowSize"].value &&
+    lastFlankLimit === document.forms["graphOpts"]["flankLimit"].value && 
+    lastEdgeCutoff === document.forms["graphOpts"]["edgeCutoff"].value &&
+    lastVisNeighbors === document.forms["graphOpts"]["visNeighbors"].value){
+    if(isPoly()){loadGraph('update','polywas');}
+    else{loadGraph('update','force');}
   }
-  // If it's a force graph
   else{
-    // If these options are the same, no need to do full reload
-    if(lastSigEdgeScore === document.forms["forceOpts"]["sigEdgeScore"].value &&
-      lastMaxNeighbors === document.forms["forceOpts"]["maxNeighbors"].value && !(isPoly)){
-      loadGraph('update','force');
-    }
-    // Otherwise we have to just blow it up and start over
+    if(isPoly()){loadGraph('new','polywas');}
     else{loadGraph('new','force');}
   }
 }
@@ -183,15 +183,15 @@ function loadGraph(op,layout,nodes,edges){
     // After the wait dialog is open, load the graph
     $("#cyWait").one('shown.bs.modal', function(){
         // Update the persistent variables
-        lastWindowSize = document.forms["polyOpts"]["windowSize"].value;
-        lastFlankLimit = document.forms["polyOpts"]["flankLimit"].value;
-        lastSigEdgeScore = document.forms["forceOpts"]["sigEdgeScore"].value;
-        lastMaxNeighbors = document.forms["forceOpts"]["maxNeighbors"].value;
+        lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
+        lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
+        lastEdgeCutoff = document.forms["graphOpts"]["edgeCutoff"].value;
+        lastVisNeighbors = document.forms["graphOpts"]["visNeighbors"].value;
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
           if(op === 'new'){
-            if(layout === 'polywas'){newPoly(resolve,reject);}
+            if(layout === 'polywas'){newPoly(resolve,reject,nodes,edges);}
             else{newForce(resolve,reject,nodes,edges);}}
           else{
             if(layout === 'polywas'){updatePoly(resolve,reject);}
@@ -200,14 +200,14 @@ function loadGraph(op,layout,nodes,edges){
 
         pinkySwear.then(function(result){
             // Update the table and such
+            $('#cyWait').modal('hide');
             $('#navTabs a[href="#GeneTab"]').tab('show');
             buildGeneTables();
-            updateGraphTable('Gene', result);
+            updateGraphTable('Gene', geneNodes);
             updateHUD();
-            $('#cyWait').modal('hide');
             
             // Trigger event graph loaded custom event
-            jQuery('body').trigger(graphLoadedEvent);
+            $(window).trigger(graphLoadedEvent);
         },function(err){$('#cyWait').modal('hide');window.alert(err);});
     });
     $('#cyWait').modal('show');
@@ -216,77 +216,83 @@ function loadGraph(op,layout,nodes,edges){
 /*--------------------------------
      Gene Selection Function
 ---------------------------------*/
-function geneSelect(geneID){
-  // Get the node object if it exists
-  var geneNode = cy.getElementById(geneID);
-  
-  // If the node doesn't exist
-  if(geneNode.length < 1){
-    var ind = geneNodes.findIndex(function(cur,idx,arr){
-      return cur['data']['id'] === geneID;});
+function geneSelect(geneNode){
+  // Deselect all neighbors and edges
+  cy.startBatch();
+  cy.nodes('.neighbor').toggleClass('neighbor', false);
+  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
     
-    // Save the highlighted genes
-    var high = {'new': geneID};
-    high['other'] = [];
-    cy.nodes('.highlighted').forEach(function(cur,idx,arr){
-      high['other'].push(cur.data('id'));
+  if(geneNode.length === 1 && geneNode.hasClass('highlighted')){
+    // If it's highlighted and alone, unselect it
+    geneNode.toggleClass('highlighted', false);
+    $('#GeneTable').DataTable().row('#'+geneNode.id()).deselect();
+  }
+  else{
+    // Otherwise select all of them!
+    geneNode.forEach(function(cur, idx, arr){
+      cur.toggleClass('highlighted', true);
+      $('#GeneTable').DataTable().row('#'+cur.id()).select();
     });
-    
-    // Rehighlight nodes after the graph is loaded 
-    jQuery('body').one('graphLoaded', high, function(evt){
-      // Highlight each gene that was selected prior to addition
-      cy.startBatch();
-      evt.data.other.forEach(function(cur,idx,arr){
-        cy.getElementById(cur).toggleClass('highlighted', true);
-        $('#GeneTable').DataTable().row('#'+cur).select();
-      });
-      cy.endBatch();
-      
-      // Run the selection algorithm on the new kid to highlight neighbors and edges
-      geneSelect(geneID);
-    });
-    
-    // Reload the graph with new gene
-    geneNodes[ind]['data']['render'] = 'x';
-    loadGraph('new', 'force', geneNodes);
   }
   
-  // If we have one matching gene
-  else if(geneNode.length === 1){
-    // Find out if the relevant node is highlighted
-    var isHigh = geneNode.hasClass('highlighted');
+  // Reselect all necessary edges and neighbors
+  var genes = cy.nodes('.highlighted');
+  var edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
+  edges.connectedNodes().not('.highlighted').toggleClass('neighbor', true);
+  cy.endBatch();
 
-    // Deselect all neighbors and edges
-    cy.startBatch();
-    cy.nodes('.neighbor').toggleClass('neighbor', false);
-    cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
+  // Update the subnetwork table
+  updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbor'));
 
-    // If it's highlighted, unselect it
-    if(isHigh){
-      geneNode.toggleClass('highlighted', false);
-      $('#GeneTable').DataTable().row('#'+geneID).deselect();
+  // Add the the genes to the subnet table
+  genes.forEach(function(cur, idx, arr){
+    $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();
+  });
+}
+
+/*------------------------------------------
+            Add gene to graph
+------------------------------------------*/
+function addGene(newGene){
+  // Find the data object of the new gene, mark it
+  var ind = geneNodes.findIndex(function(cur,idx,arr){
+    return cur['data']['id'] === newGene;});
+  geneNodes[ind]['data']['render'] = 'x';
+  geneNodes[ind]['data']['origin'] = 'query';
+  $('#geneList').append('\n'+ newGene +', ');
+  
+  // Make a list of all the genes for the purposes of the query
+  var geneList = ''
+  geneNodes.forEach(function(cur,idx,arr){
+    if(cur['data']['render'] === 'x'){
+      geneList += cur['data']['id'] + ', ';
     }
-
-    // Otherwise just add it to the list
-    else{
-      geneNode.toggleClass('highlighted', true);
-      $('#GeneTable').DataTable().row('#'+geneID).select();
+  });
+  
+  // Run the selection algorithm when graph is updated
+  $(window).one('graphLoaded', {'new': newGene}, function(evt){
+    var node = cy.getElementById(evt.data.new);
+    geneSelect(cy.nodes('.highlighted'));
+    setGeneListeners(node);
+    geneSelect(node);
+  });
+  
+  // Run the server query to get the new edges
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'gene_connections'),
+    data: {
+      network: lastNetwork,
+      sigEdgeScore: lastEdgeCutoff,
+      geneList: geneList,
+      newGene: newGene,
+    },
+    type: 'POST',
+    success: function(data){
+      var node = cy.add(geneNodes[ind]);
+      cy.add(data.edges);
+      updateGraph();
     }
-
-    // Reselect all necessary edges and neighbors
-    var genes = cy.nodes('.highlighted');
-    var edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
-    edges.connectedNodes().not('.highlighted').toggleClass('neighbor', true);
-    cy.endBatch();
-
-    // Update the subnetwork table
-    updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbor'));
-
-    // Add the the genes to the subnet table
-    genes.forEach(function(cur, idx, arr){
-      $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();
-    });
-  }
+  });
 }
 
 /*--------------------------------
@@ -307,7 +313,7 @@ function updateHUD(){
     msg += lastNetwork + ' > ';
     
     // If it's a polywas graph, add term details
-    if(isPoly){
+    if(isPoly()){
       msg += lastOntology + ' > '
       msg += lastTerm +' > '
       msg += lastWindowSize + '/' + lastFlankLimit;
@@ -374,9 +380,9 @@ function setupTextComplete(network, selector){
 /*------------------------------------------
       Set Listeners for Genes in Graph
 ------------------------------------------*/
-function setGeneListeners(){
+function setGeneListeners(genes){
   // Get all the genes
-  var genes = cy.nodes('[type = "gene"]');
+  if(genes === undefined){genes = cy.nodes('[type = "gene"]');}
   
   // Set listener for clicking
   genes.on('tap', function(evt){
@@ -385,7 +391,7 @@ function setGeneListeners(){
       $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
 
     // Run the selection algorithm
-    geneSelect(evt.cyTarget.data('id'));
+    geneSelect(evt.cyTarget);
   });
   
   // Setup qtips
@@ -408,3 +414,5 @@ function setGeneListeners(){
     hide: {event: 'mouseout'},
   });
 }
+
+function isPoly(){return cy.options().layout.name === 'polywas';}

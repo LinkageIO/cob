@@ -125,6 +125,8 @@ def term_network():
     term = str(request.form['term'])
     windowSize = int(request.form['windowSize'])
     flankLimit = int(request.form['flankLimit'])
+    sigEdgeScore = float(request.form['sigEdgeScore'])
+    cob.set_sig_edge_zscore(sigEdgeScore)
     
     # Get the candidates
     genes = cob.refgen.candidate_genes(
@@ -137,13 +139,20 @@ def term_network():
         include_rank_intervening=True,
         include_num_siblings=True)
     
-    # Find gwas data if it is there
-    gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
-        term=term,windowSize=windowSize,flankLimit=flankLimit)
-    
-    # Build up the network
+    # Base of the result dict
     net = {}
-    net['nodes'] = getNodes(genes, cob, parents=True, gwas_data=gwas_data)
+    
+    # If there are GWAS results, pass them in
+    if ontology in gwas_data_db:
+        gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
+            term=term,windowSize=windowSize,flankLimit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, gwas_data=gwas_data)
+    
+    # Otherwise just run it without
+    else:
+        net['nodes'] = getNodes(genes, cob)
+    
+    # Get the edges
     net['edges'] = getEdges([gene.id for gene in genes], cob)
     
     # Log Data Point to COB Log
@@ -232,19 +241,20 @@ def custom_network():
 @app.route("/gene_connections", methods=['POST'])
 def gene_connections():
     # Get data from the form
-    network = str(request.form['network'])
+    cob = networks[str(request.form['network'])]
     sigEdgeScore = float(request.form['sigEdgeScore'])
     geneList = str(request.form['geneList'])
+    newGene = str(request.form['newGene'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
-    
-    # Set up the network
-    cob = networks[network]
     cob.set_sig_edge_zscore(sigEdgeScore)
     
     # Get the edges!
     edges = getEdges(geneList, cob)
     
     # Filter the ones that are not attached to the new one
+    edges = list(filter(
+        lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
+        ,edges))
     
     # Return it as a JSON object
     return jsonify({'edges': edges})
@@ -270,7 +280,7 @@ def gene_word_search():
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-def getNodes(genes, cob, primary=None, render=None, parents=False, gwas_data=pd.DataFrame()):
+def getNodes(genes, cob, primary=None, render=None, gwas_data=pd.DataFrame()):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -320,7 +330,7 @@ def getNodes(genes, cob, primary=None, render=None, parents=False, gwas_data=pd.
                 anote += a + ' '
         
         # Build the data object from our data
-        node = {'data':{
+        node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
             'render': 'x',
@@ -356,23 +366,8 @@ def getNodes(genes, cob, primary=None, render=None, parents=False, gwas_data=pd.
             else:
                 node['data']['render'] = ' '
         
-        if parents:
-            parent_set.add(gene.attr['parent_locus'])
-        
         # Save the node to the list
         nodes.append(node)
-        
-    # If needed, build nodes for the parent SNPS
-    if parents:
-        for parent in parent_set:
-            parent_attr = re.split('<|>|:|-', parent)
-            nodes.insert(0, {'data':{
-                'id': parent,
-                'type': 'snp',
-                'chrom': str(parent_attr[2]),
-                'start': str(parent_attr[3]),
-                'end': str(parent_attr[4]),
-            }})
         
     return nodes
 
@@ -384,7 +379,7 @@ def getEdges(geneList, cob):
         names_as_cols=True)
     
     # "Loop" to build the edge objects
-    edges = [{'data':{
+    edges = [{'group':'edges', 'data':{
         'source': source,
         'target' : target,
         'weight' : str(weight)
