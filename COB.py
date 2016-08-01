@@ -24,8 +24,9 @@ app = Flask(__name__)
 network_names = ['ZmRoot']
 
 # Folder with annotation files
-anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
-os.makedirs(anote_folder, exist_ok=True)
+scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
+os.makedirs(scratch_folder, exist_ok=True)
+os.environ['GWS_STORE'] = scratch_folder
 
 # ----------------------------------------
 #    Load things to memeory to prepare
@@ -63,7 +64,10 @@ for gwas in co.available_datasets('GWASData')['Name']:
 print('Finding functional annotations...')
 func_data_db = {}
 for func in co.available_datasets('RefGenFunc')['Name']:
+    print('Processing annotations for {}...'.format(func))
     func_data_db[func] = co.RefGenFunc(func)
+    func_data_db[func].to_csv(os.path.join(scratch_folder,(func+'.tsv')))
+    geneWordBuilder(func,[os.path.join(scratch_folder,(func+'.tsv'))],[1],['2 end'],['tab'],[True])
 
 # Generate in memory term lists
 print('Finding all available terms...')
@@ -274,19 +278,15 @@ def gene_connections():
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
     probCutoff = float(request.form['probCutoff'])
-    organism = networks[str(request.form['network'])].refgen.organism
+    organism = networks[str(request.form['network'])]._global('parent_refgen')
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
     # Run the analysis and return the JSONified results
-    try:
-        results = geneWordSearch(geneList, organism, minChance=probCutoff)
-    except KeyError:
+    results = geneWordSearch(geneList, organism, minChance=probCutoff)
+    if len(results[0]) == 0:
         abort(400)
-    try:
-        results = WordFreq.to_JSON_array(results[0])
-    except IndexError:
-        abort(400)
+    results = WordFreq.to_JSON_array(results[0])
     return jsonify(result=results)
 
 # --------------------------------------------
