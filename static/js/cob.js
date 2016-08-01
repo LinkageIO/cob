@@ -129,6 +129,10 @@ $('#toggleLayoutButton').click(function(){
 /*---------------------------------------
       Load the Graph and Tables
 ---------------------------------------*/
+// Function to determine whether or not this is a polywas graph currently
+function isPoly(){return cy.options().layout.name === 'polywas';}
+
+// Validate the parameter values
 function checkOpts(){
     var badFields = [];
     
@@ -414,5 +418,3 @@ function setGeneListeners(genes){
     hide: {event: 'mouseout'},
   });
 }
-
-function isPoly(){return cy.options().layout.name === 'polywas';}
