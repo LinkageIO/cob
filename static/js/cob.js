@@ -417,3 +417,52 @@ function setGeneListeners(genes){
     hide: {event: 'mouseout'},
   });
 }
+
+/*---------------------------------------
+      Build Subnet Graph Function
+---------------------------------------*/
+function makeSubnet(){
+  var nodeList = [];
+  var edgeList = [];
+  var dataDict = null;
+  
+  // Clear the genelist box for the new main genes
+  $('#geneList').html('');
+  
+  // Find the main gene objects from the current graph
+  cy.nodes('.highlighted').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    dataDict['origin'] = 'query';
+    $('#geneList').append(dataDict['id']+', ');
+    nodeList.push({'data':dataDict});
+  });
+  
+  // Find the neighbor gene object from the current graph
+  cy.nodes('.neighbor').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    dataDict['origin'] = 'neighbor';
+    nodeList.push({'data':dataDict});
+  });
+  
+  // Find the edge data objects from the current graph
+  cy.edges('.highlightedEdge').forEach(function(cur, idx, arr){
+    dataDict = cur.data();
+    edgeList.push({'data':dataDict});
+  });
+  
+  // Make sure there are genes to work with
+  if(nodeList.length === 0){
+    window.alert('There must be genes highlighted to graph the subnetwork');
+    return;
+  }
+  
+  // Save the new gene object list
+  geneNodes = nodeList;
+  
+  // Switch to the gene list tab, also triggers option page to shift
+  $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
+  
+  // Load the new graph using the found nodes and edges
+  loadGraph(true,false,undefined,nodeList,edgeList);
+  return;
+}

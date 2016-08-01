@@ -48,6 +48,7 @@
 
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/getNetwork.js'));
+    $.getScript(($SCRIPT_ROOT + 'static/js/enrichment.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
@@ -242,13 +243,13 @@
     <div role="tabpanel" class="tab-pane" id="OptsTab"><br>
       <form id="graphOpts" class="">
         <div class="form-group">
-          <div class="form-group">
-            <label>Minimum Node Degree</label>
-            <input type="text" class="form-control" id="nodeCutoff" value="1" size="2">
-            <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
-                Minimum Node Degree must be between 0 and 20.
-            </div>
+          <label>Minimum Node Degree</label>
+          <input type="text" class="form-control" id="nodeCutoff" value="1" size="2">
+          <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
+              Minimum Node Degree must be between 0 and 20.
           </div>
+        </div>
+        <div class="form-group">
           <label>Minimum Edge Score</label>
           <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4">
           <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
@@ -296,6 +297,29 @@
         </div>
       </form>
       <input type="button" class="btn btn-primary" id="updateButton" value="Update">
+      <form id="enrichOpts" class="hidden">
+        <div class="form-group">
+          <label>Enrichment Probability Cutoff</label>
+          <input type="text" class="form-control" id="pCutoff" value="0.05" size="2">
+          <div class="alert alert-danger hidden" id="pCutoffError" role="alert">
+              Enrichment Probability Cutoff must be between 0.0 and 1.0.
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Minimum Loci in GO Term</label>
+          <input type="text" class="form-control" id="minTerm" value="5" size="4">
+          <div class="alert alert-danger hidden" id="minTermError" role="alert">
+              Minimum Loci in GO Term must be between 1 and 100.
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Maximum Loci in GO Term</label>
+          <input type="text" class="form-control" id="maxTerm" value="300" size="4">
+          <div class="alert alert-danger hidden" id="minTermError" role="alert">
+              Maximum Loci in GO Term must be between 100 and 1000.
+          </div>
+        </div>
+      </form>
     </div>
     <!-- End Parameter Adjustment Tab -->
 
@@ -320,7 +344,7 @@
       <table class="table" id="EnrichmentTable">
       <tbody></tbody>
       </table>
-      <div class="hiden" id="EnrichmentWait">
+      <div class="hidden" id="EnrichmentWait">
         Your enrichment request is currently being processed on the server!<br>
         It will appear here when it is ready.<br>
         Feel free to keep browsing in the mean time.
