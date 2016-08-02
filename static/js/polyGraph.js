@@ -1,74 +1,33 @@
-// Promise function to build a new polywas graph
-var newPoly = function(resolve, reject){
-  // Get the data and build the graph
-  $.ajax({
-    url: ($SCRIPT_ROOT + 'term_network'),
-    data: {
-      network: lastNetwork,
-      ontology: lastOntology,
-      term: lastTerm,
-      windowSize: lastWindowSize,
-      flankLimit: lastFlankLimit,
-    },
-    type: 'POST',
-    success: function(data){
-      if(cy != null){cy.destroy();cy = null;}
-      isPoly = true;
-      initPolyCyto(data);
-      
-      // Update the styles of the nodes for the new sizes
-      updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
-      
-      // Set the snp group qtips
-      var genes = cy.nodes('[type = "gene"]');
-      
-      // Set up the gene node tap listener
-      genes.on('tap', function(evt){
-        // Only scroll to the gene if it isn't highlighted already
-        if(!(evt.cyTarget.hasClass('highlighted'))){
-          $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-        
-        // Run the selection algorithm
-        geneSelect(evt.cyTarget.data('id'));
-      });
-      
-      // Set the gene qTip listeners (only needs to be done once per full graph redo)
-      genes.qtip({
-        content: function(){
-          var data = this.data();
-          res = 'ID: '+data['id'].toString()+'<br>';
-          if(data['alias'].length > 0){
-            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
-          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-          res += 'SNP: '+data['snp'].toString()+'<br>';
-          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
-          return res;
-        },
-        position: {my: 'bottom center', at: 'top center'},
-        style: {
-          classes: 'qtip-dark qtip-rounded qtip-shadow',
-          tip: {width: 10, height: 5},
-        },
-        show: {event: 'mouseover'},
-        hide: {event: 'mouseout'},
-      });
-      
-      // Set the SNPG qtips
-      setSNPGqtips();
-      
-      if(cy !== null){resolve();}
-      else{reject('Polywas graph build failed');}
-    }
-  });
+// Promise function to build a new polywas graph 
+function newPoly(resolve, reject, nodes, edges){
+  // Destroy the old graph if there is one
+  if(cy != null){cy.destroy();cy = null;}
+  
+  // Save the nodes, Init the graph
+  geneNodes = nodes;
+  initPolyCyto(nodes.filter(function(cur,idx,arr){
+    return (cur['data']['render'] === 'x');
+  }),edges);
+  
+  // Update the styles of the nodes for the new sizes
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
+  
+  // Set up the graph event listeners
+  setGeneListeners();
+  setSNPGqtips();
+  
+  // Check for a graph and resolve
+  if(cy !== null){resolve();}
+  else{reject('Polywas graph build failed');}
 }
 
 // Promise function to update the polywas graph
-var updatePoly = function(resolve, reject){
+function updatePoly(resolve, reject){
   // Run the layout
   cy.layout(getPolyLayoutOpts());
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["polyOpts"]["polyNodeSize"].value));
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
   
   // Set the SNPG qtips
   setSNPGqtips();
@@ -100,17 +59,15 @@ function setSNPGqtips(){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    minNodeDegree: parseInt(document.forms["polyOpts"]["nodeCutoff"].value), 
-    minEdgeScore: parseFloat(document.forms["polyOpts"]["edgeCutoff"].value),
-    nodeHeight: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
-    geneOffset: parseInt(document.forms["polyOpts"]["polyNodeSize"].value),
+    nodeHeight: parseInt(lastOpts["nodeSize"]),
+    geneOffset: parseInt(lastOpts["nodeSize"]),
     logSpacing: logSpacing,
-    snpLevels: parseInt(document.forms["polyOpts"]["snpLevels"].value),
+    snpLevels: parseInt(lastOpts["snpLevels"]),
   }
 }
 
 // Function to initialize the graph with polywas layout
-function initPolyCyto(data){
+function initPolyCyto(nodes,edges){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -169,7 +126,7 @@ function initPolyCyto(data){
            'opacity': '0.5',
            'line-color': 'grey'
          }},
-       {selector: '.neighbors',
+       {selector: '.neighbor',
          css: {
            'background-color': '#ff6400',
        }},
@@ -191,7 +148,7 @@ function initPolyCyto(data){
          }},
      ],
    elements: {
-     nodes: data.nodes,
-     edges: data.edges,
+     nodes: nodes,
+     edges: edges,
   }});
 }
