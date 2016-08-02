@@ -294,9 +294,9 @@ def gene_word_search():
     if cob._global('parent_refgen') in func_data_db:
         results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=probCutoff)
     else:
-        abort(460)
+        abort(405)
     if len(results[0]) == 0:
-        abort(461)
+        abort(400)
     results = WordFreq.to_JSON_array(results[0])
     return jsonify(result=results)
 
@@ -316,13 +316,13 @@ def go_enrichment():
     if cob._global('parent_refgen') in GOnt_db:
         gont = GOnt_db[cob._global('parent_refgen')]
     else:
-        abort(460)
+        abort(405)
 
     # Run the enrichment
     cob.log('Running GO Enrichment...')
     enr = gont.enrichment(genes, pval_cutoff=probCutoff, min_term_size=minTerm, max_term_size=maxTerm)
     if len(enr) == 0:
-        abort(461)
+        abort(400)
     
     # Extract the results for returning
     terms = []
