@@ -76,11 +76,15 @@ function enrich(geneList,GOnt){
     },
     type: 'POST',
     statusCode:{
-      460: function(){
-        window.alert('There is no GO ontology associated with this organism');
+      405: function(){
+        $('#EnrichmentWait').addClass('hidden');
+        noGO = false;
+        window.alert('There is function is not availible with this organism, if needed, please contact the site admin.');
         return;
       },
-      461: function(){
+      400: function(){
+        $('#EnrichmentWait').addClass('hidden');
+        noGO = false;
         window.alert('There were no significant enrichment results for this query.');
         return;
       }
