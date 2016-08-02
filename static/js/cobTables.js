@@ -171,6 +171,21 @@ function buildGeneTables(){
 }
 
 /*---------------------------------------
+      Run Enrichment Functions
+---------------------------------------*/
+function gws(e,dt,node,config){
+  // Build the gene query list
+  var geneList = dt.rows().ids();
+  enrich(geneList,false);
+}
+
+function gont(e,dt,node,cofig){
+  // Build the gene query list
+  var geneList = dt.rows().ids();
+  enrich(geneList,true);
+}
+
+/*---------------------------------------
       Gene and Subnet Table Updater
 ---------------------------------------*/
 function updateGraphTable(tableName, genes){
@@ -207,13 +222,13 @@ function updateGraphTable(tableName, genes){
       }
       geneDict = cur['data'];
     }
-    geneDict['window_size'] = lastWindowSize;
-    geneDict['flank_limit'] = lastFlankLimit;
+    geneDict['window_size'] = lastOpts['windowSize'];
+    geneDict['flank_limit'] = lastOpts['flankLimit'];
     if(geneDict['fdr'] !== 'nan'){hasFDR = true;}
     if(geneDict['num_intervening'] > -1){hasNumInter = true;}
     if(geneDict['rank_intervening'] > 2.0){hasRankInter = true;}
     if(geneDict['num_siblings'] > 2){hasNumSiblings = true;}
-    if(!(isTerm() && geneDict['ldegree'] <= lastNodeCutoff)){geneData.push(geneDict);}
+    if(!(isTerm() && geneDict['ldegree'] <= lastOpts['nodeCutoff'])){geneData.push(geneDict);}
   });
   cy.endBatch();
 

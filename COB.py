@@ -285,8 +285,8 @@ def gene_connections():
 
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
-    probCutoff = float(request.form['probCutoff'])
     cob = networks[str(request.form['network'])]
+    probCutoff = float(request.form['probCutoff'])
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
@@ -302,11 +302,11 @@ def gene_word_search():
 
 @app.route("/go_enrichment", methods=['POST'])
 def go_enrichment():
-    probCutoff = float(request.form['probCutoff'])
     cob = networks[str(request.form['network'])]
-    geneList = str(request.form['geneList'])
+    probCutoff = float(request.form['probCutoff'])
     minTerm = int(request.form['minTerm'])
     maxTerm = int(request.form['maxTerm'])
+    geneList = str(request.form['geneList'])
     
     # Parse the genes
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))

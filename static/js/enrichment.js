@@ -1,81 +1,33 @@
 // Things having to do with the enrichment tables
-
 /*-------------------------------------------
-      Build GeneWordSearch Table Function
+      Build Enrichment Table Function
 -------------------------------------------*/
-function gws(e,dt,node,config){
-  // Destroy old table if there
-  if($.fn.DataTable.isDataTable('#EnrichmentTable')){
-    $('#EnrichmentTable').DataTable().destroy();
-    $('#EnrichmentTable').off().empty();
-  }
+function enrich(geneList,GOnt){
+  // Make sure a GO request isn't already pending
+  if(noGO){
+    window.alert('You may only run one enrichment query at a time.');
+    return;}
   
-  // Build the gene query list
-  var geneList = dt.rows().ids();
+  // Check all of the relevant options and prompt if any have bad inputs
+  $('.alert').addClass('hidden');
+  var badFields = checkOpts();
+  if(badFields.length > 0){
+    errorOpts(badFields);
+    return;
+  }
+    
+  // Make sure there are at least some genes
   if(geneList.length === 0){
     window.alert('There must be genes in the table to query GeneWordSearch.');
     return;
   }
-  geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});
-  $('#EnrichmentWait').removeClass('hidden');
   
-  // Run the request to get results
-  $.ajax({
-    url: ($SCRIPT_ROOT + 'gene_word_search'),
-    data: {
-      network: lastNetwork,
-      probCutoff: 0.05,
-      geneList: geneList,
-    },
-    type: 'POST',
-    statusCode: {
-      460: function(){
-        window.alert('There are no functional annotations associated with this organism');
-        return;
-      },
-      461: function(){
-        window.alert('There were no significant GeneWordSearch results for this query.');
-        return;
-      }
-    },
-    success: function(data){
-      // Nav to tab
-      $('#EnrichmentWait').addClass('hidden');
-      $('#navTabs a[href="#EnrichmentTab"]').tab('show');
-      
-      // Build new table from data
-      $('#EnrichmentTable').DataTable({
-        "data": JSON.parse(data.result),
-        "dom": '<"EnrichmentTitle">frtipB',
-        "order": [[2,'asc']],
-        "paging": false,
-        "paginate": false,
-        "rowId": 'id',
-        "scrollCollapse": true,
-        "scrollX": "100%",
-        "scrollY": $(window).height()-325,
-        "searching": true,
-        "buttons": [
-          {"extend": 'csv',"filename": 'gws_result'},
-        ],
-        "columns": [
-          {'data':'word', 'name':'word', 'title':'Word'},
-          {'data':'pval', 'name':'pval', 'title':'P Val'},
-          {'data':'corpval', 'name':'corpval', 'title':'Corr P'},
-          {'data':'length', 'name':'length', 'title':'Length'},
-          {'data':'totwords', 'name':'totwords', 'title':'Total Words'},
-          {'data':'overlap', 'name':'overlap', 'title':'Overlap'},
-        ]
-      });
-      $("div.EnrichmentTitle").html('GeneWordSearch');
-    }
-  });
-}
-
-/*-------------------------------------------
-      Build GO Enrichment Table Function
--------------------------------------------*/
-function gont(e,dt,node,config){
+  // Prep work for request
+  updateOpts();
+  enrichGenes = geneList;
+  noGO = true;
+  isGO = GOnt;
+  
   // Destroy old table if there
   if($.fn.DataTable.isDataTable('#EnrichmentTable')){
     $('#EnrichmentTable').DataTable().destroy();
@@ -86,23 +38,41 @@ function gont(e,dt,node,config){
   $('#navTabs a[href="#EnrichmentTab"]').tab('show');
   $('#EnrichmentWait').removeClass('hidden');
   
-  // Build the gene query list
-  var geneList = dt.rows().ids();
-  if(geneList.length === 0){
-    window.alert('There must be genes in the table to query GeneWordSearch.');
-    return;
+  // Set the variables if we are doing GO
+  if(GOnt){
+    var address = 'go_enrichment';
+    var title = 'GO Enrichment';
+    var cols = [
+      {'data':'id', 'name':'id', 'title':'ID'},
+      {'data':'name', 'name':'name', 'title':'Name'},
+      {'data':'desc', 'name':'desc', 'title':'Description'},
+    ];
   }
-  geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});
   
+  // Set the variables for Gene Word Search
+  else{
+    var address = 'gene_word_search';
+    var title = 'GeneWordSearch';
+    var cols = [
+      {'data':'word', 'name':'word', 'title':'Word'},
+      {'data':'pval', 'name':'pval', 'title':'P Val'},
+      {'data':'corpval', 'name':'corpval', 'title':'Corr P'},
+      {'data':'length', 'name':'length', 'title':'Length'},
+      {'data':'totwords', 'name':'totwords', 'title':'Total Words'},
+      {'data':'overlap', 'name':'overlap', 'title':'Overlap'},
+    ];
+  }
   // Run the request to get results
+  geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});
+
   $.ajax({
-    url: ($SCRIPT_ROOT + 'go_enrichment'),
+    url: ($SCRIPT_ROOT + address),
     data: {
       network: lastNetwork,
-      probCutoff: 0.05,
       geneList: geneList,
-      minTerm: 5,
-      maxTerm: 300,
+      probCutoff: lastOpts['pCutoff'],
+      minTerm: lastOpts['minTerm'],
+      maxTerm: lastOpts['maxTerm'],
     },
     type: 'POST',
     statusCode:{
@@ -111,15 +81,22 @@ function gont(e,dt,node,config){
         return;
       },
       461: function(){
-        window.alert('There were no significant GO enrichment results for this query.');
+        window.alert('There were no significant enrichment results for this query.');
         return;
       }
     },
     success: function(data){
-      data = JSON.parse(data);
-      rows = []
-      Object.keys(data).forEach(function(cur,idx,arr){rows.push(data[cur]);});
-      console.log(rows);
+      noGO = false;
+      
+      // Parse the data appropriately
+      if(GOnt){
+        data = JSON.parse(data);
+        var rows = [];
+        Object.keys(data).forEach(function(cur,idx,arr){rows.push(data[cur]);});
+      }
+      else{
+        var rows = JSON.parse(data.result);
+      }
       
       // Nav to tab
       $('#EnrichmentWait').addClass('hidden');
@@ -138,15 +115,11 @@ function gont(e,dt,node,config){
         "scrollY": $(window).height()-325,
         "searching": true,
         "buttons": [
-          {"extend": 'csv',"filename": 'gws_result'},
+          {"extend": 'csv',"filename": address},
         ],
-        "columns": [
-          {'data':'id', 'name':'id', 'title':'ID'},
-          {'data':'name', 'name':'name', 'title':'Name'},
-          {'data':'desc', 'name':'desc', 'title':'Description'},
-        ]
+        "columns": cols
       });
-      $("div.EnrichmentTitle").html('GO Enrichment');
+      $("div.EnrichmentTitle").html(title);
     }
   });
 }

@@ -10,7 +10,7 @@ function newForce(resolve,reject,nodes,edges){
   }),edges);
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
 
   // Save the degree for the graph
   setGeneListeners();
@@ -26,7 +26,7 @@ function updateForce(resolve, reject){
   cy.layout(getForceLayoutOpts());
 
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
   
   // Check for a graph and resolve
   if(cy !== null){resolve();}

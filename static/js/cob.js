@@ -67,18 +67,26 @@ $("#TermGenesButton").click(function(){
      Parameter Update Event Listeners
 ------------------------------------------*/
 // Toggle for Log Spacing in Polywas is pressed
-$('#logSpacingButton').click(function(){logSpacing = !(logSpacing);});
+$('#logSpacingButton').click(function(){
+  logSpacing = !(logSpacing);
+});
 
 // Update Button on Options Tab is pressed 
-$('#updateButton').click(function(){
+$('#reEnrichButton').click(function(){
+  updateEnrichment();
+});
+
+// Update Button on Options Tab is pressed 
+$('#reGraphButton').click(function(){
   updateGraph();
 });
 
 // Enter is pressed in an option field
-$("#graphOpts").keypress(function(evt){
+$("#opts").keypress(function(evt){
   if(evt.which !== 13){return;}
   evt.preventDefault();
-  updateGraph();
+  if(['pCutoff','minTerm','maxTerm'].indexOf(evt.target.id) > -1){updateEnrichment();}
+  else{updateGraph();}
 });
 
 // Clear Selection Button is pressed
@@ -132,39 +140,15 @@ $('#toggleLayoutButton').click(function(){
 function isPoly(){return cy.options().layout.name === 'polywas';}
 function isTerm(){return !(geneNodes[0]['data']['term'] === 'custom');}
 
-// Validate the parameter values
-function checkOpts(){
-    var badFields = [];
-    
-    // Fetch all the values
-    var edgeCutoff = parseFloat(document.forms["graphOpts"]["edgeCutoff"].value);
-    var nodeSize = parseInt(document.forms["graphOpts"]["nodeSize"].value);
-    var visNeighbors = parseInt(document.forms["graphOpts"]["visNeighbors"].value);
-    var windowSize = parseInt(document.forms["graphOpts"]["windowSize"].value);
-    var flankLimit = parseInt(document.forms["graphOpts"]["flankLimit"].value);
-    var nodeCutoff = parseInt(document.forms["graphOpts"]["nodeCutoff"].value);
-    var snpLevels = parseInt(document.forms["graphOpts"]["snpLevels"].value);
-    
-    // Check each for sanity and record if it's bad
-    if(!((edgeCutoff >= 1.0)&&(edgeCutoff <= 20.0))){badFields.push('edgeCutoff');}
-    if(!((nodeSize >= 5)&&(nodeSize <= 50))){badFields.push('nodeSize');}
-    if(!((visNeighbors >= 0)&&(visNeighbors <= 150))){badFields.push('visNeighbors');}
-    if(!((windowSize >= 0)&&(windowSize <= 1000000))){badFields.push('windowSize');}
-    if(!((flankLimit >= 0)&&(flankLimit <= 20))){badFields.push('flankLimit');}
-    if(!((nodeCutoff >= 0)&&(nodeCutoff <= 20))){badFields.push('nodeCutoff');}
-    if(!((snpLevels >= 1)&&(snpLevels <= 5))){badFields.push('snpLevels');}
-    
-    // Return the problemeatic ones
-    return badFields;
+function updateEnrichment(){
+  if(enrichGenes === null){return;}
+  enrich(enrichGenes,isGO);
 }
 
 function updateGraph(){
   if(cy === null){return;}
-  var newGraph = (lastEdgeCutoff !== document.forms["graphOpts"]["edgeCutoff"].value ||
-    lastVisNeighbors !== document.forms["graphOpts"]["visNeighbors"].value ||
-    lastWindowSize !== document.forms["graphOpts"]["windowSize"].value ||
-    lastFlankLimit !== document.forms["graphOpts"]["flankLimit"].value ||
-    lastNodeCutoff !== document.forms["graphOpts"]["nodeCutoff"].value);
+  var newGraph = optsChange(['nodeCutoff','edgeCutoff',
+    'visNeighbors','windowSize','flankLimit']);
   loadGraph(newGraph,isPoly(),isTerm());
 }
 
@@ -174,19 +158,14 @@ function loadGraph(newGraph,poly,term,nodes,edges){
     $('.alert').addClass('hidden');
     var badFields = checkOpts();
     if(badFields.length > 0){
-        badFields.forEach(function(cur, idx, arr){$('#'+cur+'Error').removeClass('hidden');});
-        $('#navTabs a[href="#OptsTab"]').tab('show');
-        return;
+      errorOpts(badFields);
+      return;
     }
     
     // After the wait dialog is open, load the graph
     $("#cyWait").one('shown.bs.modal', function(){
         // Update the persistent variables
-        lastEdgeCutoff = document.forms["graphOpts"]["edgeCutoff"].value;
-        lastVisNeighbors = document.forms["graphOpts"]["visNeighbors"].value;
-        lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
-        lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
-        lastNodeCutoff = document.forms["graphOpts"]["nodeCutoff"].value;
+        updateOpts();
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
@@ -319,7 +298,7 @@ function updateHUD(){
     if(isTerm()){
       msg += lastOntology + ' > '
       msg += lastTerm +' > '
-      msg += lastWindowSize + '/' + lastFlankLimit;
+      msg += lastOpts['windowSize'] + '/' + lastOpts['flankLimit'];
     }
     
     // Otherwise just call it a custom network
@@ -465,4 +444,72 @@ function makeSubnet(){
   // Load the new graph using the found nodes and edges
   loadGraph(true,false,undefined,nodeList,edgeList);
   return;
+}
+
+/* -----------------------------------
+           Handle Options
+----------------------------------- */
+// Update the values in the lastOps dict
+function updateOpts(){lastOpts = curOpts();}
+
+function curOpts(){
+  var vals = {};
+  optList.forEach(function(cur,idx,arr){
+    vals[cur] = document.forms["opts"][cur].value;
+  });
+  return vals;
+}
+
+function optsChange(opts){
+  var result = false;
+  var curOp = curOpts();
+  opts.forEach(function(cur,idx,arr){
+    if(curOp[cur] !== lastOpts[cur]){result = true;}
+  });
+  return result;
+}
+
+function errorOpts(opts){
+  opts.forEach(function(cur, idx, arr){
+    $('#'+cur+'Error').removeClass('hidden');
+  });
+  $('#navTabs a[href="#OptsTab"]').tab('show');
+}
+
+// Validate the parameter values
+function checkOpts(){
+    var vals = {}
+    var badFields = [];
+    
+    // Fetch all of the current values
+    optList.forEach(function(cur,idx,arr){
+      if((cur !== 'edgeCutoff')&&(cur !== 'probCutoff')){
+        vals[cur] = parseInt(document.forms["opts"][cur].value);}
+      else{vals[cur] = parseFloat(document.forms["opts"][cur].value);}
+    });
+    
+    // Check each for sanity and record if it's bad
+      if(!((vals['nodeSize'] >= 5)&&(vals['nodeSize'] <= 50))){
+        badFields.push('nodeSize');}
+      if(!((vals['edgeCutoff'] >= 1.0)&&(vals['edgeCutoff'] <= 20.0))){
+        badFields.push('edgeCutoff');}
+      if(!((vals['windowSize'] >= 0)&&(vals['windowSize'] <= 1000000))){
+        badFields.push('windowSize');}
+      if(!((vals['flankLimit'] >= 0)&&(vals['flankLimit'] <= 20))){
+        badFields.push('flankLimit');}
+      if(!((vals['visNeighbors'] >= 0)&&(vals['visNeighbors'] <= 150))){
+        badFields.push('visNeighbors');}
+      if(!((vals['nodeCutoff'] >= 0)&&(vals['nodeCutoff'] <= 20))){
+        badFields.push('nodeCutoff');}
+      if(!((vals['snpLevels'] >= 1)&&(vals['snpLevels'] <= 5))){
+        badFields.push('snpLevels');}
+      if(!((vals['pCutoff'] >= 0.0)&&(vals['pCutoff'] <= 1.0))){
+        badFields.push('pCutoff');}
+      if(!((vals['minTerm'] >= 1)&&(vals['minTerm'] <= 100))){
+        badFields.push('minTerm');}
+      if(!((vals['maxTerm'] >= 100)&&(vals['maxTerm'] <= 1000))){
+        badFields.push('maxTerm');}
+    
+    // Return the problemeatic ones
+    return badFields;
 }

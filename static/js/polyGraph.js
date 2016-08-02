@@ -10,7 +10,7 @@ function newPoly(resolve, reject, nodes, edges){
   }),edges);
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
   
   // Set up the graph event listeners
   setGeneListeners();
@@ -27,7 +27,7 @@ function updatePoly(resolve, reject){
   cy.layout(getPolyLayoutOpts());
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["graphOpts"]["nodeSize"].value));
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
   
   // Set the SNPG qtips
   setSNPGqtips();
@@ -59,10 +59,10 @@ function setSNPGqtips(){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    nodeHeight: parseInt(document.forms["graphOpts"]["nodeSize"].value),
-    geneOffset: parseInt(document.forms["graphOpts"]["nodeSize"].value),
+    nodeHeight: parseInt(lastOpts["nodeSize"]),
+    geneOffset: parseInt(lastOpts["nodeSize"]),
     logSpacing: logSpacing,
-    snpLevels: parseInt(document.forms["graphOpts"]["snpLevels"].value),
+    snpLevels: parseInt(lastOpts["snpLevels"]),
   }
 }
 

@@ -36,15 +36,20 @@
     }).appendTo('head');
 
     // Set some global variables for reference
+    var lastNetwork = '';
     var lastOntology = '';
     var lastTerm = '';
-    var lastNetwork = '';
-    var cy = null;
     var logSpacing = true;
+    var cy = null;
     var popTimerID = 1;
     var ids = [];
+    var lastOpts = {};
     var geneNodes = null;
+    var enrichGenes = null;
+    var noGO = false;
+    var isGO = true;
     var graphLoadedEvent = jQuery.Event('graphLoaded');
+    var optList = ['nodeCutoff','edgeCutoff','windowSize','flankLimit','visNeighbors',     'nodeSize','snpLevels','pCutoff','minTerm','maxTerm'];
 
     // Load in the scripts
     $.getScript(($SCRIPT_ROOT + 'static/js/getNetwork.js'));
@@ -53,16 +58,12 @@
     $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
     $(document).ready(function(){
-      // Some bookkeeping things
-      var lastEdgeCutoff = document.forms["graphOpts"]["edgeCutoff"].value;
-      var lastVisNeighbors = document.forms["graphOpts"]["visNeighbors"].value;
-      var lastWindowSize = document.forms["graphOpts"]["windowSize"].value;
-      var lastFlankLimit = document.forms["graphOpts"]["flankLimit"].value;
-      var lastNodeCutoff = document.forms["graphOpts"]["nodeCutoff"].value;
-      
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
         $.getScript(($SCRIPT_ROOT + 'static/js/cobTables.js'), function(){
+          // Keep track of the previous options
+          updateOpts();
+          
           // Make sure the table is visible
           $('#NetworkWait').addClass("hidden");
           $('#Network').removeClass("hidden");
@@ -115,6 +116,16 @@
       right: 0;
       z-index: 10;
     }
+    #reGraphButton, #reEnrichButton {
+      width: 95%;
+    }
+    .updateButton {
+      width: 50%;
+    }
+    .form-group{
+      line-height: 275%;
+      text-align: right;
+    }
     .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle, .SubnetTitle, .EnrichmentTitle {
       float: left;
       font-size: x-large;
@@ -131,6 +142,9 @@
     }
     table {
       background-color: white;
+    }
+    label {
+      padding-right: 10px;
     }
   </style>
 </head>
@@ -240,85 +254,117 @@
     <!-- End Network Selection Tab -->
 
     <!-- Option Adjustment Tab -->
-    <div role="tabpanel" class="tab-pane" id="OptsTab"><br>
-      <form id="graphOpts" class="">
-        <div class="form-group">
-          <label>Minimum Node Degree</label>
-          <input type="text" class="form-control" id="nodeCutoff" value="1" size="2">
-          <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
+    <div role="tabpanel" class="tab-pane" id="OptsTab">
+      <form id="opts" class="">
+        <table style="width:100%">
+        <tr><td colspan="2"><h3>Network Options</h3></td></tr>
+          <tr class="form-group">
+            <td><label>Minimum Node Degree</label></td>
+            <td><input type="text" class="form-control" id="nodeCutoff" value="1"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert">
               Minimum Node Degree must be between 0 and 20.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Minimum Edge Score</label>
-          <input type="text" class="form-control" id="edgeCutoff" value="3.0" size="4">
-          <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
-              Minimum Edge Score must be between 1.0 and 20.0.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Node Size</label>
-          <input type="text" class="form-control" id="nodeSize" value="10" size="2">
-          <div class="alert alert-danger hidden" id="nodeSizeError" role="alert">
-              Node Size must be between 5 and 50.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Visible Neighbors (For Custom)</label>
-          <input type="text" class="form-control" id="visNeighbors" value="25" size="3">
-          <div class="alert alert-danger hidden" id="visNeighborsError" role="alert">
-              Visible Neighbors must be between 0 and 150.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Window Size (For Term)</label>
-          <input type="text" class="form-control" id="windowSize" value="50000" size="7">
-          <div class="alert alert-danger hidden" id="windowSizeError" role="alert">
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Minimum Edge Score</label></td>
+            <td><input type="text" class="form-control" id="edgeCutoff" value="3.0"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert">
+                Minimum Edge Score must be between 1.0 and 20.0.
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Window Size (For Term)</label></td>
+            <td><input type="text" class="form-control" id="windowSize" value="50000"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="windowSizeError" role="alert">
               Window Size must be between 0 and 1,000,000.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Flank Limit (For Term)</label>
-          <input type="text" class="form-control" id="flankLimit" value="2" size="3">
-          <div class="alert alert-danger hidden" id="flankLimitError" role="alert">
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Flank Limit (For Term)</label></td>
+            <td><input type="text" class="form-control" id="flankLimit" value="2"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="flankLimitError" role="alert">
               Flank Limit must be between 0 and 20.
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label>Number of SNP Colors (For Polywas Layout)</label>
-          <input type="text" class="form-control" id="snpLevels" value="3" size="2">
-          <div class="alert alert-danger hidden" id="snpLevelsError" role="alert">
-              Number of SNP Colors must be between 1 and 5.
-          </div>
-        </div>
-        <div class="form-group">
-          <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing (For Polywas Layout)</button>
-        </div>
-      </form>
-      <input type="button" class="btn btn-primary" id="updateButton" value="Update">
-      <form id="enrichOpts" class="hidden">
-        <div class="form-group">
-          <label>Enrichment Probability Cutoff</label>
-          <input type="text" class="form-control" id="pCutoff" value="0.05" size="2">
-          <div class="alert alert-danger hidden" id="pCutoffError" role="alert">
-              Enrichment Probability Cutoff must be between 0.0 and 1.0.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Minimum Loci in GO Term</label>
-          <input type="text" class="form-control" id="minTerm" value="5" size="4">
-          <div class="alert alert-danger hidden" id="minTermError" role="alert">
-              Minimum Loci in GO Term must be between 1 and 100.
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Maximum Loci in GO Term</label>
-          <input type="text" class="form-control" id="maxTerm" value="300" size="4">
-          <div class="alert alert-danger hidden" id="minTermError" role="alert">
-              Maximum Loci in GO Term must be between 100 and 1000.
-          </div>
-        </div>
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Visible Neighbors (For Custom)</label></td>
+            <td><input type="text" class="form-control" id="visNeighbors" value="25"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="visNeighborsError" role="alert">
+                Visible Neighbors must be between 0 and 150.
+            </div>
+          </td></tr>
+        <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
+          <tr class="form-group">
+            <td><label>Node Size</label></td>
+            <td><input type="text" class="form-control" id="nodeSize" value="10"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="nodeSizeError" role="alert">
+                Node Size must be between 5 and 50.
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>SNP Colors (For Polywas)</label></td>
+            <td><input type="text" class="form-control" id="snpLevels" value="3"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="snpLevelsError" role="alert">
+                Number of SNP Colors must be between 1 and 5.
+            </div>
+          </td></tr>
+          <tr class="form-group"><td colspan="2">
+            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true">Log Spacing (For Polywas)</button>
+          </td></tr>
+        <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
+          <tr class="form-group">
+            <td><label>Enrichment Probability Cutoff</label></td>
+            <td><input type="text" class="form-control" id="pCutoff" value="0.05"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="pCutoffError" role="alert">
+                Enrichment Probability Cutoff must be between 0.0 and 1.0.
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Minimum Loci in GO Term</label></td>
+            <td><input type="text" class="form-control" id="minTerm" value="5"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="minTermError" role="alert">
+                Minimum Loci in GO Term must be between 1 and 100.
+            </div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>Maximum Loci in GO Term</label></td>
+            <td><input type="text" class="form-control" id="maxTerm" value="300"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="maxTermError" role="alert">
+                Maximum Loci in GO Term must be between 100 and 1000.
+            </div>
+          </td></tr>
+        </table>
+        <br>
+        <table style="width:100%">
+          <tr>
+            <td class="updateButton">
+              <input type="button" class="btn btn-primary" id="reEnrichButton" value="Refresh Enrichment">
+            </td>
+            <td class="updateButton">
+              <input type="button" class="btn btn-primary" id="reGraphButton" value="Refresh Graph">
+            </td>
+          </tr>
+        </table>
       </form>
     </div>
     <!-- End Parameter Adjustment Tab -->
