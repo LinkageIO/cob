@@ -137,11 +137,21 @@ def term_network():
     term = str(request.form['term'])
     windowSize = int(request.form['windowSize'])
     flankLimit = int(request.form['flankLimit'])
-    edgeCutoff = float(request.form['edgeCutoff'])
     nodeCutoff = int(request.form['nodeCutoff'])
-    cob.set_sig_edge_zscore(edgeCutoff)
+    edgeCutoff = float(request.form['edgeCutoff'])
+    
+    # Get the parameters into range
+    nodeCutoff = min(nodeCutoff,20)
+    nodeCutoff = max(nodeCutoff,0)
+    edgeCutoff = min(edgeCutoff,20.0)
+    edgeCutoff = max(edgeCutoff,1.0)
+    windowSize = min(windowSize,1000000)
+    windowSize = max(windowSize,0)
+    flankLimit = min(flankLimit,20)
+    flankLimit = max(flankLimit,0)
     
     # Get the candidates
+    cob.set_sig_edge_zscore(edgeCutoff)
     genes = cob.refgen.candidate_genes(
         co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
@@ -184,10 +194,20 @@ def term_network():
 def custom_network():
     # Get data from the form
     cob = networks[str(request.form['network'])]
-    maxNeighbors = int(request.form['maxNeighbors'])
-    edgeCutoff = float(request.form['edgeCutoff'])
     nodeCutoff = int(request.form['nodeCutoff'])
+    edgeCutoff = float(request.form['edgeCutoff'])
+    maxNeighbors = int(request.form['maxNeighbors'])
     geneList = str(request.form['geneList'])
+    
+    # Get the parameters into range
+    nodeCutoff = min(nodeCutoff,20)
+    nodeCutoff = max(nodeCutoff,0)
+    edgeCutoff = min(edgeCutoff,20.0)
+    edgeCutoff = max(edgeCutoff,1.0)
+    maxNeighbors = min(maxNeighbors,150)
+    maxNeighbors = max(maxNeighbors,0)
+    
+    # Set the edge score
     cob.set_sig_edge_zscore(edgeCutoff)
 
     # Get the genes
@@ -266,11 +286,15 @@ def custom_network():
 def gene_connections():
     # Get data from the form
     cob = networks[str(request.form['network'])]
-    sigEdgeScore = float(request.form['sigEdgeScore'])
+    edgeCutoff = float(request.form['edgeCutoff'])
     geneList = str(request.form['geneList'])
     newGene = str(request.form['newGene'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
-    cob.set_sig_edge_zscore(sigEdgeScore)
+    
+    # Make edge score safe
+    edgeCutoff = min(edgeCutoff,20.0)
+    edgeCutoff = max(edgeCutoff,1.0)
+    cob.set_sig_edge_zscore(edgeCutoff)
     
     # Get the edges!
     edges = getEdges(geneList, cob)
@@ -290,6 +314,10 @@ def gene_word_search():
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
+    # Make probCutoff safe
+    probCutoff = min(probCutoff,1.0)
+    probCutoff = max(probCutoff,0.0)
+    
     # Run the analysis and return the JSONified results
     if cob._global('parent_refgen') in func_data_db:
         results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=probCutoff)
@@ -307,6 +335,14 @@ def go_enrichment():
     minTerm = int(request.form['minTerm'])
     maxTerm = int(request.form['maxTerm'])
     geneList = str(request.form['geneList'])
+    
+    # Make parameters safe
+    probCutoff = min(probCutoff,1.0)
+    probCutoff = max(probCutoff,0.0)
+    minTerm = min(minTerm,100)
+    minTerm = max(minTerm,1)
+    maxTerm = min(maxTerm,1000)
+    maxTerm = min(maxTerm,100)
     
     # Parse the genes
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))

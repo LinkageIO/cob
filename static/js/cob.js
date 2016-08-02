@@ -264,7 +264,7 @@ function addGene(newGene){
     url: ($SCRIPT_ROOT + 'gene_connections'),
     data: {
       network: lastNetwork,
-      sigEdgeScore: lastEdgeCutoff,
+      edgeCutoff: lastOpts['edgeCutoff'],
       geneList: geneList,
       newGene: newGene,
     },
