@@ -8,6 +8,15 @@ function enrich(geneList,GOnt){
     window.alert('You may only run one enrichment query at a time.');
     return;}
   
+  // Make sure there are at least some genes
+  if(geneList.length === 0){
+    window.alert('There must be genes in the table to query GeneWordSearch.');
+    return;
+  }
+  
+  // Save the genes to run if the opts are bad
+  enrichGenes = geneList;
+  
   // Check all of the relevant options and prompt if any have bad inputs
   $('.alert').addClass('hidden');
   var badFields = checkOpts();
@@ -15,16 +24,9 @@ function enrich(geneList,GOnt){
     errorOpts(badFields);
     return;
   }
-    
-  // Make sure there are at least some genes
-  if(geneList.length === 0){
-    window.alert('There must be genes in the table to query GeneWordSearch.');
-    return;
-  }
   
   // Prep work for request
   updateOpts();
-  enrichGenes = geneList;
   noGO = true;
   isGO = GOnt;
   
@@ -70,7 +72,7 @@ function enrich(geneList,GOnt){
     data: {
       network: lastNetwork,
       geneList: geneList,
-      probCutoff: lastOpts['pCutoff'],
+      pCutoff: lastOpts['pCutoff'],
       minTerm: lastOpts['minTerm'],
       maxTerm: lastOpts['maxTerm'],
     },
@@ -110,7 +112,7 @@ function enrich(geneList,GOnt){
       $('#EnrichmentTable').DataTable({
         "data": rows,
         "dom": '<"EnrichmentTitle">frtipB',
-        "order": [[0,'asc']],
+        "order": [[1,'asc']],
         "paging": false,
         "paginate": false,
         "rowId": 'id',

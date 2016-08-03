@@ -107,6 +107,7 @@ $('#clearSelectionButton').click(function(){
 
 // Toggle Layout button is pressed
 $('#toggleLayoutButton').click(function(){
+  if(cy === null){return;}
   
   // Save the highlighted gene names
   var high = [];
@@ -140,16 +141,27 @@ $('#toggleLayoutButton').click(function(){
 function isPoly(){return cy.options().layout.name === 'polywas';}
 function isTerm(){return !(geneNodes[0]['data']['term'] === 'custom');}
 
+// Front to update the results with parameters
 function updateEnrichment(){
-  if(enrichGenes === null){return;}
-  enrich(enrichGenes,isGO);
+  if(enrichGenes !== null){enrich(enrichGenes,isGO);}
 }
 
 function updateGraph(){
-  if(cy === null){return;}
-  var newGraph = optsChange(['nodeCutoff','edgeCutoff',
-    'visNeighbors','windowSize','flankLimit']);
-  loadGraph(newGraph,isPoly(),isTerm());
+  var newGraph = true;
+  var poly = null;
+  var term = null;
+  if(cy === null){
+    var termTable = $('#NetworkTab .tab-content .active').id === 'TermTableTab'
+    if(termTable && (lastNetwork==='' || lastOntology==='' || lastTerm==='')){return;}
+    else if(termTable){poly = true; term = true;}
+    else{poly = false; term = false;}
+  }
+  else{
+    newGraph = optsChange(['nodeCutoff','edgeCutoff',
+      'visNeighbors','windowSize','flankLimit']);
+    poly = isPoly(); term = isTerm();
+  }
+  loadGraph(newGraph,poly,term);
 }
 
 // Get data and build the new graph
@@ -317,9 +329,12 @@ function updateNodeSize(diameter){
   cy.style().selector('[type = "snpG"], [type = "gene"]').style({
     'width': (diameter).toString(),
     'height': (diameter).toString(),
-  }).selector('.pop').style({
+  }).selector('[origin = "query"]').style({
     'width': (diameter*1.5).toString(),
     'height': (diameter*1.5).toString(),
+  }).selector('.pop').style({
+    'width': (diameter*2).toString(),
+    'height': (diameter*2).toString(),
   }).update();
   cy.endBatch();
 }
@@ -383,7 +398,7 @@ function setGeneListeners(genes){
       res = 'ID: '+data['id'].toString()+'<br>';
       if(data['alias'].length > 0){res += 'Alias(es): '+data['alias'].toString()+'<br>';}
       res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-      if(data['snp'] != 'N/A'){res += 'SNP: '+data['snp'].toString()+'<br>';}
+      if(isTerm()){res += 'SNP: '+data['snp'].toString()+'<br>';}
       res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
       return res;
     },
@@ -483,32 +498,32 @@ function checkOpts(){
     
     // Fetch all of the current values
     optList.forEach(function(cur,idx,arr){
-      if((cur !== 'edgeCutoff')&&(cur !== 'probCutoff')){
+      if((cur !== 'edgeCutoff')&&(cur !== 'pCutoff')){
         vals[cur] = parseInt(document.forms["opts"][cur].value);}
       else{vals[cur] = parseFloat(document.forms["opts"][cur].value);}
     });
     
     // Check each for sanity and record if it's bad
-      if(!((vals['nodeSize'] >= 5)&&(vals['nodeSize'] <= 50))){
+    if(!((vals['nodeCutoff'] >= 0)&&(vals['nodeCutoff'] <= 20))){
+      badFields.push('nodeCutoff');}
+    if(!((vals['edgeCutoff'] >= 1.0)&&(vals['edgeCutoff'] <= 20.0))){
+      badFields.push('edgeCutoff');}
+    if(!((vals['windowSize'] >= 0)&&(vals['windowSize'] <= 1000000))){
+      badFields.push('windowSize');}
+    if(!((vals['flankLimit'] >= 0)&&(vals['flankLimit'] <= 20))){
+      badFields.push('flankLimit');}
+    if(!((vals['visNeighbors'] >= 0)&&(vals['visNeighbors'] <= 150))){
+      badFields.push('visNeighbors');}
+    if(!((vals['nodeSize'] >= 5)&&(vals['nodeSize'] <= 50))){
         badFields.push('nodeSize');}
-      if(!((vals['edgeCutoff'] >= 1.0)&&(vals['edgeCutoff'] <= 20.0))){
-        badFields.push('edgeCutoff');}
-      if(!((vals['windowSize'] >= 0)&&(vals['windowSize'] <= 1000000))){
-        badFields.push('windowSize');}
-      if(!((vals['flankLimit'] >= 0)&&(vals['flankLimit'] <= 20))){
-        badFields.push('flankLimit');}
-      if(!((vals['visNeighbors'] >= 0)&&(vals['visNeighbors'] <= 150))){
-        badFields.push('visNeighbors');}
-      if(!((vals['nodeCutoff'] >= 0)&&(vals['nodeCutoff'] <= 20))){
-        badFields.push('nodeCutoff');}
-      if(!((vals['snpLevels'] >= 1)&&(vals['snpLevels'] <= 5))){
-        badFields.push('snpLevels');}
-      if(!((vals['pCutoff'] >= 0.0)&&(vals['pCutoff'] <= 1.0))){
-        badFields.push('pCutoff');}
-      if(!((vals['minTerm'] >= 1)&&(vals['minTerm'] <= 100))){
-        badFields.push('minTerm');}
-      if(!((vals['maxTerm'] >= 100)&&(vals['maxTerm'] <= 1000))){
-        badFields.push('maxTerm');}
+    if(!((vals['snpLevels'] >= 1)&&(vals['snpLevels'] <= 5))){
+      badFields.push('snpLevels');}
+    if(!((vals['pCutoff'] >= 0.0)&&(vals['pCutoff'] <= 1.0))){
+      badFields.push('pCutoff');}
+    if(!((vals['minTerm'] >= 1)&&(vals['minTerm'] <= 100))){
+      badFields.push('minTerm');}
+    if(!((vals['maxTerm'] >= 100)&&(vals['maxTerm'] <= 1000))){
+      badFields.push('maxTerm');}
     
     // Return the problemeatic ones
     return badFields;

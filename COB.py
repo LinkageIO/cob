@@ -28,6 +28,21 @@ scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
 os.makedirs(scratch_folder, exist_ok=True)
 os.environ['GWS_STORE'] = scratch_folder
 
+# Max number of genes for custom queries
+geneLimit = {'min':1, 'max':150}
+
+# Option Limits
+optLimits = {
+    'nodeCutoff': {'min':0, 'max':20},
+    'edgeCutoff': {'min':1.0, 'max':20.0},
+    'windowSize': {'min':0, 'max':1000000},
+    'flankLimit': {'min':0, 'max':20},
+    'maxNeighbors': {'min':0, 'max':150},
+    'pCutoff': {'min':0.0, 'max':1.0},
+    'minTerm': {'min':1, 'max':100},
+    'maxTerm': {'min':100, 'max':1000}'
+}
+
 # ----------------------------------------
 #    Load things to memeory to prepare
 # ----------------------------------------
@@ -135,20 +150,10 @@ def term_network():
     cob = networks[str(request.form['network'])]
     ontology = str(request.form['ontology'])
     term = str(request.form['term'])
-    windowSize = int(request.form['windowSize'])
-    flankLimit = int(request.form['flankLimit'])
-    nodeCutoff = int(request.form['nodeCutoff'])
-    edgeCutoff = float(request.form['edgeCutoff'])
-    
-    # Get the parameters into range
-    nodeCutoff = min(nodeCutoff,20)
-    nodeCutoff = max(nodeCutoff,0)
-    edgeCutoff = min(edgeCutoff,20.0)
-    edgeCutoff = max(edgeCutoff,1.0)
-    windowSize = min(windowSize,1000000)
-    windowSize = max(windowSize,0)
-    flankLimit = min(flankLimit,20)
-    flankLimit = max(flankLimit,0)
+    nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
+    windowSize = safeOpts('windowSize',int(request.form['windowSize']))
+    flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
@@ -194,18 +199,17 @@ def term_network():
 def custom_network():
     # Get data from the form
     cob = networks[str(request.form['network'])]
-    nodeCutoff = int(request.form['nodeCutoff'])
-    edgeCutoff = float(request.form['edgeCutoff'])
-    maxNeighbors = int(request.form['maxNeighbors'])
+    nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
+    maxNeighbors = safeOpts('maxNeighbors',int(request.form['maxNeighbors']))
     geneList = str(request.form['geneList'])
     
-    # Get the parameters into range
-    nodeCutoff = min(nodeCutoff,20)
-    nodeCutoff = max(nodeCutoff,0)
-    edgeCutoff = min(edgeCutoff,20.0)
-    edgeCutoff = max(edgeCutoff,1.0)
-    maxNeighbors = min(maxNeighbors,150)
-    maxNeighbors = max(maxNeighbors,0)
+    # Make sure there aren't too many genes
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    if len(geneList) < geneLimit['min']:
+        abort(400)
+    elif len(geneList) > geneLimit['max']:
+        geneList = geneList[:geneLimit['max']]
     
     # Set the edge score
     cob.set_sig_edge_zscore(edgeCutoff)
@@ -214,7 +218,7 @@ def custom_network():
     primary = set()
     neighbors = set()
     render = set()
-    rejected = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    rejected = set(geneList)
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
         try:
@@ -286,14 +290,13 @@ def custom_network():
 def gene_connections():
     # Get data from the form
     cob = networks[str(request.form['network'])]
-    edgeCutoff = float(request.form['edgeCutoff'])
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     geneList = str(request.form['geneList'])
     newGene = str(request.form['newGene'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
-    # Make edge score safe
-    edgeCutoff = min(edgeCutoff,20.0)
-    edgeCutoff = max(edgeCutoff,1.0)
+    
+    # Set the Significant Edge Score
     cob.set_sig_edge_zscore(edgeCutoff)
     
     # Get the edges!
@@ -310,17 +313,13 @@ def gene_connections():
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
     cob = networks[str(request.form['network'])]
-    probCutoff = float(request.form['probCutoff'])
+    pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
-    # Make probCutoff safe
-    probCutoff = min(probCutoff,1.0)
-    probCutoff = max(probCutoff,0.0)
-    
     # Run the analysis and return the JSONified results
     if cob._global('parent_refgen') in func_data_db:
-        results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=probCutoff)
+        results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=pCutoff)
     else:
         abort(405)
     if len(results[0]) == 0:
@@ -331,18 +330,10 @@ def gene_word_search():
 @app.route("/go_enrichment", methods=['POST'])
 def go_enrichment():
     cob = networks[str(request.form['network'])]
-    probCutoff = float(request.form['probCutoff'])
-    minTerm = int(request.form['minTerm'])
-    maxTerm = int(request.form['maxTerm'])
+    pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
+    minTerm = safeOpts('minTerm',int(request.form['minTerm']))
+    maxTerm = safeOpts('maxTerm',int(request.form['maxTerm']))
     geneList = str(request.form['geneList'])
-    
-    # Make parameters safe
-    probCutoff = min(probCutoff,1.0)
-    probCutoff = max(probCutoff,0.0)
-    minTerm = min(minTerm,100)
-    minTerm = max(minTerm,1)
-    maxTerm = min(maxTerm,1000)
-    maxTerm = min(maxTerm,100)
     
     # Parse the genes
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
@@ -356,7 +347,7 @@ def go_enrichment():
 
     # Run the enrichment
     cob.log('Running GO Enrichment...')
-    enr = gont.enrichment(genes, pval_cutoff=probCutoff, min_term_size=minTerm, max_term_size=maxTerm)
+    enr = gont.enrichment(genes, pval_cutoff=pCutoff, min_term_size=minTerm, max_term_size=maxTerm)
     if len(enr) == 0:
         abort(400)
     
@@ -367,6 +358,15 @@ def go_enrichment():
     df = pd.DataFrame(terms).drop_duplicates(subset='id')
     cob.log('Found {} enriched terms.', str(df.shape[0]))
     return jsonify(df.to_json(orient='index'))
+
+# --------------------------------------------
+#     Function to Make Input Safe Again
+# --------------------------------------------
+def safeOpts(name,val):
+    # Get the parameters into range
+    val = min(val,optLimits[name]['max'])
+    val = max(val,optLimits[name]['min'])
+    return val
 
 # --------------------------------------------
 #     Functions to get the nodes and edges
@@ -458,14 +458,12 @@ def getNodes(genes, cob, term, primary=None, render=None,
                 node['data']['render'] = 'x'
             else:
                 node['data']['render'] = ' '
+            # Save the node to the list
+            nodes.append(node)
         else:
             if local_degree >= nodeCutoff:
                 node['data']['render'] = 'x'
-            else:
-                node['data']['render'] = ' '
-        
-        # Save the node to the list
-        nodes.append(node)
+                nodes.append(node)
         
     return nodes
 

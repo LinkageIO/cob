@@ -99,7 +99,7 @@ function buildGeneTables(){
       "data": [],
       "deferRender": false,
       "dom": '<"GeneTitle">frtpB',
-      "order": [[0,'dec'],[6,'asc'],[8,'asc']],
+      "order": [[0,'dec'],[3,'asc'],[4,'dec']],
       "paging": true,
       "paginate": true,
       "rowId": 'id',
@@ -122,6 +122,7 @@ function buildGeneTables(){
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
       "dom": '<"SubnetTitle">frtpB',
+      "order": [[0,'dec'],[3,'asc'],[4,'asc']],
       "paging": false,
       "paginate": false,
       "rowId": 'id',
@@ -144,8 +145,7 @@ function buildGeneTables(){
   $("div.SubnetTitle").html('Subnet Data');
   
   // Hide the columns we don't need in the respective tables
-  gene_table.columns('annotations:name').visible(false);
-  sub_table.columns('ldegree:name, gdegree:name, start:name, end:name, num_intervening:name, rank_intervening:name, num_siblings:name, snp:name, rendered:name').visible(false);
+  sub_table.columns('rendered:name').visible(false);
 
   // Set listeners for selection
   $('#GeneTable tbody').on('click','tr', function(evt){
@@ -228,7 +228,8 @@ function updateGraphTable(tableName, genes){
     if(geneDict['num_intervening'] > -1){hasNumInter = true;}
     if(geneDict['rank_intervening'] > 2.0){hasRankInter = true;}
     if(geneDict['num_siblings'] > 2){hasNumSiblings = true;}
-    if(!(isTerm() && geneDict['ldegree'] <= lastOpts['nodeCutoff'])){geneData.push(geneDict);}
+    if(!(isTerm() && isPoly() && (geneDict['ldegree'] <= lastOpts['nodeCutoff']))){
+      geneData.push(geneDict);}
   });
   cy.endBatch();
 
@@ -236,6 +237,7 @@ function updateGraphTable(tableName, genes){
   var tbl = $('#'+tableName+'Table').DataTable();
   tbl.clear().rows.add(geneData).draw();
   tbl.columns('fdr:name').visible(hasFDR);
+  tbl.columns('snp:name').visible(isTerm());
   tbl.columns('num_intervening:name').visible(hasNumInter);
   tbl.columns('rank_intervening:name').visible(hasRankInter);
   tbl.columns('num_siblings:name').visible(hasNumSiblings);
