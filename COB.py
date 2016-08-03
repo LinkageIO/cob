@@ -29,7 +29,7 @@ os.makedirs(scratch_folder, exist_ok=True)
 os.environ['GWS_STORE'] = scratch_folder
 
 # Max number of genes for custom queries
-geneLimit = {'min':1, 'max':150}
+geneLimit = {'min':1,'max':150}
 
 # Option Limits
 optLimits = {
@@ -40,7 +40,7 @@ optLimits = {
     'maxNeighbors': {'min':0, 'max':150},
     'pCutoff': {'min':0.0, 'max':1.0},
     'minTerm': {'min':1, 'max':100},
-    'maxTerm': {'min':100, 'max':1000}'
+    'maxTerm': {'min':100, 'max':1000}
 }
 
 # ----------------------------------------
