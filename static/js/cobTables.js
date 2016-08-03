@@ -74,12 +74,12 @@ function buildGeneTables(){
     {data: 'snp', name:'snp', title:'SNP'},
     {data: 'start', name:'start', title:'Start'},
     {data: 'end', name:'end', title:'End'},
-    {data: 'annotations', name:'annotations', title:'Annotations'},
     {data: 'num_intervening', name:'num_intervening', title:'Num Intervening'},
     {data: 'rank_intervening', name:'rank_intervening', title:'Rank Intervening'},
     {data: 'num_siblings', name:'num_siblings', title:'Num Siblings'},
     {data: 'window_size', name:'window_size', title:'Window Size', visible: false},
     {data: 'flank_limit', name:'flank_limit', title:'Flank Limit', visible: false},
+    {data: 'annotations', name:'annotations', title:'Annotations'},
     //{data: 'parent_num_iterations', name:'parent_num_iterations', title: 'Num Parent Interactions'},
     //{data: 'parent_avg_effect_size', name:'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
   ];
@@ -190,7 +190,7 @@ function gont(e,dt,node,cofig){
 ---------------------------------------*/
 function updateGraphTable(tableName, genes){
   // Save original tab name
-  var oldTab = $('.active [role="tab"]').attr('href');
+  var oldTab = $('#navTabs .active [role="tab"]').attr('href');
 
   // Switch to needed tab, needed for column scaling
   $('#navTabs a[href="#'+tableName+'Tab"]').tab('show');

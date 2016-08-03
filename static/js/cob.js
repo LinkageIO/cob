@@ -141,17 +141,18 @@ $('#toggleLayoutButton').click(function(){
 function isPoly(){return cy.options().layout.name === 'polywas';}
 function isTerm(){return !(geneNodes[0]['data']['term'] === 'custom');}
 
-// Front to update the results with parameters
+// Front to update the enrichment results with parameters
 function updateEnrichment(){
   if(enrichGenes !== null){enrich(enrichGenes,isGO);}
 }
 
+// Front to figure out how to update the graph
 function updateGraph(){
   var newGraph = true;
   var poly = null;
   var term = null;
   if(cy === null){
-    var termTable = $('#NetworkTab .tab-content .active').id === 'TermTableTab'
+    var termTable = $('#GeneSelectTabs .active [role = "tab"]').attr('href') === '#TermTableTab'
     if(termTable && (lastNetwork==='' || lastOntology==='' || lastTerm==='')){return;}
     else if(termTable){poly = true; term = true;}
     else{poly = false; term = false;}
