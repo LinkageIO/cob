@@ -1,0 +1,4 @@
+Cython>=0.24.1
+numpy>=1.11.1
+gunicorn>=19.6.0
+git+git://github.com/schae234/Camoco@master#egg=camoco
