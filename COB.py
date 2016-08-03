@@ -7,11 +7,14 @@ import copy
 import glob
 import logging
 import numpy as np
+import pandas as pd
 import camoco as co
 from math import isinf
 from itertools import chain
+from genewordsearch.Classes import WordFreq
 from genewordsearch.GeneWordSearch import geneWords
 from genewordsearch.DBBuilder import geneWordBuilder
+from genewordsearch.GeneWordSearch import geneWordSearch
 
 # Take a huge swig from the flask
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
@@ -21,8 +24,28 @@ app = Flask(__name__)
 network_names = ['ZmRoot']
 
 # Folder with annotation files
-anote_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
-os.makedirs(anote_folder, exist_ok=True)
+scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
+os.makedirs(scratch_folder, exist_ok=True)
+os.environ['GWS_STORE'] = scratch_folder
+
+# Max number of genes for custom queries
+geneLimit = {'min':1, 'max':150}
+
+# Option Limits
+optLimits = {
+    'nodeCutoff': {'min':0, 'max':20},
+    'edgeCutoff': {'min':1.0, 'max':20.0},
+    'windowSize': {'min':0, 'max':1000000},
+    'flankLimit': {'min':0, 'max':20},
+    'maxNeighbors': {'min':0, 'max':150},
+    'pCutoff': {'min':0.0, 'max':1.0},
+    'minTerm': {'min':1, 'max':100},
+    'maxTerm': {'min':100, 'max':1000}'
+}
+
+# ----------------------------------------
+#    Load things to memeory to prepare
+# ----------------------------------------
 
 # Generate network list based on allowed list and load them into memory
 print('Preloading networks into memory...')
@@ -35,46 +58,39 @@ print('Fetching gene names for networks...')
 network_genes = {}
 for name, net in networks.items():
     ids = list(net._expr.index.values)
-    als = net.refgen.aliases(ids)
+    als = co.RefGen(net._global('parent_refgen')).aliases(ids)
     for k,v in als.items():
         ids += v
     network_genes[name] = list(set(ids))
 print('Found gene names')
 
-# Pull all annotation files from folder
-print('Processing gene annotation files in ' + anote_folder + '...')
-orgs = set()
-for name,net in networks.items():
-    orgs.add(net.refgen.organism)
-
-# Process all of the annotations in the default folder
-for org in orgs:
-    # Variables for the loop
-    fileList = glob.glob(anote_folder + org + '*.[tc]sv')
-    geneCols = []
-    desCols = []
-    delimeters = []
-    headers = []
-
-    # For each file, find/set the parameters
-    for fd in fileList:
-        geneCols.append(1)
-        desCols.append('2 end')
-        if(fd[-3:] == 'tsv'):
-            delimeters.append('tab')
-        else:
-            delimeters.append(',')
-        headers.append(True)
-
-    # Actually run the database builder
-    geneWordBuilder(org, fileList, geneCols, desCols, delimeters, headers)
-    print('Finished these annotation files: ' + str(fileList))
-print('Processed all annotations')
-
 # Generate in Memory Avalible GWAS datasets list
 print('Finding available GWAS datasets...')
 gwas_sets = {"data" : list(co.available_datasets('GWAS')[
             ['Name','Description']].itertuples(index=False))}
+
+# Find all of the GWAS data we have available
+print('Finding GWAS Data...')
+gwas_data_db = {}
+for gwas in co.available_datasets('GWASData')['Name']:
+    gwas_data_db[gwas] = co.GWASData(gwas) 
+
+# Find any functional annotations we have 
+print('Finding functional annotations...')
+func_data_db = {}
+for func in co.available_datasets('RefGenFunc')['Name']:
+    print('Processing annotations for {}...'.format(func))
+    func_data_db[func] = co.RefGenFunc(func)
+    func_data_db[func].to_csv(os.path.join(scratch_folder,(func+'.tsv')))
+    geneWordBuilder(func,[os.path.join(scratch_folder,(func+'.tsv'))],[1],['2 end'],['tab'],[True])
+
+# Find any GO ontologies we have for the networks we have
+print('Finding applicable GO Ontologies...')
+GOnt_db = {}
+for name in co.available_datasets('GOnt')['Name']:
+    gont = co.GOnt(name)
+    if gont.refgen.name not in GOnt_db:
+        GOnt_db[gont.refgen.name] = gont
 
 # Generate in memory term lists
 print('Finding all available terms...')
@@ -130,15 +146,17 @@ def ontology_terms(ontology):
 # Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/term_network", methods=['POST'])
 def term_network():
-    # Get data from the form
-    network = str(request.form['network'])
+    # Get data from the form and derive some stuff
+    cob = networks[str(request.form['network'])]
     ontology = str(request.form['ontology'])
     term = str(request.form['term'])
-    windowSize = int(request.form['windowSize'])
-    flankLimit = int(request.form['flankLimit'])
-
-    # Get cob and such
-    cob = networks[network]
+    nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
+    windowSize = safeOpts('windowSize',int(request.form['windowSize']))
+    flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
+    
+    # Get the candidates
+    cob.set_sig_edge_zscore(edgeCutoff)
     genes = cob.refgen.candidate_genes(
         co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
@@ -148,24 +166,229 @@ def term_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-
-    # Values needed for later computations
-    locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
-
-    # Containers for the node info
+    
+    # Base of the result dict
     net = {}
-    net['nodes'] = []
-    parents = set()
+    
+    # If there are GWAS results, pass them in
+    if ontology in gwas_data_db:
+        gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
+            term=term,windowSize=windowSize,flankLimit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff)
+    
+    # Otherwise just run it without
+    else:
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff)
+    
+    # Get the edges of the nodes that will be rendered
+    render_list = []
+    for node in net['nodes']:
+        if node['data']['render'] == 'x':
+            render_list.append(node['data']['id'])
+    net['edges'] = getEdges(render_list, cob)
+    
+    # Log Data Point to COB Log
+    cob.log(term + ': Found ' +
+        str(len(net['nodes'])) + ' nodes, ' +
+        str(len(net['edges'])) + ' edges')
+    
+    # Return it as a JSON object
+    return jsonify(net)
 
-    # Find alises and annotations if present
-    alias_db = cob.refgen.aliases([gene.id for gene in genes])
-    try:
-        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
-    except ValueError:
-        anote_db = {}
+@app.route("/custom_network", methods=['POST'])
+def custom_network():
+    # Get data from the form
+    cob = networks[str(request.form['network'])]
+    nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
+    maxNeighbors = safeOpts('maxNeighbors',int(request.form['maxNeighbors']))
+    geneList = str(request.form['geneList'])
+    
+    # Make sure there aren't too many genes
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    if len(geneList) < geneLimit['min']:
+        abort(400)
+    elif len(geneList) > geneLimit['max']:
+        geneList = geneList[:geneLimit['max']]
+    
+    # Set the edge score
+    cob.set_sig_edge_zscore(edgeCutoff)
 
-    # Loop to build the gene nodes
+    # Get the genes
+    primary = set()
+    neighbors = set()
+    render = set()
+    rejected = set(geneList)
+    for name in copy.copy(rejected):
+        # Find all the neighbors, sort by score
+        try:
+            gene = cob.refgen.from_ids(name)
+        except ValueError:
+            continue
+        nbs = cob.neighbors(gene).reset_index().sort_values('score')
+        
+        # Strip everything except the gene IDs and add to the grand neighbor list
+        rejected.remove(name)
+        primary.add(gene.id)
+        render.add(gene.id)
+        new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
+        
+        # Build the set of genes that should be rendered
+        nbs = nbs[:maxNeighbors]
+        render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
+        
+        # Remove the query gene if it's present
+        if gene.id in new_genes:
+            new_genes.remove(gene.id)
+        
+        # Add to the set of neighbor genes
+        neighbors = neighbors.union(set(new_genes))
+    
+    # Get gene objects from IDs, but save list both lists for later
+    genes_set = primary.union(neighbors)
+    genes = cob.refgen.from_ids(genes_set)
+    
+    # Get the candidates
+    genes = cob.refgen.candidate_genes(
+        genes,
+        window_size=0,
+        flank_limit=0,
+        chain=True,
+        include_parent_locus=True,
+        #include_parent_attrs=['numIterations', 'avgEffectSize'],
+        include_num_intervening=True,
+        include_rank_intervening=True,
+        include_num_siblings=True)
+    
+    # Filter the candidates down to the provided list of genes
+    genes = list(filter((lambda x: x.id in genes_set), genes))
+    
+    # If there are no good genes, error out
+    if(len(genes) <= 0):
+        abort(400)
+
+    # Build up the objects
+    net = {}
+    net['nodes'] = getNodes(genes, cob, 'custom', primary=primary, render=render, nodeCutoff=nodeCutoff)
+    net['rejected'] = list(rejected)
+    
+    # Get the edges of the nodes that will be rendered
+    render_list = []
+    for node in net['nodes']:
+        if node['data']['render'] == 'x':
+            render_list.append(node['data']['id'])
+    net['edges'] = getEdges(render_list, cob)
+    
+    # Log Data Point to COB Log
+    cob.log('Custom Term: Found ' +
+        str(len(net['nodes'])) + ' nodes, ' +
+        str(len(net['edges'])) + ' edges')
+    
+    return jsonify(net)
+
+@app.route("/gene_connections", methods=['POST'])
+def gene_connections():
+    # Get data from the form
+    cob = networks[str(request.form['network'])]
+    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
+    geneList = str(request.form['geneList'])
+    newGene = str(request.form['newGene'])
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    
+    # Set the Significant Edge Score
+    cob.set_sig_edge_zscore(edgeCutoff)
+    
+    # Get the edges!
+    edges = getEdges(geneList, cob)
+    
+    # Filter the ones that are not attached to the new one
+    edges = list(filter(
+        lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
+        ,edges))
+    
+    # Return it as a JSON object
+    return jsonify({'edges': edges})
+
+@app.route("/gene_word_search", methods=['POST'])
+def gene_word_search():
+    cob = networks[str(request.form['network'])]
+    pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
+    geneList = str(request.form['geneList'])
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    # Run the analysis and return the JSONified results
+    if cob._global('parent_refgen') in func_data_db:
+        results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=pCutoff)
+    else:
+        abort(405)
+    if len(results[0]) == 0:
+        abort(400)
+    results = WordFreq.to_JSON_array(results[0])
+    return jsonify(result=results)
+
+@app.route("/go_enrichment", methods=['POST'])
+def go_enrichment():
+    cob = networks[str(request.form['network'])]
+    pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
+    minTerm = safeOpts('minTerm',int(request.form['minTerm']))
+    maxTerm = safeOpts('maxTerm',int(request.form['maxTerm']))
+    geneList = str(request.form['geneList'])
+    
+    # Parse the genes
+    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    
+    # Get the things for enrichment
+    genes = cob.refgen.from_ids(geneList)
+    if cob._global('parent_refgen') in GOnt_db:
+        gont = GOnt_db[cob._global('parent_refgen')]
+    else:
+        abort(405)
+
+    # Run the enrichment
+    cob.log('Running GO Enrichment...')
+    enr = gont.enrichment(genes, pval_cutoff=pCutoff, min_term_size=minTerm, max_term_size=maxTerm)
+    if len(enr) == 0:
+        abort(400)
+    
+    # Extract the results for returning
+    terms = []
+    for term in enr:
+        terms.append({'id':term.id,'name':term.name,'desc':term.desc})
+    df = pd.DataFrame(terms).drop_duplicates(subset='id')
+    cob.log('Found {} enriched terms.', str(df.shape[0]))
+    return jsonify(df.to_json(orient='index'))
+
+# --------------------------------------------
+#     Function to Make Input Safe Again
+# --------------------------------------------
+def safeOpts(name,val):
+    # Get the parameters into range
+    val = min(val,optLimits[name]['max'])
+    val = max(val,optLimits[name]['min'])
+    return val
+
+# --------------------------------------------
+#     Functions to get the nodes and edges
+# --------------------------------------------
+def getNodes(genes, cob, term, primary=None, render=None,
+    gwas_data=pd.DataFrame(), nodeCutoff=0):
+    # Cache the locality
+    locality = cob.locality(genes)
+    
+    # Containers for the node info
+    nodes = []
+    parent_set = set()
+
+    # Look for alises
+    aliases = co.RefGen(cob._global('parent_refgen')).aliases([gene.id for gene in genes])
+    
+    # Look for annotations
+    if cob._global('parent_refgen') in func_data_db:
+        func_data = func_data_db[cob._global('parent_refgen')][[gene.id for gene in genes]]
+    else:
+        func_data = {}
+
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
@@ -181,168 +404,39 @@ def term_network():
             #print('Num Attr fail on gene: ' + str(gene.id))
             num_interv = 'NAN'
 
-        # If there are any aliases registered for the gene, add them
+        # Pull any aliases from our database
         alias = ''
-        if gene.id in alias_db:
-            for a in alias_db[gene.id]:
+        if gene.id in aliases:
+            for a in aliases[gene.id]:
                 alias += a + ' '
-
+        
+        # Fetch the FDR if we can
+        fdr = np.nan
+        if gene.id in gwas_data.index:
+            fdr = gwas_data.loc[gene.id]['fdr']
+            
         # Pull any annotations from our databases
         anote = ''
-        if gene.id in anote_db:
-            for a in anote_db[gene.id]:
+        if gene.id in func_data:
+            for a in func_data[gene.id]:
                 anote += a + ' '
-
-        net['nodes'].append({'data':{
+        
+        # Build the data object from our data
+        node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
+            'render': 'x',
+            'term': term,
             'snp': gene.attr['parent_locus'],
             'alias': alias,
+            'origin': 'N/A',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
+            'cur_ldegree': str(0),
             'ldegree': str(local_degree),
             'gdegree': str(global_degree),
-            'num_intervening': num_interv,
-            'rank_intervening': str(gene.attr['intervening_rank']),
-            'num_siblings': str(gene.attr['num_siblings']),
-            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anote,
-        }})
-        parents.add(gene.attr['parent_locus'])
-
-    # Loop to build the SNP nodes
-    for parent in parents:
-        parent_attr = re.split('<|>|:|-', parent)
-        net['nodes'].insert(0, {'data':{
-            'id': parent,
-            'type': 'snp',
-            'chrom': str(parent_attr[2]),
-            'start': str(parent_attr[3]),
-            'end': str(parent_attr[4]),
-        }})
-
-    # "Loop" to build the edge objects
-    net['edges'] = [{'data':{
-        'source': source,
-        'target' : target,
-        'weight' : str(weight)
-    }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
-
-    # Return it as a JSON object
-    return jsonify(net)
-
-@app.route("/custom_network", methods=['POST'])
-def custom_network():
-    # Get data from the form
-    network = str(request.form['network'])
-    maxNeighbors = int(request.form['maxNeighbors'])
-    sigEdgeScore = float(request.form['sigEdgeScore'])
-    geneList = str(request.form['geneList'])
-
-    # Set up cob
-    cob = networks[network]
-    cob.set_sig_edge_zscore(sigEdgeScore)
-
-    # Get the genes
-    primary = set()
-    neighbors = set()
-    rejected = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
-    for name in copy.copy(rejected):
-        # Find all the neighbors, sort by score
-        try:
-            gene = cob.refgen.from_ids(name)
-        except ValueError:
-            continue
-        nbs = cob.neighbors(gene).reset_index().sort_values('score')
-
-        # If we need to truncate the list, do so
-        if((maxNeighbors > -1) and (len(nbs) > maxNeighbors)):
-            nbs = nbs[0:(maxNeighbors)]
-
-        # Strip everything except the gene IDs and add to the grand neighbor list
-        rejected.remove(name)
-        primary.add(gene.id)
-        new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
-        if gene.id in new_genes:
-            new_genes.remove(gene.id)
-        neighbors = neighbors.union(set(new_genes))
-
-    # Get gene objects from IDs, but save list both lists for later
-    genes_set = primary.union(neighbors)
-    genes = cob.refgen.from_ids(genes_set)
-
-    # If there are no good genes, error out
-    if(len(genes) <= 0):
-        abort(400)
-
-    # Find the candidate genes (Really just here to get extra info, it's cheap)
-    genes = cob.refgen.candidate_genes(
-        genes,
-        window_size=0,
-        flank_limit=0,
-        chain=True,
-        include_parent_locus=True,
-        #include_parent_attrs=['numIterations', 'avgEffectSize'],
-        include_num_intervening=True,
-        include_rank_intervening=True,
-        include_num_siblings=True)
-
-    # Values needed for later computations
-    locality = cob.locality(genes)
-    subnet = cob.subnetwork(genes, names_as_index=False, names_as_cols=True)
-
-    # Containers for the node info
-    net = {}
-    net['nodes'] = []
-    net['rejected'] = list(rejected)
-
-    # Find alises and annotations if present
-    alias_db = cob.refgen.aliases([gene.id for gene in genes])
-    try:
-        anote_db = geneWords([gene.id for gene in genes], cob.refgen.organism, raw=True)
-    except ValueError:
-        anote_db = {}
-
-    # Loop to build the gene nodes
-    for gene in genes:
-        # Catch for translating the way camoco works to the way We need for COB
-        try:
-            local_degree = locality.ix[gene.id]['local']
-            global_degree = locality.ix[gene.id]['global']
-        except KeyError as e:
-            local_degree = global_degree = 0
-
-        # Catch for bug in camoco
-        try:
-            num_interv = str(gene.attr['num_intervening'])
-        except KeyError as e:
-            num_interv = 'NAN'
-
-        # If there are any aliases registered for the gene, add them
-        alias = ''
-        if gene.id in alias_db:
-            for a in alias_db[gene.id]:
-                alias += a + ' '
-
-        # Pull any annotations from our databases
-        anote = ''
-        if gene.id in anote_db:
-            for a in anote_db[gene.id]:
-                anote += a + ' '
-
-        node = {'data':{
-            'id': gene.id,
-            'type': 'gene',
-            'snp': 'N/A',
-            'alias': alias,
-            'origin': 'neighbor',
-            'chrom': str(gene.chrom),
-            'start': str(gene.start),
-            'end': str(gene.end),
-            'ldegree': str(local_degree),
-            'gdegree': str(global_degree),
+            'fdr': str(fdr),
             'num_intervening': num_interv,
             'rank_intervening': str(gene.attr['intervening_rank']),
             'num_siblings': str(gene.attr['num_siblings']),
@@ -350,16 +444,41 @@ def custom_network():
             #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
             'annotations': anote,
         }}
-        if gene.id in primary:
-            node['data']['origin'] = 'query'
-        net['nodes'].append(node)
+        
+        # Denote the query genes
+        if primary:
+            if gene.id in primary:
+                node['data']['origin'] = 'query'
+            else:
+                node['data']['origin'] = 'neighbor'
+        
+        # Denote whether or not to render it if there is a list
+        if render:
+            if (gene.id in render) and (local_degree >= nodeCutoff):
+                node['data']['render'] = 'x'
+            else:
+                node['data']['render'] = ' '
+            # Save the node to the list
+            nodes.append(node)
+        else:
+            if local_degree >= nodeCutoff:
+                node['data']['render'] = 'x'
+                nodes.append(node)
+        
+    return nodes
 
+def getEdges(geneList, cob):
+    # Find the Edges for the genes we will render
+    subnet = cob.subnetwork(
+        cob.refgen.from_ids(geneList),
+        names_as_index=False,
+        names_as_cols=True)
+    
     # "Loop" to build the edge objects
-    net['edges'] = [{'data':{
+    edges = [{'group':'edges', 'data':{
         'source': source,
         'target' : target,
         'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
-
-    # Return it as a JSON object
-    return jsonify(net)
+    
+    return edges

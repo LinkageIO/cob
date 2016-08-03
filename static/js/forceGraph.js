@@ -1,77 +1,34 @@
-// Promise function to build a new force directed graph
-var newForce = function(resolve, reject){
-  // Get the data and on completion, build the graph
-  $.ajax({
-    url: ($SCRIPT_ROOT + 'custom_network'),
-    data: {
-      network: lastNetwork,
-      sigEdgeScore: lastSigEdgeScore,
-      maxNeighbors: lastMaxNeighbors,
-      geneList: $('#geneList').val(),
-    },
-    type: 'POST',
-    statusCode: {400: function(){reject('No input genes were present in the network.');}},
-    success: function(data){
-      // Kill the old graph and build the new one
-      if(cy != null){cy.destroy();cy = null;}
-      isPoly = false;
-      initForceCyto(data);
-      var genes = cy.nodes();
+// Promise function to build a new force directed graph 
+function newForce(resolve,reject,nodes,edges){
+  // Destroy the old graph if there is one
+  if(cy != null){cy.destroy();cy = null;}
+  
+  // Save the nodes, Init the graph
+  geneNodes = nodes;
+  initForceCyto(nodes.filter(function(cur,idx,arr){
+    return (cur['data']['render'] === 'x');
+  }),edges);
+  
+  // Update the styles of the nodes for the new sizes
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
 
-      cy.startBatch();
-      // Update the styles of the nodes for the new sizes
-      updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
-
-      // Save the degree for the graph
-      genes.forEach(function(cur, idx, arr){cur.data('cur_ldegree', cur.degree());});
-      cy.endBatch();
-
-      // Set up the gene node tap listener
-      genes.on('tap', function(evt){
-        // Only scroll to the gene if it isn't highlighted already
-        if(!(evt.cyTarget.hasClass('highlighted'))){
-          $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-
-        // Run the selection algorithm
-        geneSelect(evt.cyTarget.data('id'));
-      });
-
-      // Set the gene qTip listeners (only needs to be done once per full graph redo)
-      genes.qtip({
-        content: function(){
-          var data = this.data();
-          res = 'ID: '+data['id'].toString()+'<br>';
-          if(data['alias'].length > 0){
-            res += 'Alias(es): '+data['alias'].toString()+'<br>';}
-          res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-          res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
-          return res;
-        },
-        position: {my: 'bottom center', at: 'top center'},
-        style: {
-          classes: 'qtip-dark qtip-rounded qtip-shadow',
-          tip: {width: 10, height: 5},
-        },
-        show: {event: 'mouseover'},
-        hide: {event: 'mouseout'},
-      });
-
-      if(data.rejected.length > 0){
-        window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');
-      }
-
-      if(cy !== null){resolve();}
-      else{reject('Force graph build failed');}
-    }});
+  // Save the degree for the graph
+  setGeneListeners();
+  
+  // Check for a graph and resolve
+  if(cy !== null){resolve();}
+  else{reject('Force graph build failed');}
 }
 
-var updateForce = function(resolve, reject){
+// Promise function handle updating exiisting force graph
+function updateForce(resolve, reject){
   // Run the layout
   cy.layout(getForceLayoutOpts());
 
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(document.forms["forceOpts"]["forceNodeSize"].value));
-
+  updateNodeSize(parseInt(lastOpts["nodeSize"]));
+  
+  // Check for a graph and resolve
   if(cy !== null){resolve();}
   else{reject('Force graph update failed');}
 }
@@ -83,12 +40,12 @@ function getForceLayoutOpts(){
     animate: false,
     nodeOverlap: 50,
     componentSpacing: 35,
-    nodeRepulsion: function(node){return 100000;},
+    nodeRepulsion: function(node){return 50000;},
   }
 }
 
 // Function to initialize the graph with force layout
-function initForceCyto(data){
+function initForceCyto(nodes, edges){
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -102,16 +59,20 @@ function initForceCyto(data){
     layout: getForceLayoutOpts(),
 
     style: [
+      {selector: '[type = "gene"]',
+       css: {
+         'z-index': '1',
+         'shape': 'circle',
+         'background-color': '#337ab7',
+       }},
        {selector: '[origin = "query"]',
         css: {
-          'z-index': '2',
-          'shape': 'circle',
+          'z-index': '3',
           'background-color': 'DarkOrchid',
         }},
         {selector: '[origin = "neighbor"]',
          css: {
-           'z-index': '1',
-           'shape': 'circle',
+           'z-index': '2',
            'background-color': 'MediumSeaGreen',
          }},
        {selector: 'edge',
@@ -121,7 +82,7 @@ function initForceCyto(data){
            'opacity': '0.5',
            'line-color': 'grey'
          }},
-       {selector: '.neighbors',
+       {selector: '.neighbor',
          css: {
            'background-color': '#ff6400',
        }},
@@ -143,7 +104,7 @@ function initForceCyto(data){
          }},
      ],
    elements: {
-     nodes: data.nodes,
-     edges: data.edges,
+     nodes: nodes,
+     edges: edges,
   }});
 }
