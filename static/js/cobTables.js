@@ -149,14 +149,24 @@ function buildGeneTables(){
 
   // Set listeners for selection
   $('#GeneTable tbody').on('click','tr', function(evt){
-    var ele = cy.getElementById(this['id']);
-    if(ele.length === 1){geneSelect(ele);}
-    else{addGene(this['id']);}
+    if(evt.ctrlKey){
+      window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
+    }
+    else{
+      var ele = cy.getElementById(this['id']);
+      if(ele.length === 1){geneSelect(ele);}
+      else{addGene(this['id']);}
+    }
   });
   $('#SubnetTable tbody').on('click','tr', function(evt){
-    var ele = cy.getElementById(this['id']);
-    if(ele.length === 1){geneSelect(ele);}
-    else{addGene(this['id']);}
+    if(evt.ctrlKey){
+      window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
+    }
+    else{
+      var ele = cy.getElementById(this['id']);
+      if(ele.length === 1){geneSelect(ele);}
+      else{addGene(this['id']);}
+    }
   });
   
   // Set listener for pop effect of subnetwork table

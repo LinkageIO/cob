@@ -51,7 +51,7 @@ function setSNPGqtips(){
       tip: {width: 10, height: 5},
     },
     show: {event: 'mouseover'},
-    hide: {event: 'mouseout'},
+    hide: {event: 'mouseout unfocus', distance:20},
   });
 }
 
