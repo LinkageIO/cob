@@ -46,7 +46,6 @@ var register = function(cy){
     // Clean up things from previous layout, if there was one
     cy.reset();
     cy.remove('[type = "chrom"], [type = "snpG"]');
-    cy.nodes().classes('').style({'display': 'element'});
     cy.edges().classes('');
     
     // Finding and splitting up the different element types

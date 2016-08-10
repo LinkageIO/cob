@@ -238,8 +238,7 @@ function updateGraphTable(tableName, genes){
     if(geneDict['num_intervening'] > -1){hasNumInter = true;}
     if(geneDict['rank_intervening'] > 2.0){hasRankInter = true;}
     if(geneDict['num_siblings'] > 2){hasNumSiblings = true;}
-    if(!(isTerm() && isPoly() && (geneDict['ldegree'] <= lastOpts['nodeCutoff']))){
-      geneData.push(geneDict);}
+    geneData.push(geneDict);
   });
   cy.endBatch();
 

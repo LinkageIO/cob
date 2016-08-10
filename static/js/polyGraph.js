@@ -77,10 +77,10 @@ function initPolyCyto(nodes,edges){
     autounselectify: false,
     
     // Rendering Options
-    pixelRatio: 1,
+    motionBlur: true,
     hideEdgesOnViewport: false,
-    textureOnViewport: true,
     wheelSensitivity: 0.5,
+    pixelRatio: 2.0,
     
     layout: getPolyLayoutOpts(),
     style: [
