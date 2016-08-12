@@ -54,7 +54,7 @@ function initForceCyto(nodes, edges){
     pixelRatio: 1,
     hideEdgesOnViewport: false,
     textureOnViewport: true,
-    wheelSensitivity: 0.5,
+    wheelSensitivity: 0.25,
 
     layout: getForceLayoutOpts(),
 
