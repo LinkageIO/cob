@@ -295,7 +295,6 @@ def gene_connections():
     newGene = str(request.form['newGene'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
-    
     # Set the Significant Edge Score
     cob.set_sig_edge_zscore(edgeCutoff)
     
@@ -303,9 +302,10 @@ def gene_connections():
     edges = getEdges(geneList, cob)
     
     # Filter the ones that are not attached to the new one
-    edges = list(filter(
-        lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
-        ,edges))
+    if(newGene != 'N/A'):
+        edges = list(filter(
+            lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
+            ,edges))
     
     # Return it as a JSON object
     return jsonify({'edges': edges})
@@ -425,7 +425,7 @@ def getNodes(genes, cob, term, primary=None, render=None,
         node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
-            'render': 'x',
+            'render': ' ',
             'term': term,
             'snp': gene.attr['parent_locus'],
             'alias': alias,
@@ -458,12 +458,12 @@ def getNodes(genes, cob, term, primary=None, render=None,
                 node['data']['render'] = 'x'
             else:
                 node['data']['render'] = ' '
-            # Save the node to the list
-            nodes.append(node)
         else:
             if local_degree >= nodeCutoff:
                 node['data']['render'] = 'x'
-                nodes.append(node)
+        
+        # Save the node to the list
+        nodes.append(node)
         
     return nodes
 

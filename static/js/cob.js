@@ -71,6 +71,12 @@ $('#logSpacingButton').click(function(){
   logSpacing = !(logSpacing);
 });
 
+// Reset all the options on the options tab
+$('#resetOptsButton').click(function(){
+  $('.alert').addClass('hidden');
+  restoreDefaults();
+});
+
 // Update Button on Options Tab is pressed 
 $('#reEnrichButton').click(function(){
   updateEnrichment();
@@ -89,20 +95,22 @@ $("#opts").keypress(function(evt){
   else{updateGraph();}
 });
 
-// Clear Selection Button is pressed
-$('#clearSelectionButton').click(function(){
+// Last graph button is pressed
+$('#backButton').click(function(){
+  restoreGraph();
+});
+
+// Save PNG Button is pressed
+$('#pngButton').click(function(){
   if(cy === null){return;}
-  
-  // Remove the classes that highlight nodes
-  cy.nodes('.highlighted').toggleClass('highlighted', false)
-  cy.nodes('.neighbor').toggleClass('neighbor', false);
-  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
-  
-  // Unhighlight the gene table
-  $('#GeneTable').DataTable().rows('*').deselect();
-  
-  // Clear the subnetwork table
-  $('#SubnetTable').DataTable().clear().draw();
+  var png = cy.png({bg:'white',scale:1});
+  var link = document.createElement('a');
+  link.className = 'hidden';
+  link.setAttribute('href',png);
+  link.setAttribute('download','graph.png');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 });
 
 // Toggle Layout button is pressed
@@ -132,6 +140,22 @@ $('#toggleLayoutButton').click(function(){
   
   // Update the graph with the new layout
   loadGraph(true,(!(isPoly())),undefined,geneNodes,edgeList);
+});
+
+// Clear Selection Button is pressed
+$('#clearSelectionButton').click(function(){
+  if(cy === null){return;}
+  
+  // Remove the classes that highlight nodes
+  cy.nodes('.highlighted').toggleClass('highlighted', false)
+  cy.nodes('.neighbor').toggleClass('neighbor', false);
+  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
+  
+  // Unhighlight the gene table
+  $('#GeneTable').DataTable().rows('*').deselect();
+  
+  // Clear the subnetwork table
+  $('#SubnetTable').DataTable().clear().draw();
 });
 
 /*---------------------------------------
@@ -200,6 +224,10 @@ function loadGraph(newGraph,poly,term,nodes,edges){
             buildGeneTables();
             updateGraphTable('Gene', geneNodes);
             updateHUD();
+            
+            // Show the back button if necessary
+            if(pastGeneNodes.length > 0){$('#backButton').removeClass('hidden');}
+            else{$('#backButton').addClass('hidden');}
             
             // Trigger event graph loaded custom event
             $(window).trigger(graphLoadedEvent);
@@ -330,13 +358,17 @@ function updateNodeSize(diameter){
   cy.style().selector('[type = "snpG"], [type = "gene"]').style({
     'width': (diameter).toString(),
     'height': (diameter).toString(),
-  }).selector('[origin = "query"]').style({
-    'width': (diameter*1.5).toString(),
-    'height': (diameter*1.5).toString(),
   }).selector('.pop').style({
     'width': (diameter*2).toString(),
     'height': (diameter*2).toString(),
-  }).update();
+  });
+  if(!(isPoly())){
+    cy.style().selector('[origin = "query"]').style({
+      'width': (diameter*1.5).toString(),
+      'height': (diameter*1.5).toString(),
+    });
+  }
+  cy.style().update();
   cy.endBatch();
 }
 
@@ -384,12 +416,14 @@ function setGeneListeners(genes){
   
   // Set listener for clicking
   genes.on('tap', function(evt){
-    // Only scroll to the gene if it isn't highlighted already
-    if(!(evt.cyTarget.hasClass('highlighted'))){
-      $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-
-    // Run the selection algorithm
-    geneSelect(evt.cyTarget);
+    if(evt.originalEvent.ctrlKey){
+      window.open('http://www.maizegdb.org/gene_center/gene/'+evt.cyTarget.id());
+    }
+    else{
+      if(!(evt.cyTarget.hasClass('highlighted'))){
+        $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
+      geneSelect(evt.cyTarget);
+    }
   });
   
   // Setup qtips
@@ -452,6 +486,9 @@ function makeSubnet(){
   }
   
   // Save the new gene object list
+  pastGeneNodes.push(geneNodes);
+  pastPoly.push(isPoly());
+  pastQuery.push($('#geneList').val());
   geneNodes = nodeList;
   
   // Switch to the gene list tab, also triggers option page to shift
@@ -462,15 +499,53 @@ function makeSubnet(){
   return;
 }
 
+// Go back from subnet to previous graph
+function restoreGraph(){
+  if(pastGeneNodes.length < 1){return;}
+  // Restore the most recent set of gene nodes
+  geneNodes = pastGeneNodes.pop();
+  poly = pastPoly.pop();
+  $('#geneList').html(pastQuery.pop());
+  
+  // Make a list of all the genes for the purposes of the query
+  var geneList = ''
+  geneNodes.forEach(function(cur,idx,arr){
+    if(cur['data']['render'] === 'x'){
+      geneList += cur['data']['id'] + ', ';
+    }
+  });
+  
+  // Run the server query to get the edges for this set
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'gene_connections'),
+    data: {
+      network: lastNetwork,
+      edgeCutoff: lastOpts['edgeCutoff'],
+      geneList: geneList,
+      newGene: 'N/A',
+    },
+    type: 'POST',
+    success: function(data){
+      loadGraph(true,poly,undefined,geneNodes,data.edges);
+    }
+  });
+}
+
 /* -----------------------------------
            Handle Options
 ----------------------------------- */
+function restoreDefaults(){
+  Object.keys(optVals).forEach(function(cur,idx,arr){
+    $('#'+cur).val(optVals[cur]['default']);
+  });
+}
+
 // Update the values in the lastOps dict
 function updateOpts(){lastOpts = curOpts();}
 
 function curOpts(){
   var vals = {};
-  optList.forEach(function(cur,idx,arr){
+  Object.keys(optVals).forEach(function(cur,idx,arr){
     vals[cur] = document.forms["opts"][cur].value;
   });
   return vals;
@@ -488,43 +563,27 @@ function optsChange(opts){
 function errorOpts(opts){
   opts.forEach(function(cur, idx, arr){
     $('#'+cur+'Error').removeClass('hidden');
+    $('#'+cur+'Error').html(optVals[cur]['title']+' must be between '+optVals[cur]['min']+' and '+optVals[cur]['max']);
   });
   $('#navTabs a[href="#OptsTab"]').tab('show');
 }
 
 // Validate the parameter values
 function checkOpts(){
-    var vals = {}
+    var val = null;
     var badFields = [];
     
     // Fetch all of the current values
-    optList.forEach(function(cur,idx,arr){
-      if((cur !== 'edgeCutoff')&&(cur !== 'pCutoff')){
-        vals[cur] = parseInt(document.forms["opts"][cur].value);}
-      else{vals[cur] = parseFloat(document.forms["opts"][cur].value);}
+    Object.keys(optVals).forEach(function(cur,idx,arr){
+      // Get the numerical interpretation of the value
+      if((cur === 'edgeCutoff')||(cur === 'pCutoff')){
+        val = parseFloat(document.forms["opts"][cur].value);}
+      else{val = parseInt(document.forms["opts"][cur].value);}
+      
+      // Check and save name if out of bounds
+      if(!((val >= optVals[cur]['min'])&&(val <= optVals[cur]['max']))){
+        badFields.push(cur);}
     });
-    
-    // Check each for sanity and record if it's bad
-    if(!((vals['nodeCutoff'] >= 0)&&(vals['nodeCutoff'] <= 20))){
-      badFields.push('nodeCutoff');}
-    if(!((vals['edgeCutoff'] >= 1.0)&&(vals['edgeCutoff'] <= 20.0))){
-      badFields.push('edgeCutoff');}
-    if(!((vals['windowSize'] >= 0)&&(vals['windowSize'] <= 1000000))){
-      badFields.push('windowSize');}
-    if(!((vals['flankLimit'] >= 0)&&(vals['flankLimit'] <= 20))){
-      badFields.push('flankLimit');}
-    if(!((vals['visNeighbors'] >= 0)&&(vals['visNeighbors'] <= 150))){
-      badFields.push('visNeighbors');}
-    if(!((vals['nodeSize'] >= 5)&&(vals['nodeSize'] <= 50))){
-        badFields.push('nodeSize');}
-    if(!((vals['snpLevels'] >= 1)&&(vals['snpLevels'] <= 5))){
-      badFields.push('snpLevels');}
-    if(!((vals['pCutoff'] >= 0.0)&&(vals['pCutoff'] <= 1.0))){
-      badFields.push('pCutoff');}
-    if(!((vals['minTerm'] >= 1)&&(vals['minTerm'] <= 100))){
-      badFields.push('minTerm');}
-    if(!((vals['maxTerm'] >= 100)&&(vals['maxTerm'] <= 1000))){
-      badFields.push('maxTerm');}
     
     // Return the problemeatic ones
     return badFields;
