@@ -4,10 +4,7 @@ function newPoly(resolve, reject, nodes, edges){
   if(cy != null){cy.destroy();cy = null;}
   
   // Save the nodes, Init the graph
-  geneNodes = nodes;
-  initPolyCyto(nodes.filter(function(cur,idx,arr){
-    return (cur['data']['render'] === 'x');
-  }),edges);
+  initPolyCyto(getValues(nodes,true),edges);
   
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(lastOpts["nodeSize"]));

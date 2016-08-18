@@ -16,8 +16,11 @@ function getTermNet(resolve, reject, poly){
     type: 'POST',
     statusCode: {400: function(){reject('Getting the term network went wrong somehow.');}},
     success: function(data){
+        geneDict = data.nodes;
+      isTerm = true;
+      
       // Clean the data trackers
-      pastGeneNodes = [];
+      pastGeneDicts = [];
       pastPoly = [];
       pastQuery = [];
       
@@ -42,12 +45,15 @@ function getCustomNet(resolve, reject, poly){
     type: 'POST',
     statusCode: {400: function(){reject('No input genes were present in the network.');}},
     success: function(data){
+      geneDict = data.nodes;
+      isTerm = false;
+      
       // If there we're any rejected genes, alert the user
       if(data.rejected.length > 0){
         window.alert('The following gene(s) were not found in the designated network:\n\n\n'+data.rejected.toString()+'\n\n');}
       
       // Clean the data trackers
-      pastGeneNodes = [];
+      pastGeneDicts = [];
       pastPoly = [];
       pastQuery = [];
       

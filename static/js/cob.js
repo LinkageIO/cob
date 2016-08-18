@@ -103,11 +103,11 @@ $('#backButton').click(function(){
 // Save PNG Button is pressed
 $('#pngButton').click(function(){
   if(cy === null){return;}
-  var png = cy.png({bg:'white',scale:1});
-  var link = document.createElement('a');
+  var jpg = cy.jpg({bg:'white',scale:2});
+  var link = document.createElement('img');
   link.className = 'hidden';
-  link.setAttribute('href',png);
-  link.setAttribute('download','graph.png');
+  link.setAttribute('src',jpg);
+  link.setAttribute('download','graph.jpg');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -139,7 +139,7 @@ $('#toggleLayoutButton').click(function(){
   });
   
   // Update the graph with the new layout
-  loadGraph(true,(!(isPoly())),undefined,geneNodes,edgeList);
+  loadGraph(true,(!isPoly()),undefined,geneDict,edgeList);
 });
 
 // Clear Selection Button is pressed
@@ -152,18 +152,29 @@ $('#clearSelectionButton').click(function(){
   cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
   
   // Unhighlight the gene table
-  $('#GeneTable').DataTable().rows('*').deselect();
+  $('#GeneTable').DataTable().rows().deselect();
   
   // Clear the subnetwork table
   $('#SubnetTable').DataTable().clear().draw();
 });
 
+
+$('#navTabs a[href="#GeneTab"]').on('shown.bs.tab', function(){
+  if($.fn.DataTable.isDataTable('#GeneTable')){
+    $('#GeneTable').DataTable().draw();
+  }
+});
+
+$('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
+  if($.fn.DataTable.isDataTable('#SubnetTable')){
+    $('#SubnetTable').DataTable().draw();
+  }
+});
 /*---------------------------------------
       Load the Graph and Tables
 ---------------------------------------*/
 // Function to determine whether or not this is a polywas graph currently
 function isPoly(){return cy.options().layout.name === 'polywas';}
-function isTerm(){return !(geneNodes[0]['data']['term'] === 'custom');}
 
 // Front to update the enrichment results with parameters
 function updateEnrichment(){
@@ -184,7 +195,7 @@ function updateGraph(){
   else{
     newGraph = optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit']);
-    poly = isPoly(); term = isTerm();
+    poly = isPoly(); term = isTerm;
   }
   loadGraph(newGraph,poly,term);
 }
@@ -218,15 +229,23 @@ function loadGraph(newGraph,poly,term,nodes,edges){
         });
 
         pinkySwear.then(function(result){
+            cy.startBatch();
+            // Update Node Degrees
+            Object.keys(geneDict).forEach(function(cur,idx,arr){
+              if(geneDict[cur]['data']['render'] === 'x'){
+                geneDict[cur]['data']['cur_ldegree'] = cy.getElementById(cur).degree();}
+              else{geneDict[cur]['data']['cur_ldegree'] = 0;}
+            });
+            cy.endBatch();
+            
             // Update the table and such
             $('#cyWait').modal('hide');
             $('#navTabs a[href="#GeneTab"]').tab('show');
             buildGeneTables();
-            updateGraphTable('Gene', geneNodes);
             updateHUD();
             
             // Show the back button if necessary
-            if(pastGeneNodes.length > 0){$('#backButton').removeClass('hidden');}
+            if(pastGeneDicts.length > 0){$('#backButton').removeClass('hidden');}
             else{$('#backButton').addClass('hidden');}
             
             // Trigger event graph loaded custom event
@@ -239,56 +258,63 @@ function loadGraph(newGraph,poly,term,nodes,edges){
 /*--------------------------------
      Gene Selection Function
 ---------------------------------*/
-function geneSelect(geneNode){
-  // Deselect all neighbors and edges
+function geneSelect(geneEles){
   cy.startBatch();
-  cy.nodes('.neighbor').toggleClass('neighbor', false);
-  cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
-    
-  if(geneNode.length === 1 && geneNode.hasClass('highlighted')){
+  
+  var geneTbl = $('#GeneTable').DataTable();
+  var subTbl = $('#SubnetTable').DataTable();
+  if(geneEles.length === 1 && geneEles.hasClass('highlighted')){
     // If it's highlighted and alone, unselect it
-    geneNode.toggleClass('highlighted', false);
-    $('#GeneTable').DataTable().row('#'+geneNode.id()).deselect();
+    geneEles.removeClass('highlighted');
   }
+  // Reconcile selection in graph and table
   else{
     // Otherwise select all of them!
-    geneNode.forEach(function(cur, idx, arr){
-      cur.toggleClass('highlighted', true);
-      $('#GeneTable').DataTable().row('#'+cur.id()).select();
+    geneEles.forEach(function(cur, idx, arr){
+      cur.addClass('highlighted');
     });
   }
   
+  // Deselect all neighbors and edges
+  var oldNei = cy.nodes('.neighbor').removeClass('neighbor');
+  cy.edges('.highlightedEdge').removeClass('highlightedEdge');
+  
+  
   // Reselect all necessary edges and neighbors
   var genes = cy.nodes('.highlighted');
-  var edges = genes.connectedEdges(':visible').toggleClass('highlightedEdge', true);
-  edges.connectedNodes().not('.highlighted').toggleClass('neighbor', true);
-  cy.endBatch();
+  var edges = genes.connectedEdges(':visible').addClass('highlightedEdge');
+  var newNei = edges.connectedNodes().not('.highlighted').addClass('neighbor');
 
+  // Find all the genes that need are marked in some way
+  var geneSet = new Set();
+  cy.nodes('.highlighted, .neighbor').forEach(function(cur,idx,arr){geneSet.add(cur.id());});
+  
   // Update the subnetwork table
-  updateGraphTable('Subnet',cy.nodes('.highlighted, .neighbor'));
-
+  updateSubnetTable(geneSet);
+  
   // Add the the genes to the subnet table
-  genes.forEach(function(cur, idx, arr){
-    $('#SubnetTable').DataTable().row('#'+cur.data('id')).select();
-  });
+  rowArr = []
+  genes.forEach(function(cur, idx, arr){rowArr.push('#'+cur.id());});
+  subTbl.rows('.selected').deselect();
+  subTbl.rows(rowArr).select();
+  
+  cy.endBatch();
 }
 
 /*------------------------------------------
             Add gene to graph
 ------------------------------------------*/
 function addGene(newGene){
-  // Find the data object of the new gene, mark it
-  var ind = geneNodes.findIndex(function(cur,idx,arr){
-    return cur['data']['id'] === newGene;});
-  geneNodes[ind]['data']['render'] = 'x';
-  geneNodes[ind]['data']['origin'] = 'query';
+  // Update the new gene
+  geneDict[newGene]['data']['render'] = 'x';
+  geneDict[newGene]['data']['origin'] = 'query';
   $('#geneList').append('\n'+ newGene +', ');
   
   // Make a list of all the genes for the purposes of the query
   var geneList = ''
-  geneNodes.forEach(function(cur,idx,arr){
-    if(cur['data']['render'] === 'x'){
-      geneList += cur['data']['id'] + ', ';
+  Object.keys(geneDict).forEach(function(cur,idx,arr){
+    if(geneDict[cur]['data']['render'] === 'x'){
+      geneList += cur + ', ';
     }
   });
   
@@ -311,7 +337,7 @@ function addGene(newGene){
     },
     type: 'POST',
     success: function(data){
-      var node = cy.add(geneNodes[ind]);
+      var node = cy.add(geneDict[newGene]);
       cy.add(data.edges);
       updateGraph();
     }
@@ -336,7 +362,7 @@ function updateHUD(){
     msg += lastNetwork + ' > ';
     
     // If it's a polywas graph, add term details
-    if(isTerm()){
+    if(isTerm){
       msg += lastOntology + ' > '
       msg += lastTerm +' > '
       msg += lastOpts['windowSize'] + '/' + lastOpts['flankLimit'];
@@ -348,6 +374,17 @@ function updateHUD(){
   
   // Post the message to the proper box
   $("#cyTitle").html(msg);
+}
+
+// Method to get values until obj.values() is in safari and edge
+function getValues(obj, onlyRender){
+  var vals = [];
+  var val = null;
+  Object.keys(obj).forEach(function(cur,idx,arr){
+    val = obj[cur];
+    if(!onlyRender || (val['data']['render'] === 'x')){vals.push(val);}
+  });
+  return vals;
 }
 
 /*--------------------------------
@@ -420,9 +457,12 @@ function setGeneListeners(genes){
       window.open('http://www.maizegdb.org/gene_center/gene/'+evt.cyTarget.id());
     }
     else{
-      if(!(evt.cyTarget.hasClass('highlighted'))){
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.data('id')).scrollTo();}
-      geneSelect(evt.cyTarget);
+      if(evt.cyTarget.hasClass('highlighted')){
+        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).deselect();
+      }
+      else{
+        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).scrollTo().select();
+      }
     }
   });
   
@@ -433,7 +473,7 @@ function setGeneListeners(genes){
       res = 'ID: '+data['id'].toString()+'<br>';
       if(data['alias'].length > 0){res += 'Alias(es): '+data['alias'].toString()+'<br>';}
       res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-      if(isTerm()){res += 'SNP: '+data['snp'].toString()+'<br>';}
+      if(isTerm){res += 'SNP: '+data['snp'].toString()+'<br>';}
       res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
       return res;
     },
@@ -451,7 +491,7 @@ function setGeneListeners(genes){
       Build Subnet Graph Function
 ---------------------------------------*/
 function makeSubnet(){
-  var nodeList = [];
+  var nodeDict = {};
   var edgeList = [];
   var dataDict = null;
   
@@ -463,57 +503,53 @@ function makeSubnet(){
     dataDict = cur.data();
     dataDict['origin'] = 'query';
     $('#geneList').append(dataDict['id']+', ');
-    nodeList.push({'data':dataDict});
+    nodeDict[dataDict['id']] = {'group':'nodes', 'data':dataDict};
   });
   
   // Find the neighbor gene object from the current graph
   cy.nodes('.neighbor').forEach(function(cur, idx, arr){
     dataDict = cur.data();
     dataDict['origin'] = 'neighbor';
-    nodeList.push({'data':dataDict});
+    nodeDict[dataDict['id']] = {'group':'nodes', 'data':dataDict};
   });
   
   // Find the edge data objects from the current graph
   cy.edges('.highlightedEdge').forEach(function(cur, idx, arr){
     dataDict = cur.data();
-    edgeList.push({'data':dataDict});
+    edgeList.push({'group':'edges', 'data':dataDict});
   });
   
   // Make sure there are genes to work with
-  if(nodeList.length === 0){
+  if(nodeDict.length === 0){
     window.alert('There must be genes highlighted to graph the subnetwork');
     return;
   }
   
   // Save the new gene object list
-  pastGeneNodes.push(geneNodes);
+  pastGeneDicts.push(geneDict);
   pastPoly.push(isPoly());
   pastQuery.push($('#geneList').val());
-  geneNodes = nodeList;
+  geneDict = nodeDict;
   
   // Switch to the gene list tab, also triggers option page to shift
   $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
   
   // Load the new graph using the found nodes and edges
-  loadGraph(true,false,undefined,nodeList,edgeList);
+  loadGraph(true,false,undefined,nodeDict,edgeList);
   return;
 }
 
 // Go back from subnet to previous graph
 function restoreGraph(){
-  if(pastGeneNodes.length < 1){return;}
+  if(pastGeneDicts.length < 1){return;}
   // Restore the most recent set of gene nodes
-  geneNodes = pastGeneNodes.pop();
+  geneDict = pastGeneDicts.pop();
   poly = pastPoly.pop();
   $('#geneList').html(pastQuery.pop());
   
   // Make a list of all the genes for the purposes of the query
   var geneList = ''
-  geneNodes.forEach(function(cur,idx,arr){
-    if(cur['data']['render'] === 'x'){
-      geneList += cur['data']['id'] + ', ';
-    }
-  });
+  getValues(geneDict,true).forEach(function(cur,idx,arr){geneList+=cur['data']['id']+', ';});
   
   // Run the server query to get the edges for this set
   $.ajax({
@@ -526,7 +562,7 @@ function restoreGraph(){
     },
     type: 'POST',
     success: function(data){
-      loadGraph(true,poly,undefined,geneNodes,data.edges);
+      loadGraph(true,poly,undefined,geneDict,data.edges);
     }
   });
 }

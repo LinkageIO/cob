@@ -1,13 +1,10 @@
 // Promise function to build a new force directed graph 
-function newForce(resolve,reject,nodes,edges){
+function newForce(resolve, reject, nodes, edges){
   // Destroy the old graph if there is one
   if(cy != null){cy.destroy();cy = null;}
   
   // Save the nodes, Init the graph
-  geneNodes = nodes;
-  initForceCyto(nodes.filter(function(cur,idx,arr){
-    return (cur['data']['render'] === 'x');
-  }),edges);
+  initPolyCyto(getValues(nodes,true),edges);
   
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(lastOpts["nodeSize"]));

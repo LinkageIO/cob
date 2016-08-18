@@ -41,13 +41,14 @@
     var popTimerID = 1;
     var ids = [];
     var lastOpts = {};
-    var geneNodes = null;
-    var pastGeneNodes = [];
+    var geneDict = null;
+    var pastGeneDicts = [];
     var pastPoly = [];
     var pastQuery = [];
     var enrichGenes = null;
     var noGO = false;
     var isGO = true;
+    var isTerm = false;
     var graphLoadedEvent = jQuery.Event('graphLoaded');
     var optVals = {
       'nodeCutoff':{'title':'Minimum Node Degree','default':1,'min':0,'max':20},

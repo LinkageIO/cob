@@ -174,15 +174,15 @@ def term_network():
     if ontology in gwas_data_db:
         gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
-        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff)
+        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff, window_size=windowSize, flank_limit=flankLimit)
     
     # Otherwise just run it without
     else:
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, window_size=windowSize, flank_limit=flankLimit)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
-    for node in net['nodes']:
+    for node in net['nodes'].values():
         if node['data']['render'] == 'x':
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
@@ -274,7 +274,7 @@ def custom_network():
     
     # Get the edges of the nodes that will be rendered
     render_list = []
-    for node in net['nodes']:
+    for node in net['nodes'].values():
         if node['data']['render'] == 'x':
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
@@ -372,12 +372,12 @@ def safeOpts(name,val):
 #     Functions to get the nodes and edges
 # --------------------------------------------
 def getNodes(genes, cob, term, primary=None, render=None,
-    gwas_data=pd.DataFrame(), nodeCutoff=0):
+    gwas_data=pd.DataFrame(), nodeCutoff=0, window_size=None, flank_limit=None):
     # Cache the locality
     locality = cob.locality(genes)
     
     # Containers for the node info
-    nodes = []
+    nodes = {}
     parent_set = set()
 
     # Look for alises
@@ -437,6 +437,8 @@ def getNodes(genes, cob, term, primary=None, render=None,
             'ldegree': str(local_degree),
             'gdegree': str(global_degree),
             'fdr': str(fdr),
+            'window_size': str(window_size),
+            'flank_limit': str(flank_limit),
             'num_intervening': num_interv,
             'rank_intervening': str(gene.attr['intervening_rank']),
             'num_siblings': str(gene.attr['num_siblings']),
@@ -463,7 +465,7 @@ def getNodes(genes, cob, term, primary=None, render=None,
                 node['data']['render'] = 'x'
         
         # Save the node to the list
-        nodes.append(node)
+        nodes[gene.id] = node
         
     return nodes
 
