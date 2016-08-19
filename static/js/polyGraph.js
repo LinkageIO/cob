@@ -26,7 +26,8 @@ function updatePoly(resolve, reject){
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(lastOpts["nodeSize"]));
   
-  // Set the SNPG qtips
+  // Set up the graph event listeners
+  setGeneListeners();
   setSNPGqtips();
   
   if(cy !== null){resolve();}

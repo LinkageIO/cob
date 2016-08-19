@@ -62,7 +62,7 @@ function buildTermTable(ontology){
       Gene Table Constructors
 ---------------------------------*/
 function buildGeneTables(){
-  // Enumerated column data!
+  // Enumerated column information!
   var cols = [
     {data: 'render', name:'rendered', title:'Vis'},
     {data: 'id', name:'id', title:'ID'},
@@ -140,7 +140,7 @@ function buildGeneTables(){
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
       "dom": '<"SubnetTitle">frtpB',
-      "order": [[0,'dec'],[3,'asc'],[4,'asc']],
+      "order": [[0,'dec'],[3,'asc'],[4,'dec']],
       "paging": false,
       "paginate": false,
       "rowId": 'id',
@@ -175,39 +175,15 @@ function buildGeneTables(){
     }
   });
   
-  
-  
-  
-  
-  
   // Need to redo selection system
   $('#GeneTable tbody').on('click','tr', function(evt){
     if(evt.ctrlKey){
-      evt.preventDefault();
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
+      //$('#GeneTable').DataTable().row(this['id']).deselect();
     }
+    else{geneSelect();}
   });
   
-  // Set listeners for selection
-  gene_table.on('select', function(evt,dt,type,idxs){
-    evt.preventDefault();
-    if(!evt.ctrlKey){
-    var eles = [];
-    var add = [];
-    var ele = null;
-    idxs.forEach(function(cur,idx,arr){
-      ele = cy.getElementById(dt.row(cur).id());
-      if(ele.length < 1){add.push(cur);}
-      else{eles.push(ele);}
-    });
-    if(eles.length > 0){geneSelect(cy.collection(eles));}
-    //if(add.length > 0){addGene(add);}
-    
-  }});
-  
-  gene_table.on('deselect', function(evt,dt,type,idxs){
-    geneSelect(cy.getElementById(dt.row(idxs[0]).id()));
-  });
 }
 
 /*---------------------------------------
@@ -240,7 +216,7 @@ function updateSubnetTable(newGenes){
   
   // Get the data in the proper formats for adding and removing
   addGenes.forEach(function(cur,idx,arr){arr[idx] = geneDict[cur]['data'];});
-  subGenes.forEach(function(cur, idx, arr){arr[idx] = '#'+cur;});
+  subGenes.forEach(function(cur,idx,arr){arr[idx] = '#'+cur;});
   
   // Clear old data and add new
   if(subGenes.length > 0){tbl.rows(subGenes).remove();}

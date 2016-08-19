@@ -4,12 +4,12 @@ function newForce(resolve, reject, nodes, edges){
   if(cy != null){cy.destroy();cy = null;}
   
   // Save the nodes, Init the graph
-  initPolyCyto(getValues(nodes,true),edges);
+  initForceCyto(getValues(nodes,true),edges);
   
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(lastOpts["nodeSize"]));
 
-  // Save the degree for the graph
+  // Set the gene event listeners
   setGeneListeners();
   
   // Check for a graph and resolve
@@ -24,6 +24,9 @@ function updateForce(resolve, reject){
 
   // Update the styles of the nodes for the new sizes
   updateNodeSize(parseInt(lastOpts["nodeSize"]));
+  
+  // Set the gene event listeners
+  setGeneListeners();
   
   // Check for a graph and resolve
   if(cy !== null){resolve();}

@@ -158,13 +158,7 @@ $('#clearSelectionButton').click(function(){
   $('#SubnetTable').DataTable().clear().draw();
 });
 
-
-$('#navTabs a[href="#GeneTab"]').on('shown.bs.tab', function(){
-  if($.fn.DataTable.isDataTable('#GeneTable')){
-    $('#GeneTable').DataTable().draw();
-  }
-});
-
+// Redraw the Subnet Table when shown
 $('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
   if($.fn.DataTable.isDataTable('#SubnetTable')){
     $('#SubnetTable').DataTable().draw();
@@ -258,32 +252,36 @@ function loadGraph(newGraph,poly,term,nodes,edges){
 /*--------------------------------
      Gene Selection Function
 ---------------------------------*/
-function geneSelect(geneEles){
+function geneSelect(){
   cy.startBatch();
   
+  // Get references to the DataTables APIs
   var geneTbl = $('#GeneTable').DataTable();
   var subTbl = $('#SubnetTable').DataTable();
-  if(geneEles.length === 1 && geneEles.hasClass('highlighted')){
-    // If it's highlighted and alone, unselect it
-    geneEles.removeClass('highlighted');
-  }
-  // Reconcile selection in graph and table
-  else{
-    // Otherwise select all of them!
-    geneEles.forEach(function(cur, idx, arr){
-      cur.addClass('highlighted');
-    });
-  }
   
   // Deselect all neighbors and edges
-  var oldNei = cy.nodes('.neighbor').removeClass('neighbor');
+  cy.nodes('.highlighted').removeClass('highlighted');
+  cy.nodes('.neighbor').removeClass('neighbor');
   cy.edges('.highlightedEdge').removeClass('highlightedEdge');
   
+  // Find all the genes that should be highlighted, and should be added
+  var highlighted = [];
+  var genes = [];
+  var toAdd = [];
+  $('#GeneTable').DataTable().rows('.selected').ids().each(function(cur){
+    highlighted.push(cur);
+    var ele = cy.getElementById(cur);
+    if(ele.length < 1){toAdd.push(cur);}
+    else{genes.push(cy.getElementById(cur));}
+  });
   
-  // Reselect all necessary edges and neighbors
-  var genes = cy.nodes('.highlighted');
+  // If there are any genes to add, trigger that now
+  if(toAdd.length > 0){addGenes(toAdd);return;}
+  
+  // Highlight all the things that need it
+  genes = cy.collection(genes).addClass('highlighted');
   var edges = genes.connectedEdges(':visible').addClass('highlightedEdge');
-  var newNei = edges.connectedNodes().not('.highlighted').addClass('neighbor');
+  edges.connectedNodes().not('.highlighted').addClass('neighbor');
 
   // Find all the genes that need are marked in some way
   var geneSet = new Set();
@@ -293,7 +291,7 @@ function geneSelect(geneEles){
   updateSubnetTable(geneSet);
   
   // Add the the genes to the subnet table
-  rowArr = []
+  var rowArr = [];
   genes.forEach(function(cur, idx, arr){rowArr.push('#'+cur.id());});
   subTbl.rows('.selected').deselect();
   subTbl.rows(rowArr).select();
@@ -304,26 +302,31 @@ function geneSelect(geneEles){
 /*------------------------------------------
             Add gene to graph
 ------------------------------------------*/
-function addGene(newGene){
-  // Update the new gene
-  geneDict[newGene]['data']['render'] = 'x';
-  geneDict[newGene]['data']['origin'] = 'query';
-  $('#geneList').append('\n'+ newGene +', ');
-  
-  // Make a list of all the genes for the purposes of the query
-  var geneList = ''
-  Object.keys(geneDict).forEach(function(cur,idx,arr){
-    if(geneDict[cur]['data']['render'] === 'x'){
-      geneList += cur + ', ';
-    }
+function addGenes(newGenes){
+  // Update the new genes
+  var newGenesData = [];
+  newGenes.forEach(function(cur,idx,arr){
+    geneDict[cur]['data']['render'] = 'x';
+    geneDict[cur]['data']['origin'] = 'query';
+    newGenesData.push(geneDict[cur]);
+    $('#geneList').append('\n'+ cur +', ');
   });
   
+  // Make a list of all the genes for the purposes of the query
+  var allGenes = Object.keys(geneDict).filter(cur => geneDict[cur]['data']['render'] === 'x');
+  
+  var sel = []
+  $('#GeneTable').DataTable().rows('.selected').ids(true).each(function(cur){
+    sel.push(cur);
+  });
+  console.log(sel);
+  
   // Run the selection algorithm when graph is updated
-  $(window).one('graphLoaded', {'new': newGene}, function(evt){
-    var node = cy.getElementById(evt.data.new);
-    geneSelect(cy.nodes('.highlighted'));
-    setGeneListeners(node);
-    geneSelect(node);
+  $(window).one('graphLoaded', {'sel':sel}, function(evt){
+    //sel.forEach(function(cur,idx,arr){arr[idx] = '#'+cur;});
+    console.log(evt.data.sel);
+    $('#GeneTable').DataTable().rows(evt.data.sel).select();
+    geneSelect();
   });
   
   // Run the server query to get the new edges
@@ -332,12 +335,12 @@ function addGene(newGene){
     data: {
       network: lastNetwork,
       edgeCutoff: lastOpts['edgeCutoff'],
-      geneList: geneList,
-      newGene: newGene,
+      allGenes: allGenes.toString(),
+      newGenes: newGenes.toString(),
     },
     type: 'POST',
     success: function(data){
-      var node = cy.add(geneDict[newGene]);
+      var node = cy.add(newGenesData);
       cy.add(data.edges);
       updateGraph();
     }
@@ -451,6 +454,11 @@ function setGeneListeners(genes){
   // Get all the genes
   if(genes === undefined){genes = cy.nodes('[type = "gene"]');}
   
+  // Remove all event listeners
+  genes.off('tap');
+  try{genes.qtip('destroy');console.log(err);}
+  catch(err){}
+  
   // Set listener for clicking
   genes.on('tap', function(evt){
     if(evt.originalEvent.ctrlKey){
@@ -459,9 +467,11 @@ function setGeneListeners(genes){
     else{
       if(evt.cyTarget.hasClass('highlighted')){
         $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).deselect();
+        geneSelect();
       }
       else{
         $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).scrollTo().select();
+        geneSelect();
       }
     }
   });

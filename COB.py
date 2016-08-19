@@ -291,20 +291,21 @@ def gene_connections():
     # Get data from the form
     cob = networks[str(request.form['network'])]
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    geneList = str(request.form['geneList'])
-    newGene = str(request.form['newGene'])
-    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
+    allGenes = str(request.form['allGenes'])
+    newGenes = str(request.form['newGenes'])
+    allGenes = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', allGenes)))
+    newGenes = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', newGenes)))
     
     # Set the Significant Edge Score
     cob.set_sig_edge_zscore(edgeCutoff)
     
     # Get the edges!
-    edges = getEdges(geneList, cob)
+    edges = getEdges(allGenes, cob)
     
     # Filter the ones that are not attached to the new one
-    if(newGene != 'N/A'):
+    if(len(newGenes) > 0):
         edges = list(filter(
-            lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
+            lambda x: ((x['data']['source'] in newGenes) or (x['data']['target'] in newGenes))
             ,edges))
     
     # Return it as a JSON object
