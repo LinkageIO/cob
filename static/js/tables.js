@@ -148,7 +148,7 @@ function buildGeneTables(){
       "scrollX": "100%",
       "scrollY": $(window).height()-275,
       "searching": true,
-      "select": {"style": 'api'},
+      "select": {"style": 'multi+shift'},
       "buttons": [
         {"extend": 'csv',"filename": 'subnetwork'},
         {"text": 'Graph Subnet', "action": makeSubnet},
@@ -179,7 +179,16 @@ function buildGeneTables(){
   $('#GeneTable tbody').on('click','tr', function(evt){
     if(evt.ctrlKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-      //$('#GeneTable').DataTable().row(this['id']).deselect();
+      $('#GeneTable').DataTable().row(this['id']).deselect();
+    }
+    else{geneSelect();}
+  });
+  
+  // Need to redo selection system
+  $('#SubnetTable tbody').on('click','tr', function(evt){
+    if(evt.ctrlKey){
+      window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
+      $('#SubnetTable').DataTable().row(this['id']).deselect();
     }
     else{geneSelect();}
   });
@@ -204,21 +213,25 @@ function gont(e,dt,node,cofig){
 /*---------------------------------------
       Gene and Subnet Table Updater
 ---------------------------------------*/
-function updateSubnetTable(newGenes){
+function updateSubnetTable(newGenes, newGenesSel){
   // Get the table api ref
   var tbl = $('#SubnetTable').DataTable();
   
   // Find the genes we must add and remove
   var oldGenes = new Set();
   tbl.rows().ids().each(function(cur){oldGenes.add(cur)});
-  var addGenes = [...newGenes].filter(cur => !oldGenes.has(cur));
-  var subGenes = [...oldGenes].filter(cur => !newGenes.has(cur));
+  var toAdd = [...newGenes].filter(cur => !oldGenes.has(cur));
+  var toSub = [...oldGenes].filter(cur => !newGenes.has(cur));
   
   // Get the data in the proper formats for adding and removing
-  addGenes.forEach(function(cur,idx,arr){arr[idx] = geneDict[cur]['data'];});
-  subGenes.forEach(function(cur,idx,arr){arr[idx] = '#'+cur;});
+  toAdd.forEach(function(cur,idx,arr){arr[idx] = geneDict[cur]['data'];});
+  toSub.forEach(function(cur,idx,arr){arr[idx] = '#'+cur;});
   
   // Clear old data and add new
-  if(subGenes.length > 0){tbl.rows(subGenes).remove();}
-  tbl.rows.add(addGenes).draw();
+  if(toSub.length > 0){tbl.rows(toSub).remove();}
+  tbl.rows.add(toAdd).draw();
+  
+  // Update the selections
+  tbl.rows('.selected').deselect();
+  tbl.rows(newGenesSel).select();
 }

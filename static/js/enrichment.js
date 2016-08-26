@@ -70,11 +70,11 @@ function enrich(geneList,GOnt){
   $.ajax({
     url: ($SCRIPT_ROOT + address),
     data: {
-      network: lastNetwork,
+      network: curNetwork,
       geneList: geneList,
-      pCutoff: lastOpts['pCutoff'],
-      minTerm: lastOpts['minTerm'],
-      maxTerm: lastOpts['maxTerm'],
+      pCutoff: curOpts['pCutoff'],
+      minTerm: curOpts['minTerm'],
+      maxTerm: curOpts['maxTerm'],
     },
     type: 'POST',
     statusCode:{

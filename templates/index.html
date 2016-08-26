@@ -23,7 +23,7 @@
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.7/cytoscape.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
 
   <!-- Loaf COB -->
@@ -31,25 +31,55 @@
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
     $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')
     }).appendTo('head');
-
-    // Set some global variables for reference
-    var lastNetwork = '';
-    var lastOntology = '';
-    var lastTerm = '';
-    var logSpacing = true;
+    
+    /* ------------------------------
+          General State Variables
+    ------------------------------ */
+    // Shortcuts to current graph parameters
+    var curNetwork = '';
+    var curOntology = '';
+    var curTerm = '';
+    var curOpts = {};
+    
+    // Shortcut to current cytoscape object
     var cy = null;
-    var popTimerID = 1;
-    var ids = [];
-    var lastOpts = {};
+    
+    // Save of all node objects returned for qucker graph manipulation
     var geneDict = null;
+    
+    // Saves whether data is a term or a custom network
+    var isTerm = false;
+    
+    // Holder for the timer id of the subnet pop effect
+    var popTimerID = 1;
+    
+    // Track genes that are selected for persistence
+    var curSel = [];
+    
+    // Places to hold needed information to revert from subnet graphs
     var pastGeneDicts = [];
     var pastPoly = [];
     var pastQuery = [];
+    
+    /* ----------------------------
+          Enrichment Variables
+    ---------------------------- */
+    // List of genes that were queried for enrichment, Used for parameter updating
     var enrichGenes = null;
+    
+    // Saves whether there is currently a GO request pending
     var noGO = false;
+    
+    // Saves whether enrichment is GO or GWS
     var isGO = true;
-    var isTerm = false;
-    var graphLoadedEvent = jQuery.Event('graphLoaded');
+    
+    /* ----------------------------
+          Option Variables
+    ---------------------------- */
+    // Var to keep track of position of log spacing toggle
+    var logSpacing = true;
+    
+    // Dictionary containing metadata for all of the parameters
     var optVals = {
       'nodeCutoff':{'title':'Minimum Node Degree','default':1,'min':0,'max':20},
       'edgeCutoff':{'title':'Minimum Edge Score','default':3.0,'min':1.0,'max':20.0},
@@ -63,16 +93,17 @@
       'maxTerm':{'title':'Maximum Loci in GO Term','default':300,'min':100,'max':1000},
     };
 
-    // Load in the scripts
-    $.getScript(($SCRIPT_ROOT + 'static/js/getNetwork.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/enrichment.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/polyGraph.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/forceGraph.js'));
+    /* ----------------------------
+          Load The Scripts
+    ---------------------------- */
+    $.getScript(($SCRIPT_ROOT + 'static/js/genes.js'));
+    $.getScript(($SCRIPT_ROOT + 'static/js/graph.js'));
     $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
+    $.getScript(($SCRIPT_ROOT + 'static/js/enrichment.js'));
     $(document).ready(function(){
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
-        $.getScript(($SCRIPT_ROOT + 'static/js/cobTables.js'), function(){
+        $.getScript(($SCRIPT_ROOT + 'static/js/tables.js'), function(){
           // Keep track of the previous options
           restoreDefaults();
           updateOpts();
