@@ -1,4 +1,14 @@
 /*----------------------------------
+        Table Tab Listeners
+-----------------------------------*/
+// Redraw the Subnet Table when shown
+$('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
+  if($.fn.DataTable.isDataTable('#SubnetTable')){
+    $('#SubnetTable').DataTable().draw();
+  }
+});
+
+/*----------------------------------
     Selection Table Constructors
 -----------------------------------*/
 // Build a Fresh Network Table

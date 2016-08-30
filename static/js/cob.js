@@ -95,22 +95,12 @@ $("#opts").keypress(function(evt){
   else{updateGraph();}
 });
 
+/*--------------------------------------
+        Graph Button Listeners
+--------------------------------------*/
 // Last graph button is pressed
 $('#backButton').click(function(){
   restoreGraph();
-});
-
-// Save PNG Button is pressed
-$('#pngButton').click(function(){
-  if(cy === null){return;}
-  var jpg = cy.jpg({bg:'white',scale:2});
-  var link = document.createElement('img');
-  link.className = 'hidden';
-  link.setAttribute('src',jpg);
-  link.setAttribute('download','graph.jpg');
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 });
 
 // Toggle Layout button is pressed
@@ -149,11 +139,20 @@ $('#clearSelectionButton').click(function(){
   $('#SubnetTable').DataTable().clear().draw();
 });
 
-// Redraw the Subnet Table when shown
-$('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
-  if($.fn.DataTable.isDataTable('#SubnetTable')){
-    $('#SubnetTable').DataTable().draw();
-  }
+/*--------------------------------------
+        Export Button Listeners
+--------------------------------------*/
+// PNG Button is pressed
+$('#pngButton').click(function(){
+  if(cy === null){return;}
+  var png = cy.png({bg:'white',scale:3});
+  download(png, 'graph.png', 'image/png');
+});
+
+$('#graphMLButton').click(function(){
+  if(cy === null){return;}
+  var gml = cy.graphml();
+  download(gml, 'graph.gml', 'application/xml');
 });
 
 /*---------------------------------------

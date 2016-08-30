@@ -25,6 +25,10 @@
   <!-- Cytoscape and extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js"></script>
   <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js"></script>
+  <script src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.0/cytoscape-graphml.js"></script>
+  
+  <!-- Download Shortcut Function -->
+  <script src="https://cdn.rawgit.com/rndme/download/v1.4.6/download.js"></script>
 
   <!-- Loaf COB -->
   <script>
@@ -444,8 +448,9 @@
 <!-- Box for title indicating current network -->
 <div id='cyTitle'></div>
 <div id='graphButtons'>
-  <!--<input type="button" class="btn btn-primary" id="pngButton" value="Save PNG">-->
-  <input type="button" class="btn btn-primary" id="toggleLayoutButton" value="Toggle Layout">
+  <input type="button" class="btn btn-primary" id="graphMLButton" value="GraphML">
+  <input type="button" class="btn btn-primary" id="pngButton" value="PNG">
+  <input type="button" class="btn btn-success" id="toggleLayoutButton" value="Toggle Layout">
   <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
 </div>
 </body>
