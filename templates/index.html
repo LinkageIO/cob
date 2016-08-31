@@ -60,6 +60,9 @@
     // Track genes that are selected for persistence
     var curSel = [];
     
+    // Track whether an addGenes request is already in process
+    var noAdd = false;
+    
     // Places to hold needed information to revert from subnet graphs
     var pastGeneDicts = [];
     var pastPoly = [];
