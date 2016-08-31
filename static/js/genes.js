@@ -1,5 +1,6 @@
-// Handle pulling the two diffent types of data
-
+/*----------------------------------
+        Retrieve Gene Data
+-----------------------------------*/
 // Pull the nodes for a specific term
 function termNet(resolve, reject, poly){
   $.ajax({
@@ -63,7 +64,7 @@ function customNet(resolve, reject, poly){
 }
 
 /*------------------------------------------
-          Add Known gene to graph
+          Add Known Gene to Graph
 ------------------------------------------*/
 function addGenes(newGenes){
   // Update the new genes

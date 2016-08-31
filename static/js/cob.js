@@ -149,6 +149,7 @@ $('#pngButton').click(function(){
   download(png, 'graph.png', 'image/png');
 });
 
+// GraphML Button is pressed
 $('#graphMLButton').click(function(){
   if(cy === null){return;}
   var gml = cy.graphml();
@@ -415,9 +416,8 @@ function checkOpts(){
     // Fetch all of the current values
     Object.keys(optVals).forEach(function(cur,idx,arr){
       // Get the numerical interpretation of the value
-      if((cur === 'edgeCutoff')||(cur === 'pCutoff')){
-        val = parseFloat(document.forms["opts"][cur].value);}
-      else{val = parseInt(document.forms["opts"][cur].value);}
+      if(cur['int']){val = parseInt(document.forms["opts"][cur].value);}
+      else{val = parseFloat(document.forms["opts"][cur].value);}
       
       // Check and save name if out of bounds
       if(!((val >= optVals[cur]['min'])&&(val <= optVals[cur]['max']))){

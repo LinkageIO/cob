@@ -1,4 +1,4 @@
-// Promise function to build a new polywas graph 
+// Promise function to build a new graph
 function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   if(newGraph){
     // Destroy the old graph if there is one
@@ -35,8 +35,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    nodeHeight: parseInt(curOpts["nodeSize"]),
-    geneOffset: parseInt(curOpts["nodeSize"]),
+    nodeDiameter: parseInt(curOpts["nodeSize"]),
     logSpacing: logSpacing,
     snpLevels: parseInt(curOpts["snpLevels"]),
   }
@@ -73,12 +72,12 @@ function initCyto(nodes,edges,poly){
            'background-color': 'DarkSlateGrey',
            'content': 'data(id)',
            'color': 'white',
-           'text-valign': 'center',
-           'text-halign': 'center',
            'text-background-color': 'DarkSlateGrey',
            'text-background-opacity': '1',
            'text-background-shape': 'roundrectangle',
-           'font-size': '10',
+           'text-valign': 'center',
+           'text-halign': 'center',
+           'font-size': '12',
          }},
        {selector: '[type = "snpG"]',
         css: {

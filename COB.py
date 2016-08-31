@@ -38,8 +38,9 @@ optLimits = {
     'windowSize': {'min':0, 'max':1000000},
     'flankLimit': {'min':0, 'max':20},
     'maxNeighbors': {'min':0, 'max':150},
+    'fdrCutoff': {'min':0.0, 'max':5.0},
     'pCutoff': {'min':0.0, 'max':1.0},
-    'minTerm': {'min':1, 'max':100},
+    'minTerm': {'min':1, 'max':99},
     'maxTerm': {'min':100, 'max':1000}
 }
 

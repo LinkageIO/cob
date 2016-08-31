@@ -85,16 +85,28 @@
     
     // Dictionary containing metadata for all of the parameters
     var optVals = {
-      'nodeCutoff':{'title':'Minimum Node Degree','default':1,'min':0,'max':20},
-      'edgeCutoff':{'title':'Minimum Edge Score','default':3.0,'min':1.0,'max':20.0},
-      'windowSize':{'title':'Window Size (For Term)','default':50000,'min':0,'max':1000000},
-      'flankLimit':{'title':'Flank Limit (For Term)','default':2,'min':0,'max':20},
-      'visNeighbors':{'title':'Visible Neighbors (For Custom)','default':25,'min':0,'max':150},
-      'nodeSize':{'title':'Node Size','default':10,'min':5,'max':50},
-      'snpLevels':{'title':'SNP Colors (For Polywas)','default':3,'min':1,'max':5},
-      'pCutoff':{'title':'Enrichment Probability Cutoff','default':0.05,'min':0.0,'max':1.0},
-      'minTerm':{'title':'Minimum Loci in GO Term','default':5,'min':1,'max':100},
-      'maxTerm':{'title':'Maximum Loci in GO Term','default':300,'min':100,'max':1000},
+      'nodeCutoff':{'title':'Minimum Node Degree',
+        'default':1,'min':0,'max':20,'int':true},
+      'edgeCutoff':{'title':'Minimum Edge Score',
+        'default':3.0,'min':1.0,'max':20.0,'int':false},
+      'windowSize':{'title':'Window Size (For Term)',
+        'default':50000,'min':0,'max':1000000,'int':true},
+      'flankLimit':{'title':'Flank Limit (For Term)',
+        'default':2,'min':0,'max':20,'int':true},
+      'visNeighbors':{'title':'Visible Neighbors (For Custom)',
+        'default':25,'min':0,'max':150,'int':true},
+      'fdrCutoff':{'title':'Maximum FDR (if available)',
+        'default':1.0,'min':0.0,'max':5.0,'int':false},
+      'nodeSize':{'title':'Node Size',
+        'default':10,'min':5,'max':50,'int':true},
+      'snpLevels':{'title':'SNP Colors (For Polywas)',
+        'default':3,'min':1,'max':5,'int':true},
+      'pCutoff':{'title':'Enrichment Probability Cutoff',
+        'default':0.05,'min':0.0,'max':1.0,'int':false},
+      'minTerm':{'title':'Minimum Loci in GO Term',
+        'default':5,'min':1,'max':99,'int':true},
+      'maxTerm':{'title':'Maximum Loci in GO Term',
+        'default':300,'min':100,'max':1000,'int':true},
     };
 
     /* ----------------------------
@@ -345,6 +357,13 @@
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="visNeighborsError" role="alert"></div>
+          </td></tr>
+          <tr class="form-group">
+            <td><label>FDR Cutoff (if available)</label></td>
+            <td><input type="text" class="form-control" id="fdrCutoff"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
         <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
           <tr class="form-group">
