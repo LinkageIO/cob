@@ -41,7 +41,7 @@ optLimits = {
     'fdrCutoff': {'min':0.0, 'max':5.0},
     'pCutoff': {'min':0.0, 'max':1.0},
     'minTerm': {'min':1, 'max':99},
-    'maxTerm': {'min':100, 'max':1000}
+    'maxTerm': {'min':100, 'max':1000},
 }
 
 # ----------------------------------------
@@ -155,6 +155,7 @@ def term_network():
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     windowSize = safeOpts('windowSize',int(request.form['windowSize']))
     flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
+    fdrCutoff = safeOpts('fdrCutoff',float(request.form['fdrCutoff']))
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
@@ -173,13 +174,13 @@ def term_network():
     
     # If there are GWAS results, pass them in
     if ontology in gwas_data_db:
-        gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
+        gwasData = gwas_data_db[ontology].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
-        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff, window_size=windowSize, flank_limit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
     
     # Otherwise just run it without
     else:
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, window_size=windowSize, flank_limit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
@@ -223,7 +224,7 @@ def custom_network():
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
         try:
-            gene = cob.refgen.from_ids(name)
+            gene = cob.refgen.from_id(name)
         except ValueError:
             continue
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
@@ -373,8 +374,8 @@ def safeOpts(name,val):
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-def getNodes(genes, cob, term, primary=None, render=None,
-    gwas_data=pd.DataFrame(), nodeCutoff=0, window_size=None, flank_limit=None):
+def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
+    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=optLimits['fdrCutoff']):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -394,17 +395,17 @@ def getNodes(genes, cob, term, primary=None, render=None,
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
-            local_degree = locality.ix[gene.id]['local']
-            global_degree = locality.ix[gene.id]['global']
+            ldegree = locality.ix[gene.id]['local']
+            gdegree = locality.ix[gene.id]['global']
         except KeyError as e:
-            local_degree = global_degree = 0
+            ldegree = gdegree = 0
 
         # Catch for bug in camoco
         try:
-            num_interv = str(gene.attr['num_intervening'])
+            numInterv = str(gene.attr['num_intervening'])
         except KeyError as e:
             #print('Num Attr fail on gene: ' + str(gene.id))
-            num_interv = 'NAN'
+            numInterv = 'nan'
 
         # Pull any aliases from our database
         alias = ''
@@ -414,8 +415,8 @@ def getNodes(genes, cob, term, primary=None, render=None,
         
         # Fetch the FDR if we can
         fdr = np.nan
-        if gene.id in gwas_data.index:
-            fdr = gwas_data.loc[gene.id]['fdr']
+        if gene.id in gwasData.index:
+            fdr = gwasData.loc[gene.id]['fdr']
             
         # Pull any annotations from our databases
         anote = ''
@@ -436,16 +437,16 @@ def getNodes(genes, cob, term, primary=None, render=None,
             'start': str(gene.start),
             'end': str(gene.end),
             'cur_ldegree': str(0),
-            'ldegree': str(local_degree),
-            'gdegree': str(global_degree),
+            'ldegree': str(ldegree),
+            'gdegree': str(gdegree),
             'fdr': str(fdr),
-            'window_size': str(window_size),
-            'flank_limit': str(flank_limit),
-            'num_intervening': num_interv,
-            'rank_intervening': str(gene.attr['intervening_rank']),
-            'num_siblings': str(gene.attr['num_siblings']),
-            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+            'windowSize': str(windowSize),
+            'flankLimit': str(flankLimit),
+            'numIntervening': numInterv,
+            'rankIntervening': str(gene.attr['intervening_rank']),
+            'numSiblings': str(gene.attr['num_siblings']),
+            #'parentNumIterations': str(gene.attr['parent_numIterations']),
+            #'parentAvgEffectSize': str(gene.attr['parent_avgEffectSize']),
             'annotations': anote,
         }}
         
@@ -456,15 +457,11 @@ def getNodes(genes, cob, term, primary=None, render=None,
             else:
                 node['data']['origin'] = 'neighbor'
         
-        # Denote whether or not to render it if there is a list
-        if render:
-            if (gene.id in render) and (local_degree >= nodeCutoff):
-                node['data']['render'] = 'x'
-            else:
-                node['data']['render'] = ' '
-        else:
-            if local_degree >= nodeCutoff:
-                node['data']['render'] = 'x'
+        # Denote whether or not to render it
+        if ldegree >= nodeCutoff:
+            if np.isnan(fdr) or fdr <= fdrCutoff:
+                if (not render) or (gene.id in render):
+                    node['data']['render'] = 'x'
         
         # Save the node to the list
         nodes[gene.id] = node

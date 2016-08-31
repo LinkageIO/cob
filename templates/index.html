@@ -65,6 +65,20 @@
     var pastPoly = [];
     var pastQuery = [];
     
+    /* ------------------------------
+          Layout Configurations
+    ------------------------------- */
+    var polyOpts = {
+      name: 'polywas',
+      nodeDiameter: parseInt(curOpts["nodeSize"]),
+      logSpacing: logSpacing,
+      snpLevels: parseInt(curOpts["snpLevels"]),
+    };
+    var forceOpts = {
+      name: 'cose', 
+      animate: false,
+    };
+    
     /* ----------------------------
           Enrichment Variables
     ---------------------------- */
@@ -96,7 +110,7 @@
       'visNeighbors':{'title':'Visible Neighbors (For Custom)',
         'default':25,'min':0,'max':150,'int':true},
       'fdrCutoff':{'title':'Maximum FDR (if available)',
-        'default':1.0,'min':0.0,'max':5.0,'int':false},
+        'default':0.35,'min':0.0,'max':5.0,'int':false},
       'nodeSize':{'title':'Node Size',
         'default':10,'min':5,'max':50,'int':true},
       'snpLevels':{'title':'SNP Colors (For Polywas)',
@@ -359,7 +373,7 @@
             <div class="alert alert-danger hidden" id="visNeighborsError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>FDR Cutoff (if available)</label></td>
+            <td><label>FDR Cutoff (If Available)</label></td>
             <td><input type="text" class="form-control" id="fdrCutoff"></td>
           </tr>
           <tr><td colspan="2">

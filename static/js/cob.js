@@ -180,7 +180,7 @@ function updateGraph(){
   }
   else{
     newGraph = optsChange(['nodeCutoff','edgeCutoff',
-      'visNeighbors','windowSize','flankLimit']);
+      'visNeighbors','windowSize','flankLimit','fdrCutoff']);
     poly = isPoly(); term = isTerm;
   }
   loadGraph(newGraph,poly,term);

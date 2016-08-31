@@ -78,20 +78,21 @@ function buildGeneTables(){
     {data: 'id', name:'id', title:'ID'},
     {data: 'alias', name:'alias', title:'Alias'},
     {data: 'fdr', name:'fdr', title:'FDR'},
-    {data: 'cur_ldegree', name:'ldegree', title:'Local Degree'},
+    {data: 'cur_ldegree', name:'cur_ldegree', title:'Current Degree'},
+    {data: 'ldegree', name:'ldegree', title:'Term Degree'},
     {data: 'gdegree', name:'gdegree', title:'Global Degree'},
     {data: 'chrom', name:'chrom', title:'Chrom'},
     {data: 'snp', name:'snp', title:'SNP'},
     {data: 'start', name:'start', title:'Start'},
     {data: 'end', name:'end', title:'End'},
-    {data: 'num_intervening', name:'num_intervening', title:'Num Intervening'},
-    {data: 'rank_intervening', name:'rank_intervening', title:'Rank Intervening'},
-    {data: 'num_siblings', name:'num_siblings', title:'Num Siblings'},
-    {data: 'window_size', name:'window_size', title:'Window Size', visible: false},
-    {data: 'flank_limit', name:'flank_limit', title:'Flank Limit', visible: false},
+    {data: 'numIntervening', name:'numIntervening', title:'Num Intervening'},
+    {data: 'rankIntervening', name:'rankIntervening', title:'Rank Intervening'},
+    {data: 'numSiblings', name:'numSiblings', title:'Num Siblings'},
+    {data: 'windowSize', name:'windowSize', title:'Window Size', visible: false},
+    {data: 'flankLimit', name:'flankLimit', title:'Flank Limit', visible: false},
     {data: 'annotations', name:'annotations', title:'Annotations'},
-    //{data: 'parent_num_iterations', name:'parent_num_iterations', title: 'Num Parent Interactions'},
-    //{data: 'parent_avg_effect_size', name:'parent_avg_effect_size', title: 'Avg Parent Effect Size'},
+    //{data: 'parentNumIterations', name:'parentNumIterations', title: 'Num Parent Interactions'},
+    //{data: 'parentAvgEffectSize', name:'parentAvgEffectSize', title: 'Avg Parent Effect Size'},
   ];
   
   /*--------------------------------
@@ -135,7 +136,7 @@ function buildGeneTables(){
   $("div.GeneTitle").html('Gene Data');
   
   // Make certain columns invisible if there will be no useful data
-  gene_table.columns('snp:name, fdr:name, num_intervening:name, rank_intervening:name, num_siblings:name').visible(isTerm);
+  gene_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
   
   /*--------------------------------
        Set up the subnet table
@@ -173,7 +174,7 @@ function buildGeneTables(){
   
   // Make certain columns invisible if there will be no useful data
   sub_table.columns('rendered:name').visible(false);
-  sub_table.columns('snp:name, fdr:name, num_intervening:name, rank_intervening:name, num_siblings:name').visible(isTerm);
+  sub_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
   
   // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){

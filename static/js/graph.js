@@ -34,24 +34,32 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
 }
 
 /*------------------------------------------
+          Options for Each Layout
+------------------------------------------*/
+// Function to return an object for the layout options
+function getPolyLayoutOpts(){
+  return {
+    name: 'polywas',
+    nodeDiameter: parseInt(curOpts["nodeSize"]),
+    logSpacing: logSpacing,
+    snpLevels: parseInt(curOpts["snpLevels"]),
+  };
+}
+// Function to return an object for the layout options
+function getForceLayoutOpts(){
+  return {
+    name: 'cose',
+    animate: false,
+  };
+}
+
+/*------------------------------------------
           Init Cytoscape.js Fresh
 ------------------------------------------*/
 function initCyto(nodes,edges,poly){
   // Get the proper layout options
-  if(poly){
-    var opts = {
-      name: 'polywas',
-      nodeDiameter: parseInt(curOpts["nodeSize"]),
-      logSpacing: logSpacing,
-      snpLevels: parseInt(curOpts["snpLevels"]),
-    };
-  }
-  else{
-    var opts = {
-      name: 'cose', 
-      animate: false,
-    };
-  }
+  if(poly){var opts = getPolyLayoutOpts();}
+  else{var opts = getForceLayoutOpts();}
   
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
