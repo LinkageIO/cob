@@ -5,12 +5,24 @@ var register = function(cy){
   // Default Layout Options
   var defaults = {
     padding: 100, // Padding around the layout
-    boundingBox: undefined, // Constrain layout bounds; {x1, y1, x2, y2} or {x1, y1, w, h}
+    boundingBox: undefined, // Constrain layout bounds; {x1,y1,x2,y2} or {x1,y1,w,h}
     chromPadding: 5, // Ammount of padding at the end of the chrom lines in degrees
     nodeDiameter: 30, // Diameter of the genes, for stacking and spacing
     radWidth: 0.015, // Thickness of the chromosomes lines (in radians)
     logSpacing: false, // Log or linear SNP layout along chromosome
     snpLevels: 3, // How many colors to stripe the snps
+    
+    // Defines which chromosome the gene is on
+    getChrom: function(ele){return ele.data('chrom');},
+    
+    // Defines which SNP the gene is on
+    getSNP: function(ele){return ele.data('snp');},
+    
+    // Defines the gene's starting and ending positions (in base pairs)
+    getStart: function(ele){return ele.data('start');}, 
+    getEnd: function(ele){return ele.data('end');},
+    
+    // Optional Callbacks
     ready: function(){}, // on layoutready
     stop: function(){} // on layoutstop
   };
@@ -51,8 +63,14 @@ var register = function(cy){
     var genes = nodes;
     
     // Find the new degree for the visible genes
+    // Save some metadata into the node
     genes.forEach(function(cur, idx, arr){
       cur.data('cur_ldegree', cur.connectedEdges(':visible').length);
+      cur.data('type', 'gene');
+      cur.data('chrom', options.getChrom(cur));
+      cur.data('snp', options.getSNP(cur));
+      cur.data('start', options.getStart(cur));
+      cur.data('end', options.getEnd(cur));
     });
     
     // ===========================

@@ -1,4 +1,3 @@
-// Things having to do with the enrichment tables
 /*-------------------------------------------
       Build Enrichment Table Function
 -------------------------------------------*/

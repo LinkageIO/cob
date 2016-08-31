@@ -1,4 +1,6 @@
-// Promise function to build a new graph
+/*-------------------------------------
+     General Modify Graph Function
+-------------------------------------*/
 function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   if(newGraph){
     // Destroy the old graph if there is one
@@ -31,28 +33,25 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   else{reject('Graph modification failed failed');}
 }
 
-// Function to return an object for the layout options
-function getPolyLayoutOpts(){
-  return {
-    name: 'polywas',
-    nodeDiameter: parseInt(curOpts["nodeSize"]),
-    logSpacing: logSpacing,
-    snpLevels: parseInt(curOpts["snpLevels"]),
-  }
-}
-// Function to return an object for the layout options
-function getForceLayoutOpts(){
-  return {
-    name: 'cose',
-    animate: false,
-  }
-}
-
-// Function to initialize the graph with polywas layout
+/*------------------------------------------
+          Init Cytoscape.js Fresh
+------------------------------------------*/
 function initCyto(nodes,edges,poly){
   // Get the proper layout options
-  if(poly){var opts = getPolyLayoutOpts();}
-  else{var opts = getForceLayoutOpts();}
+  if(poly){
+    var opts = {
+      name: 'polywas',
+      nodeDiameter: parseInt(curOpts["nodeSize"]),
+      logSpacing: logSpacing,
+      snpLevels: parseInt(curOpts["snpLevels"]),
+    };
+  }
+  else{
+    var opts = {
+      name: 'cose', 
+      animate: false,
+    };
+  }
   
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
@@ -178,7 +177,7 @@ function updateNodeSize(diameter){
 }
 
 /*------------------------------------------
-       Graph Listener Setup
+           Graph Listeners Setup
 ------------------------------------------*/
 function setGeneListeners(genes){
   // Get all the genes
