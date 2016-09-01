@@ -23,24 +23,20 @@
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js">
   </script>
-  <script
-    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
+  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
   </script>
-  <script
-    src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.0/cytoscape-graphml.js">
+  <script src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.0/cytoscape-graphml.js">
   </script>
   
   <!-- Download Shortcut Function -->
   <script src="https://cdn.rawgit.com/rndme/download/v1.4.6/download.js"></script>
 
   <!-- Loaf COB -->
-  <script>
+  <script type="text/javascript">
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
-    $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')
-    }).appendTo('head');
+    $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')}).appendTo('head');
     
     /* ------------------------------
           General State Variables
@@ -73,20 +69,6 @@
     var pastGeneDicts = [];
     var pastPoly = [];
     var pastQuery = [];
-    
-    /* ------------------------------
-          Layout Configurations
-    ------------------------------- */
-    var polyOpts = {
-      name: 'polywas',
-      nodeDiameter: parseInt(curOpts["nodeSize"]),
-      logSpacing: logSpacing,
-      snpLevels: parseInt(curOpts["snpLevels"]),
-    };
-    var forceOpts = {
-      name: 'cose', 
-      animate: false,
-    };
     
     /* ----------------------------
           Enrichment Variables
