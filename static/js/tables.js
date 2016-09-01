@@ -191,6 +191,7 @@ function buildGeneTables(){
   $('#GeneTable tbody').on('click','tr', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
+      $('#GeneTable').DataTable().row('#'+this['id']).deselect();
       window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
       return;
     }
@@ -205,6 +206,7 @@ function buildGeneTables(){
   $('#SubnetTable tbody').on('click','tr', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
+      $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
       window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
       return;
     }
