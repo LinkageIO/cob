@@ -189,7 +189,6 @@ function buildGeneTables(){
   
   // Handling a click on the two tables
   $('#GeneTable tbody').on('click','tr', function(evt){
-    console.log(evt);
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#GeneTable').DataTable().row('#'+this['id']).deselect();
@@ -198,9 +197,12 @@ function buildGeneTables(){
     }
     
     // Otherwise update all the things
-    if(evt.ctrlKey || evt.metaKey){
+    if((evt.ctrlKey || evt.metaKey) && !(evt.shiftKey)){
+      if($(evt.currentTarget).hasClass('selected')){
+        $('#GeneTable').DataTable().row('#'+this['id']).deselect();}
+      else{
+        $('#GeneTable').DataTable().row('#'+this['id']).select();}
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-      $('#GeneTable').DataTable().row('#'+this['id']).deselect();
     }
     else{geneSelect();}
   });
@@ -212,10 +214,13 @@ function buildGeneTables(){
       return;
     }
     
-    // Otherwise just go ahead normally
-    if(evt.ctrlKey || evt.metaKey){
+    // Otherwise update all the things
+    if((evt.ctrlKey || evt.metaKey) && !(evt.shiftKey)){
+      if($(evt.currentTarget).hasClass('selected')){
+        $('#SubnetTable').DataTable().row('#'+this['id']).deselect();}
+      else{
+        $('#SubnetTable').DataTable().row('#'+this['id']).select();}
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-      $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
     }
     else{geneSelect();}
   });

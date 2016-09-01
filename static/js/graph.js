@@ -193,12 +193,12 @@ function setGeneListeners(genes){
   
   // Remove all event listeners
   genes.off('tap');
-  try{genes.qtip('destroy');console.log(err);}
+  try{genes.qtip('destroy');}
   catch(err){}
   
   // Set listener for clicking
   genes.on('tap', function(evt){
-    if(evt.originalEvent.ctrlKey){
+    if(evt.originalEvent.ctrlKey || evt.originalEvent.metaKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+evt.cyTarget.id());
     }
     else{
