@@ -189,6 +189,7 @@ function buildGeneTables(){
   
   // Handling a click on the two tables
   $('#GeneTable tbody').on('click','tr', function(evt){
+    console.log(evt);
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#GeneTable').DataTable().row('#'+this['id']).deselect();
@@ -197,7 +198,7 @@ function buildGeneTables(){
     }
     
     // Otherwise update all the things
-    if(evt.ctrlKey){
+    if(evt.ctrlKey || evt.metaKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
       $('#GeneTable').DataTable().row('#'+this['id']).deselect();
     }
@@ -212,7 +213,7 @@ function buildGeneTables(){
     }
     
     // Otherwise just go ahead normally
-    if(evt.ctrlKey){
+    if(evt.ctrlKey || evt.metaKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
       $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
     }
