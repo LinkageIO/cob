@@ -3,9 +3,7 @@
 -----------------------------------*/
 // Redraw the Subnet Table when shown
 $('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
-  if($.fn.DataTable.isDataTable('#SubnetTable')){
-    $('#SubnetTable').DataTable().draw();
-  }
+  if($.fn.DataTable.isDataTable('#SubnetTable')){$('#SubnetTable').DataTable().draw();}
 });
 
 /*----------------------------------
@@ -96,7 +94,7 @@ function buildGeneTables(){
   ];
   
   /*--------------------------------
-       Set up the gene table
+       Setup The Gene Table
   ---------------------------------*/
   // Get gene table data
   var geneData = [];
@@ -118,7 +116,7 @@ function buildGeneTables(){
       "paginate": true,
       "rowId": 'id',
       "scrollCollapse": true,
-      "scroller": {displayBuffer: 1000},
+      "scroller": {displayBuffer: 1500},
       "scrollX": "100%",
       "scrollY": ($(window).height()-275),
       "searching": true,
@@ -139,7 +137,7 @@ function buildGeneTables(){
   gene_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
   
   /*--------------------------------
-       Set up the subnet table
+       Setup The Subnet Table
   ---------------------------------*/
   // Destroy the old one if needed
   if($.fn.DataTable.isDataTable('#SubnetTable')){
@@ -176,6 +174,9 @@ function buildGeneTables(){
   sub_table.columns('rendered:name').visible(false);
   sub_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
   
+  /*----------------------------------
+       Setup The Table Listeners
+  -----------------------------------*/
   // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
     if(this['id'].length > 0){
@@ -186,24 +187,35 @@ function buildGeneTables(){
     }
   });
   
-  // Need to redo selection system
+  // Handling a click on the two tables
   $('#GeneTable tbody').on('click','tr', function(evt){
+    // If we are in the process of adding a gene, kill this request
+    if(noAdd){
+      window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
+      return;
+    }
+    
+    // Otherwise update all the things
     if(evt.ctrlKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-      $('#GeneTable').DataTable().row(this['id']).deselect();
+      $('#GeneTable').DataTable().row('#'+this['id']).deselect();
     }
     else{geneSelect();}
   });
-  
-  // Need to redo selection system
   $('#SubnetTable tbody').on('click','tr', function(evt){
+    // If we are in the process of adding a gene, kill this request
+    if(noAdd){
+      window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
+      return;
+    }
+    
+    // Otherwise just go ahead normally
     if(evt.ctrlKey){
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-      $('#SubnetTable').DataTable().row(this['id']).deselect();
+      $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
     }
     else{geneSelect();}
   });
-  
 }
 
 /*---------------------------------------

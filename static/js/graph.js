@@ -202,6 +202,13 @@ function setGeneListeners(genes){
       window.open('http://www.maizegdb.org/gene_center/gene/'+evt.cyTarget.id());
     }
     else{
+      // If we are in the process of adding a gene, kill this request
+      if(noAdd){
+        window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.'); 
+        return;
+      }
+      
+      // Otherwise go ahead and update everything
       if(evt.cyTarget.hasClass('highlighted')){
         $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).deselect();
       }

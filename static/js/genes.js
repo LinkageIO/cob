@@ -68,12 +68,8 @@ function customNet(resolve, reject, poly){
           Add Known Gene to Graph
 ------------------------------------------*/
 function addGenes(newGenes){
-  // Make sure we're not already in the process of adding one
-  if(noAdd){
-    window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.'); 
-    return;
-  }
-  else{noAdd = true;}
+  // Set the add gene mutex
+  noAdd = true;
   
   // Update the new genes
   var newGenesData = [];

@@ -301,38 +301,6 @@ function geneSelect(){
 }
 
 /*--------------------------------
-       HUD Update Function
----------------------------------*/
-function updateHUD(){
-  var msg = '';
-  // If there is no graph, throw up the help message
-  if(cy == null){
-    msg += 'Please follow the instructions in the left pane to build a graph.';
-  }
-  
-  // Otherwise, build the message
-  else{
-    // Add the gene count, edge count, and network name
-    msg += cy.nodes(':visible[type="gene"]').size() + ' genes | '
-    msg += cy.edges(':visible').size() + ' interactions<br>' 
-    msg += curNetwork + ' > ';
-    
-    // If it's a polywas graph, add term details
-    if(isTerm){
-      msg += curOntology + ' > '
-      msg += curTerm +' > '
-      msg += curOpts['windowSize'] + '/' + curOpts['flankLimit'];
-    }
-    
-    // Otherwise just call it a custom network
-    else{msg += 'Custom Network';}
-  }
-  
-  // Post the message to the proper box
-  $("#cyTitle").html(msg);
-}
-
-/*--------------------------------
      Setup Text Completion
 ---------------------------------*/
 function setupTextComplete(network, selector){
@@ -365,6 +333,39 @@ function setupTextComplete(network, selector){
     }
   });
   return;
+}
+
+/*--------------------------------
+       HUD Update Function
+---------------------------------*/
+function updateHUD(){
+  var msg = '';
+  // If there is no graph, throw up the help message
+  if(cy === null){
+    msg += 'Please follow the instructions in the left pane to build a graph.';
+  }
+  
+  // Otherwise, build the message
+  else{
+    // Add the gene count, edge count, and network name
+    msg += cy.nodes(':visible[type="gene"]').size() + ' genes | '
+    msg += cy.edges(':visible').size() + ' interactions<br>' 
+    msg += curNetwork + ' > ';
+    
+    // If it's a polywas graph, add term details
+    if(isTerm){
+      msg += curOntology + ' > ' + curTerm +' > '
+      msg += curOpts['windowSize'] + '/' + curOpts['flankLimit'];
+    }
+    
+    // Otherwise just call it a custom network
+    else{
+      msg += 'Custom Network';
+    }
+  }
+  
+  // Post the message to the proper box
+  $("#cyTitle").html(msg);
 }
 
 /* -----------------------------------
