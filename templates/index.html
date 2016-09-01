@@ -23,11 +23,14 @@
   <script src="https://cdn.jsdelivr.net/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js">
+  <script 
+    src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.8/cytoscape.min.js">
   </script>
-  <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
+  <script
+    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
   </script>
-  <script src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.0/cytoscape-graphml.js">
+  <script
+    src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.0/cytoscape-graphml.js">
   </script>
   
   <!-- Download Shortcut Function -->
@@ -117,10 +120,10 @@
     /* ----------------------------
           Load The Scripts
     ---------------------------- */
-    $.getScript(($SCRIPT_ROOT + 'static/js/genes.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/graph.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/polywas-layout.js'));
-    $.getScript(($SCRIPT_ROOT + 'static/js/enrichment.js'));
+    $.getScript($SCRIPT_ROOT + 'static/js/genes.js');
+    $.getScript($SCRIPT_ROOT + 'static/js/graph.js');
+    $.getScript($SCRIPT_ROOT + 'static/js/polywas-layout.js');
+    $.getScript($SCRIPT_ROOT + 'static/js/enrichment.js');
     $(document).ready(function(){
       // Load the important scripts and stuff when finished
       $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
