@@ -13,14 +13,14 @@ $('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
 function buildNetworkTable(){
   $('#NetworkTable').DataTable().destroy();
   $('#NetworkTable').DataTable({
-      "ajax": ($SCRIPT_ROOT + 'available_datasets/Expr'),
+      "ajax": ($SCRIPT_ROOT + 'available_networks'),
       "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
       "scrollCollapse": true,
       "dom": '<"NetworkTitle">ft',
       "order": [[0,'asc']],
-      "scrollY": ($(window).height()/5),
+      "scrollY": ($(window).height()/7),
       "select": true,
       "searching": true,
     });
@@ -29,17 +29,24 @@ function buildNetworkTable(){
 }
 
 // Build a Fresh Ontology Table
-function buildOntologyTable(){
+function buildOntologyTable(network){
   $('#OntologyTable').DataTable().destroy();
   $('#OntologyTable').DataTable({
-      "ajax": ($SCRIPT_ROOT + 'available_datasets/GWAS'),
+      "ajax": ($SCRIPT_ROOT + 'available_ontologies/' + network),
       "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
-      "scrollCollapse": true,
       "dom": '<"OntologyTitle">ft',
+      "initComplete": function(settings, json){
+        if(json.data.length < 1){
+          $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
+        }
+      },
+      "language":{
+        "emptyTable":"No ontologies available for this network. Please enter query genes in the \"Custom Gene List\" Tab."},
       "order": [[0,'asc']],
-      "scrollY": ($(window).height()/5),
+      "scrollCollapse": true,
+      "scrollY": ($(window).height()/7),
       "select": true,
       "searching": true,
     });
@@ -51,14 +58,21 @@ function buildOntologyTable(){
 function buildTermTable(ontology){
   $('#TermTable').DataTable().destroy();
   $('#TermTable').DataTable({
-      "ajax": ($SCRIPT_ROOT + 'terms/' + ontology),
+      "ajax": ($SCRIPT_ROOT + 'available_terms/' + ontology),
       "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
-      "scrollCollapse": true,
       "dom": '<"TermTitle">frtip',
+      "initComplete": function(settings, json){
+        if(json.data.length < 1){
+          $('#GeneSelectTabs a[href="#TermGenesTab"]').tab('show');
+        }
+      },
+      "language":{
+        "emptyTable":"No terms available for this ontology. Please enter query genes in the \"Custom Gene List\" Tab."},
       "order": [[0,'asc']],
-      "scrollY": ($(window).height()/3),
+      "scrollCollapse": true,
+      "scrollY": ($(window).height()/4),
       "select": true,
       "searching": true,
     });

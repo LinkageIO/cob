@@ -21,7 +21,7 @@ $('#NetworkTable tbody').on('click','tr', function(){
   $('#TermWait').removeClass('hidden');
   
   // Fetch and build the next table
-  buildOntologyTable();
+  buildOntologyTable(curNetwork);
   
   // Set up the text completion engine for the gene list
   setupTextComplete(curNetwork, '#geneList');
@@ -29,6 +29,8 @@ $('#NetworkTable tbody').on('click','tr', function(){
 
 // A row on the Term Table is selected
 $('#OntologyTable tbody').on('click','tr', function(){
+  if($('#OntologyTable').DataTable().rows().count() < 1){return;}
+  
   // Highlight the relevant row
   curOntology = $('td',this).eq(0).text();
 

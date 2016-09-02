@@ -20,8 +20,10 @@ from genewordsearch.GeneWordSearch import geneWordSearch
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 app = Flask(__name__)
 
-# Networks to load
-network_names = ['ZmRoot','Mt_General']
+# Networks and Ontologies to Load
+print('starting')
+network_names = ['ZmRoot']
+ont_names = ['ZmIonome','ZmWallace']
 
 # Folder with annotation files
 scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
@@ -47,14 +49,17 @@ optLimits = {
 # ----------------------------------------
 #    Load things to memeory to prepare
 # ----------------------------------------
-
 # Generate network list based on allowed list and load them into memory
 print('Preloading networks into memory...')
 networks = {x:co.COB(x) for x in network_names}
-network_list = {'data': [[net.name, net.description] for name,net in networks.items()]}
 print('Availible Networks: ' + str(networks))
 
-# Prefetch the gene neames for all the networks
+# Generate ontology list based on allowed list and load them into memory
+print('Preloading GWASes into Memory...')
+onts = {x:co.GWAS(x) for x in ont_names}
+print('Availible GWASes: ' + str(onts))
+
+# Prefetch the gene names for all the networks
 print('Fetching gene names for networks...')
 network_genes = {}
 for name, net in networks.items():
@@ -65,16 +70,11 @@ for name, net in networks.items():
     network_genes[name] = list(set(ids))
 print('Found gene names')
 
-# Generate in Memory Avalible GWAS datasets list
-print('Finding available GWAS datasets...')
-gwas_sets = {"data" : list(co.available_datasets('GWAS')[
-            ['Name','Description']].itertuples(index=False))}
-
 # Find all of the GWAS data we have available
 print('Finding GWAS Data...')
 gwas_data_db = {}
 for gwas in co.available_datasets('GWASData')['Name']:
-    gwas_data_db[gwas] = co.GWASData(gwas) 
+    gwas_data_db[gwas] = co.GWASData(gwas)
 
 # Find any functional annotations we have 
 print('Finding functional annotations...')
@@ -96,10 +96,10 @@ for name in co.available_datasets('GOnt')['Name']:
 # Generate in memory term lists
 print('Finding all available terms...')
 terms = {}
-for ont in gwas_sets['data']:
-    terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
-        len(co.GWAS(ont[0]).refgen.candidate_genes(term.effective_loci(window_size=50000))))
-        for term in co.GWAS(ont[0]).iter_terms()]}
+for name,ont in onts.items():
+    terms[name] = {'data': [(term.id,term.desc,len(term.loci),
+        len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000))))
+        for term in ont.iter_terms()]}
 
 # Set up the logging file
 handler = logging.FileHandler('COBErrors.log')
@@ -121,35 +121,56 @@ def index():
 def send_js(path):
     return send_from_directory('static',path)
 
-# Route for sending the avalible datasets and networks
+# Route for sending the avalible datasets in a general fashion
 @app.route("/available_datasets/<path:type>")
 def available_datasets(type=None,*args):
-    if((type == 'GWAS') or (type == 'Ontology')):
-        return jsonify(gwas_sets)
-    elif((type == 'Expr') or (type == 'Network')):
-        return jsonify(network_list)
-    elif(type == 'All'):
-        return str(co.available_datasets())
+    # Find the datasets
+    if(type == None):
+        datasets = co.available_datasets()
     else:
-        return jsonify({"data" : list(co.available_datasets(type)[
-                    ['Name','Description']].itertuples(index=False))})
+        datasets = co.available_datasets(type)
+    
+    # Return the results in a table friendly format
+    return jsonify({"data" : list(datasets[
+                ['Name','Description']].itertuples(index=False))})
+
+# Route for sending the available networks
+@app.route("/available_networks")
+def available_networks():
+    # Return the list in table friendly format
+    return jsonify({'data': [[net.name, net._global('parent_refgen'), net.description] for name,net in networks.items()]})
+
+# Route for sending the available ontologies relevant to a network
+@app.route("/available_ontologies/<path:network>")
+def available_ontologies(network):
+    # Find the refgen we need
+    ref = networks[network]._global('parent_refgen')
+    
+    # Filter all but the ontologies related to our network
+    res = []
+    for name,ont in onts.items():
+        if ont.refgen.name == ref:
+            res.append([ont.name,ont.refgen.name,ont.description])
+    
+    # Return the list in table friendly format
+    return jsonify({'data':res})
+
+# Route for sending the available terms
+@app.route("/available_terms/<path:ontology>")
+def available_terms(ontology):
+    return jsonify(terms[ontology])
 
 # Route for sending available typeahead data
 @app.route("/available_genes/<path:network>")
 def available_genes(network):
     return jsonify({'geneIDs': network_genes[network]})
 
-# Route for finding and sending the available terms
-@app.route("/terms/<path:ontology>")
-def ontology_terms(ontology):
-    return jsonify(terms[ontology])
-
 # Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/term_network", methods=['POST'])
 def term_network():
     # Get data from the form and derive some stuff
     cob = networks[str(request.form['network'])]
-    ontology = str(request.form['ontology'])
+    ontology = onts[str(request.form['ontology'])]
     term = str(request.form['term'])
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
@@ -160,7 +181,7 @@ def term_network():
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
     genes = cob.refgen.candidate_genes(
-        co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
+        ontology[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
         chain=True,
         include_parent_locus=True,
@@ -173,7 +194,7 @@ def term_network():
     net = {}
     
     # If there are GWAS results, pass them in
-    if ontology in gwas_data_db:
+    if ontology.name in gwas_data_db:
         gwasData = gwas_data_db[ontology].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
         net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)

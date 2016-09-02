@@ -79,18 +79,18 @@ function initCyto(nodes,edges,poly){
            'background-color': 'DarkSlateGrey',
            'content': 'data(id)',
            'color': 'black',
-           'text-background-color': 'DarkSlateGrey',
-           'text-background-opacity': '1',
-           'text-background-shape': 'roundrectangle',
+           //'text-background-color': 'DarkSlateGrey',
+           //'text-background-opacity': '1',
+           //'text-background-shape': 'roundrectangle',
            'text-valign': 'center',
            'text-halign': 'center',
-           'font-size': '12',
+           'font-size': '17',
          }},
        {selector: '[type = "snpG"]',
         css: {
           'z-index': '1',
           'shape': 'circle',
-          'background-color': 'DimGrey',
+          'background-color': 'SlateGrey',
         }},
       {selector: '[type = "gene"]',
        css: {
@@ -122,11 +122,31 @@ function initCyto(nodes,edges,poly){
          }},
        {selector: '.snp3',
          style: {
-           'background-color': 'Tan',
+           'background-color': 'LightCoral',
          }},
        {selector: '.snp4',
          style: {
-           'background-color': 'LightGrey',
+           'background-color': 'DarkCyan',
+         }},
+       {selector: '.snp5',
+         style: {
+           'background-color': 'Tan',
+         }},
+       {selector: '.snp6',
+         style: {
+           'background-color': 'Maroon',
+         }},
+       {selector: '.snp7',
+         style: {
+           'background-color': 'OliveDrab',
+         }},
+       {selector: '.snp8',
+         style: {
+           'background-color': 'Turquoise',
+         }},
+       {selector: '.snp9',
+         style: {
+           'background-color': 'Sienna',
          }},
        {selector: 'edge',
          css: {
