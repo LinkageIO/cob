@@ -195,7 +195,7 @@ def term_network():
     
     # If there are GWAS results, pass them in
     if ontology.name in gwas_data_db:
-        gwasData = gwas_data_db[ontology].get_data(cob=cob.name,
+        gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
         net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
     
