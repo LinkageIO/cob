@@ -79,6 +79,7 @@ var register = function(cy){
     // Get the chrom nodes and relative SNP positions
     var res =  makeChroms(cy, genes, options.logSpacing);
     var snpData = res['snpData'];
+    console.log(res);
 
     // Add the chromosomes to the graph
     var chrom = cy.add(res['chromNodes']);

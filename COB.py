@@ -21,7 +21,7 @@ from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 app = Flask(__name__)
 
 # Networks to load
-network_names = ['ZmRoot']
+network_names = ['ZmRoot','Mt_General']
 
 # Folder with annotation files
 scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
