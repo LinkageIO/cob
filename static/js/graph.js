@@ -235,8 +235,8 @@ function setGeneListeners(genes){
       classes: 'qtip-dark qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'mouseover'},
-    hide: {event: 'mouseout unfocus', distance:20},
+    show: {event: 'mouseover', solo: true},
+    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
   });
 }
 
@@ -253,7 +253,7 @@ function setSNPGqtips(){
       classes: 'qtip-light qtip-rounded qtip-shadow',
       tip: {width: 10, height: 5},
     },
-    show: {event: 'mouseover'},
-    hide: {event: 'mouseout unfocus', distance:20},
+    show: {event: 'mouseover', solo: true},
+    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
   });
 }
