@@ -159,15 +159,18 @@ $('#pngButton').click(function(){
 $('#graphMLButton').click(function(){
   if(cy === null){return;}
   
-  // Decide which layout
-  if(isPoly()){var lay = 'polywas';}
-  else{var lay = 'cose';}
+  // Find Discluded Nodes
+  var dis = [];
+  var nodes = cy.nodes('[type = "chrom"], [type = "snpG"]'); 
+  console.log(nodes);
+  nodes.forEach(function(cur,idx,arr){dis.push(cur.data());});
+  console.log(dis);
   
   // Get the graph
   cy.graphml({
-    node:{css:false,data:true,position:true,discludeds:[]},
+    node:{css:false,data:true,position:true,discludeds:dis},
     edge:{css:false,data:true,discludeds:[]},
-    layoutBy: lay,
+    layoutBy: 'cose',
   });
   var txt = cy.graphml();
   
