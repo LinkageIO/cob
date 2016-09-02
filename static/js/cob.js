@@ -146,14 +146,37 @@ $('#clearSelectionButton').click(function(){
 $('#pngButton').click(function(){
   if(cy === null){return;}
   var png = cy.png({bg:'white',scale:3});
-  download(png, 'graph.png', 'image/png');
+  
+  // Derive Filename
+  var name = curNetwork + '.'
+  if(isTerm){name += curTerm;}else{name += 'Custom';}
+  
+  // Run the Download
+  download(png, (name+'.png'), 'image/png');
 });
 
 // GraphML Button is pressed
 $('#graphMLButton').click(function(){
   if(cy === null){return;}
-  var gml = cy.graphml();
-  download(gml, 'graph.gml', 'application/xml');
+  
+  // Decide which layout
+  if(isPoly()){var lay = 'polywas';}
+  else{var lay = 'cose';}
+  
+  // Get the graph
+  cy.graphml({
+    node:{css:false,data:true,position:true,discludeds:[]},
+    edge:{css:false,data:true,discludeds:[]},
+    layoutBy: lay,
+  });
+  var txt = cy.graphml();
+  
+  // Derive Filename
+  var name = curNetwork + '.'
+  if(isTerm){name += curTerm;}else{name += 'Custom';}
+  
+  // Run the Download
+  download(txt, (name+'.graphml'), 'application/xml');
 });
 
 /*---------------------------------------
