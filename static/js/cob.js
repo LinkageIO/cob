@@ -243,7 +243,7 @@ function loadGraph(newGraph,poly,term,nodes,edges){
             else{customNet(resolve,reject,poly);}}
           else{modCyto(resolve,reject,newGraph,poly,nodes,edges);}
         });
-
+        
         pinkySwear.then(function(result){
             cy.startBatch();
             // Update Node Degrees
@@ -276,7 +276,11 @@ function loadGraph(newGraph,poly,term,nodes,edges){
               curSel = [];
               geneSelect();
             }
-        },function(err){$('#cyWait').modal('hide');window.alert(err);});
+        },function(err){
+          $('#cyWait').modal('hide');
+          updateHUD();
+          setTimeout(function(){window.alert(err);},200);
+        });
     });
     $('#cyWait').modal('show');
 }

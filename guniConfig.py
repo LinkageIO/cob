@@ -1,4 +1,4 @@
-bind = "127.0.0.1:50003"
+bind = "127.0.0.1:50002"
 workers = 4
 preload_app= True
 timeout = 300

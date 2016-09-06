@@ -480,7 +480,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         
         # Denote whether or not to render it
         if ldegree >= nodeCutoff:
-            if np.isnan(fdr) or fdr <= fdrCutoff:
+            if gwasData.empty or fdr <= fdrCutoff:
                 if (not render) or (gene.id in render):
                     node['data']['render'] = 'x'
         

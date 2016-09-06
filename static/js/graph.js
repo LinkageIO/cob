@@ -11,7 +11,10 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
     Object.keys(nodes).forEach(function(cur,idx,arr){
       if(nodes[cur]['data']['render'] === 'x'){renNodes.push(nodes[cur]);}
     });
-  
+    
+    // Check for any rendered nodes
+    if(renNodes.length < 1){reject('There are no genes in this term that meet the rendering requrements defined in the options tab.');return;}
+    
     // Init the graph
     initCyto(renNodes, edges, poly);
   }
