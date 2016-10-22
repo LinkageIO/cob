@@ -81,7 +81,7 @@ function initCyto(nodes,edges,poly){
            'z-index': '2',
            'background-color': 'DarkSlateGrey',
            'content': 'data(id)',
-           'color': 'black',
+           'color': 'white',
            'text-background-color': 'DarkSlateGrey',
            'text-background-opacity': '1',
            'text-background-shape': 'roundrectangle',
