@@ -138,7 +138,7 @@ function makeSubnet(){
     dataDict = cur.data();
     edgeList.push({'group':'edges', 'data':dataDict});
   });
-  
+  console.log(nodeDict);
   // Make sure there are genes to work with
   if(nodeDict.length === 0){
     window.alert('There must be genes highlighted to graph the subnetwork');

@@ -53,6 +53,7 @@ function getForceLayoutOpts(){
   return {
     name: 'cose',
     animate: false,
+    randomize: true,
   };
 }
 
