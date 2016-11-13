@@ -68,6 +68,10 @@ $("#TermGenesButton").click(function(){
 /*------------------------------------------
      Parameter Update Event Listeners
 ------------------------------------------*/
+// Change value of windowSize and flankLimit when option selected
+$('.windowSizeOpt').click(function(){$('#windowSize').val($(this).html());});
+$('.flankLimitOpt').click(function(){$('#flankLimit').val($(this).html());});
+
 // Toggle for Log Spacing in Polywas is pressed
 $('#logSpacingButton').click(function(){
   logSpacing = !(logSpacing);
