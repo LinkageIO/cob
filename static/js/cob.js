@@ -231,9 +231,6 @@ function updateGraph(){
     newGraph = true ? fdrFlag : optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit','fdrCutoff']);
     poly = isPoly(); term = isTerm;
-    
-    // Reset FDR flag
-    fdrFlag = false;
   }
   loadGraph(newGraph,poly,term);
 }
@@ -259,6 +256,9 @@ function loadGraph(newGraph,poly,term,nodes,edges){
     $("#cyWait").one('shown.bs.modal', function(){
         // Update the persistent variables
         updateOpts();
+        
+        // Reset the FDR flag
+        fdrFlag = false;
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
