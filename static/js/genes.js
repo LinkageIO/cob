@@ -13,7 +13,7 @@ function termNet(resolve, reject, poly){
       edgeCutoff: curOpts['edgeCutoff'],
       windowSize: curOpts['windowSize'],
       flankLimit: curOpts['flankLimit'],
-      fdrCutoff: curOpts['fdrCutoff'],
+      fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
     },
     type: 'POST',
     statusCode: {400: function(){reject('Getting the term network went wrong somehow.');}},

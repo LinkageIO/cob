@@ -10,7 +10,7 @@
   <script src="https://code.jquery.com/jquery-3.1.1.min.js"
   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
   crossorigin="anonymous"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.7.3/jquery.textcomplete.min.js" integrity="sha256-vXVXOj2KpbbrV4brXZUNT19T0KPapF1VDhYMmHO/NCE=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.0/jquery.textcomplete.js" integrity="sha256-XwraNCveDAoWmMMV5oXZ/IrhghbYUNk+bx0blB3W6Q8=" crossorigin="anonymous"></script> 
 
   <!-- Bootstrap-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -25,7 +25,7 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.10/cytoscape.min.js" integrity="sha256-Nb/w8L97ZY7g1BTV4SkV2w+mB5+mtSb6fv2UsSry3UE=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.11/cytoscape.min.js" integrity="sha256-EwKs0HCdaDcPQ86jl+VST28j2uNGCVPdaLuUtyIsA1E=" crossorigin="anonymous"></script>
   <script
     src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
   </script>
@@ -88,8 +88,12 @@
     /* ----------------------------
           Option Variables
     ---------------------------- */
-    // Var to keep track of position of log spacing toggle
+    // Var to keep track of position of options toggles
+    var fdrFilter = true;
     var logSpacing = true;
+    
+    // Flag for indicating FDR toggle has been changed since last reload
+    var fdrFlag = false;
     
     // Dictionary containing metadata for all of the parameters
     var optVals = {
@@ -131,6 +135,7 @@
           // Keep track of the previous options
           restoreDefaults();
           updateOpts();
+          updateFDROpts();
           
           // Make sure the table is visible
           $('#NetworkWait').addClass("hidden");
@@ -348,17 +353,23 @@
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
+            <td><label>
+              <button id="fdrButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>FDR Filter (For Term)</b></button>
+            </label></td>
+            <td><input type="text" class="form-control" id="fdrCutoff"></td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
+          </td></tr>
+          <tr class="form-group">
             <td><label>Window Size (For Term)</label></td>
             <td>
               <div class="input-group">
                 <input type="text" class="form-control" id="windowSize">
                 <div class="input-group-btn">
-                  <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
-                  <ul class="dropdown-menu dropdown-menu-right">
-                    <li><a id="windowSizeEmpty" class="">Please select an ontology for FDR Window Sizes</a></li>
-                    <li><a class="windowSizeOpt">10000</a></li>
-                    <li><a class="windowSizeOpt">50000</a></li>
-                    <li><a class="windowSizeOpt">100000</a></li>
+                  <button id="windowSizeOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
+                  <ul id="windowSizeList" class="dropdown-menu dropdown-menu-right">
+                    <li id="windowSizeEmpty"><a>Please select an ontology for FDR Window Sizes</a></li>
                   </ul>
                 </div>
               </div>
@@ -373,12 +384,9 @@
               <div class="input-group">
                 <input type="text" class="form-control" id="flankLimit">
                 <div class="input-group-btn">
-                  <button class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
-                  <ul class="dropdown-menu dropdown-menu-right">
-                    <li><a id="flankLimitEmpty" class="">Please select an ontology for FDR Flank Limits</a></li>
-                    <li><a class="flankLimitOpt">1</a></li>
-                    <li><a class="flankLimitOpt">2</a></li>
-                    <li><a class="flankLimitOpt">5</a></li>
+                  <button id="flankLimitOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
+                  <ul id="flankLimitList" class="dropdown-menu dropdown-menu-right">
+                    <li id="flankLimitEmpty"><a>Please select an ontology for FDR Flank Limits</a></li>
                   </ul>
                 </div>
               </div>
@@ -393,15 +401,6 @@
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="visNeighborsError" role="alert"></div>
-          </td></tr>
-          <tr class="form-group">
-            <td><label>
-              <button id="fdrButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>FDR Filter</b></button>
-            </label></td>
-            <td><input type="text" class="form-control" id="fdrCutoff"></td>
-          </tr>
-          <tr><td colspan="2">
-            <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
         <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
           <tr class="form-group">

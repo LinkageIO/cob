@@ -25,6 +25,9 @@ $('#NetworkTable tbody').on('click','tr', function(){
   
   // Set up the text completion engine for the gene list
   setupTextComplete(curNetwork, '#geneList');
+  
+  // Clean out the FDR Options
+  updateFDROpts();
 });
 
 // A row on the Term Table is selected
@@ -45,6 +48,9 @@ $('#OntologyTable tbody').on('click','tr', function(){
 
   // Fetch and build the network table
   buildTermTable(curOntology);
+  
+  // Set up the FDR Opts
+  updateFDROpts();
 });
 
 // A row on the Network Table is selected
@@ -61,16 +67,23 @@ $('#TermTable tbody').on('click','tr',function(){
 ----------------------------------------------*/
 // Build graph button is clicked
 $("#TermGenesButton").click(function(){
-  if($('#geneList').val().length > 1){loadGraph(true,false,false);}
+  if($('#geneList').val().length > 1){
+    curOntology = '';
+    updateFDROpts();
+    loadGraph(true,false,false);}
   else{window.alert('You need to enter at least one gene.');}
 });
 
 /*------------------------------------------
      Parameter Update Event Listeners
 ------------------------------------------*/
-// Change value of windowSize and flankLimit when option selected
-$('.windowSizeOpt').click(function(){$('#windowSize').val($(this).html());});
-$('.flankLimitOpt').click(function(){$('#flankLimit').val($(this).html());});
+// Do things when FDR enabled or diabled
+$('#fdrButton').click(function(){
+  fdrFilter = !(fdrFilter);
+  fdrFlag = true;
+  if(fdrFilter){$('#flankLimitOpts,#windowSizeOpts,#fdrCutoff').removeAttr('disabled');}
+  else{$('#flankLimitOpts,#windowSizeOpts,#fdrCutoff').attr('disabled','disabled');}
+});
 
 // Toggle for Log Spacing in Polywas is pressed
 $('#logSpacingButton').click(function(){
@@ -204,16 +217,23 @@ function updateGraph(){
   var newGraph = true;
   var poly = null;
   var term = null;
+  
+  // If there isn't already a graph, try to decipher desired path
   if(cy === null){
     var termTable = $('#GeneSelectTabs .active [role = "tab"]').attr('href') === '#TermTableTab'
     if(termTable && (curNetwork==='' || curOntology==='' || curTerm==='')){return;}
     else if(termTable){poly = true; term = true;}
     else{poly = false; term = false;}
   }
+  
+  // If there is one see how full of a reload is necessary
   else{
-    newGraph = optsChange(['nodeCutoff','edgeCutoff',
+    newGraph = true ? fdrFlag : optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit','fdrCutoff']);
     poly = isPoly(); term = isTerm;
+    
+    // Reset FDR flag
+    fdrFlag = false;
   }
   loadGraph(newGraph,poly,term);
 }
@@ -336,6 +356,41 @@ function geneSelect(){
   }
 }
 
+/*------------------------------------------------
+    Update FDR windowSize & flankLimit Options
+------------------------------------------------*/
+function updateFDROpts(){
+  // Git rid of old options
+  $('.windowSizeOpt,.flankLimitOpt').empty();
+  
+  // If there is not a network and ontology, show the help message, exit
+  if((curNetwork === '')||(curOntology === '')){
+    $('#windowSizeEmpty,#flankLimitEmpty').toggleClass('hidden',false);return;}
+  
+  // Hide the help list item
+  $('#windowSizeEmpty,#flankLimitEmpty').toggleClass('hidden',true);
+  
+  // Get the available options from the server
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'fdr_options/'+curNetwork+'/'+curOntology),
+    success: function(data){
+      // Add each window size to the list
+      data.windowSize.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
+        $('#windowSizeList').append('<li class="windowSizeOpt"><a>'+cur+'</a></li>');
+      });
+      
+      // Add each flank limit to the list
+      data.flankLimit.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
+        $('#flankLimitList').append('<li class="flankLimitOpt"><a>'+cur+'</a></li>');
+      });
+      
+      // Listeners to change value of windowSize and flankLimit when option selected
+      $('.windowSizeOpt > a').click(function(){$('#windowSize').val($(this).html());});
+      $('.flankLimitOpt > a').click(function(){$('#flankLimit').val($(this).html());});
+    }
+  });
+}
+
 /*--------------------------------
      Setup Text Completion
 ---------------------------------*/
@@ -428,12 +483,11 @@ function getCurOpts(){
 
 // Detect what options have changed
 function optsChange(opts){
-  var result = false;
   var curOp = getCurOpts();
   opts.forEach(function(cur,idx,arr){
-    if(curOp[cur] !== curOpts[cur]){result = true;}
+    if(curOp[cur] !== curOpts[cur]){return true;}
   });
-  return result;
+  return false;
 }
 
 // Shows user what options are unacceptable
