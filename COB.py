@@ -22,8 +22,8 @@ app = Flask(__name__)
 
 # Networks and Ontologies to Load
 print('starting')
-network_names = ['ZmRoot','Mt_General']
-ont_names = ['ZmIonome','ZmWallace','Mt_GWAS']
+network_names = ['ZmRoot']
+ont_names = ['ZmIonome','ZmWallace']
 
 # Folder with annotation files
 scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
