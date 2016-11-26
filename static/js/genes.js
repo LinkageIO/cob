@@ -13,7 +13,7 @@ function termNet(resolve, reject, poly){
       edgeCutoff: curOpts['edgeCutoff'],
       windowSize: curOpts['windowSize'],
       flankLimit: curOpts['flankLimit'],
-      fdrCutoff: curOpts['fdrCutoff'],
+      fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
     },
     type: 'POST',
     statusCode: {400: function(){reject('Getting the term network went wrong somehow.');}},
@@ -138,7 +138,7 @@ function makeSubnet(){
     dataDict = cur.data();
     edgeList.push({'group':'edges', 'data':dataDict});
   });
-  console.log(nodeDict);
+  
   // Make sure there are genes to work with
   if(nodeDict.length === 0){
     window.alert('There must be genes highlighted to graph the subnetwork');

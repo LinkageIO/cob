@@ -76,6 +76,22 @@ gwas_data_db = {}
 for gwas in co.available_datasets('GWASData')['Name']:
     gwas_data_db[gwas] = co.GWASData(gwas)
 
+# Find the available window sizes and flank limits for each GWAS/COB combo
+print('Finding GWAS Metadata...')
+gwas_meta_db = {}
+for ont in gwas_data_db.keys():
+    gwas_meta_db[ont] = {}
+    for net in gwas_data_db[ont].get_data()['COB'].unique():
+        gwas_meta_db[ont][net] = {}
+        gwas = gwas_data_db[ont].get_data(cob=net)
+        gwas_meta_db[ont][net]['windowSize'] = []
+        gwas_meta_db[ont][net]['flankLimit'] = []
+        for x in gwas['WindowSize'].unique():
+            gwas_meta_db[ont][net]['windowSize'].append(int(x))
+        for x in gwas['FlankLimit'].unique():
+            gwas_meta_db[ont][net]['flankLimit'].append(int(x))
+del gwas
+
 # Find any functional annotations we have 
 print('Finding functional annotations...')
 func_data_db = {}
@@ -165,6 +181,20 @@ def available_terms(ontology):
 def available_genes(network):
     return jsonify({'geneIDs': network_genes[network]})
 
+# Route for getting FDR availablity data
+@app.route("/fdr_options/<path:network>/<path:ontology>")
+def fdr_options(network,ontology):
+    # Default to empty list
+    ans = {'windowSize': [], 'flankLimit':[]}
+    
+    # If the combo is in the db, use that as answer
+    if ontology in gwas_meta_db:
+        if network in gwas_meta_db[ontology]:
+            ans = gwas_meta_db[ontology][network]
+    
+    # Return it in JSON
+    return jsonify(ans)
+
 # Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/term_network", methods=['POST'])
 def term_network():
@@ -176,7 +206,14 @@ def term_network():
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     windowSize = safeOpts('windowSize',int(request.form['windowSize']))
     flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
-    fdrCutoff = safeOpts('fdrCutoff',float(request.form['fdrCutoff']))
+    
+    # Detrmine if there is a FDR cutoff or not
+    try:
+        float(request.form['fdrCutoff'])
+    except ValueError:
+        fdrCutoff = None
+    else:
+        fdrCutoff = safeOpts('fdrCutoff',float(request.form['fdrCutoff']))
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
@@ -193,15 +230,15 @@ def term_network():
     # Base of the result dict
     net = {}
     
-    # If there are GWAS results, pass them in
-    if ontology.name in gwas_data_db:
+    # If there are GWAS results, and a FDR Cutoff
+    if fdrCutoff and ontology.name in gwas_data_db:
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
         net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
     
-    # Otherwise just run it without
+    # Otherwise just run it without GWAS Data
     else:
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
@@ -396,7 +433,7 @@ def safeOpts(name,val):
 #     Functions to get the nodes and edges
 # --------------------------------------------
 def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
-    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=optLimits['fdrCutoff']):
+    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -480,7 +517,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         
         # Denote whether or not to render it
         if ldegree >= nodeCutoff:
-            if gwasData.empty or fdr <= fdrCutoff:
+            if (not fdrCutoff) or gwasData.empty or fdr <= fdrCutoff:
                 if (not render) or (gene.id in render):
                     node['data']['render'] = 'x'
         
