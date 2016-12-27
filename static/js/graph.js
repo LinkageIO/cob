@@ -88,7 +88,7 @@ function initCyto(nodes,edges,poly){
            'text-background-shape': 'roundrectangle',
            'text-valign': 'center',
            'text-halign': 'center',
-           'font-size': '17',
+           'font-size': '14',
          }},
        {selector: '[type = "snpG"]',
         css: {

@@ -178,20 +178,13 @@ $('#pngButton').click(function(){
 $('#graphMLButton').click(function(){
   if(cy === null){return;}
   
-  // Find Discluded Nodes
-  var dis = [];
-  var nodes = cy.nodes('[type = "chrom"], [type = "snpG"]'); 
-  console.log(nodes);
-  nodes.forEach(function(cur,idx,arr){dis.push(cur.data());});
-  console.log(dis);
-  
   // Get the graph
-  cy.graphml({
-    node:{css:false,data:true,position:true,discludeds:dis},
-    edge:{css:false,data:true,discludeds:[]},
-    layoutBy: 'cose',
-  });
   var txt = cy.graphml();
+  
+  // Remove Chromosomes and SNP Groups
+  doc = $.parseXML(txt);
+  $(doc).find('[id^="SNPG"], node:contains("chrom")').remove();
+  txt = (new XMLSerializer()).serializeToString(doc);
   
   // Derive Filename
   var name = curNetwork + '.'
@@ -228,7 +221,7 @@ function updateGraph(){
   
   // If there is one see how full of a reload is necessary
   else{
-    newGraph = true ? fdrFlag : optsChange(['nodeCutoff','edgeCutoff',
+    newGraph = fdrFlag || optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit','fdrCutoff']);
     poly = isPoly(); term = isTerm;
   }
@@ -364,33 +357,66 @@ function updateFDROpts(){
   $('.windowSizeOpt,.flankLimitOpt').empty();
   
   // If there is not a network and ontology, show the help message, exit
-  if((curNetwork === '')||(curOntology === '')){
-    $('#windowSizeEmpty,#flankLimitEmpty').toggleClass('hidden',false);return;}
-  
-  // Hide the help list item
-  $('#windowSizeEmpty,#flankLimitEmpty').toggleClass('hidden',true);
+  if((curNetwork === '')||(curOntology === '')){toggleFDR(false);return;}
   
   // Get the available options from the server
   $.ajax({
     url: ($SCRIPT_ROOT + 'fdr_options/'+curNetwork+'/'+curOntology),
     success: function(data){
-      // Add each window size to the list
-      data.windowSize.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
-        $('#windowSizeList').append('<li class="windowSizeOpt"><a>'+cur+'</a></li>');
-      });
+      // Do the thing if there are any results
+      if((data.windowSize.length) > 0 && (data.flankLimit.length > 0)){
+        toggleFDR(true);
+        
+        // Add each window size to the list
+        data.windowSize.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
+          $('#windowSizeList').append('<li class="windowSizeOpt"><a>'+cur+'</a></li>');
+        });
+        
+        // Add each flank limit to the list
+        data.flankLimit.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
+          $('#flankLimitList').append('<li class="flankLimitOpt"><a>'+cur+'</a></li>');
+        });
+        
+        // Listeners to change value of windowSize and flankLimit when option selected
+        $('.windowSizeOpt > a').click(function(){$('#windowSize').val($(this).html());});
+        $('.flankLimitOpt > a').click(function(){$('#flankLimit').val($(this).html());});
+      }
       
-      // Add each flank limit to the list
-      data.flankLimit.sort(function(a,b){return a-b;}).forEach(function(cur,idx,arr){
-        $('#flankLimitList').append('<li class="flankLimitOpt"><a>'+cur+'</a></li>');
-      });
-      
-      // Listeners to change value of windowSize and flankLimit when option selected
-      $('.windowSizeOpt > a').click(function(){$('#windowSize').val($(this).html());});
-      $('.flankLimitOpt > a').click(function(){$('#flankLimit').val($(this).html());});
+      // If there are none available, say so! 
+      else{toggleFDR(false,true);}
     }
   });
 }
 
+function toggleFDR(on,notAvail){
+  // Determine help message to post
+  if(notAvail === undefined){NA = false;}
+  var text;
+  if(notAvail){text = 'There is no FDR available for this term.';}
+  else{text = 'Please select a network and an ontology to see FDR options.';}
+  
+  // Diable all the things and kick on the qtip
+  if(on){
+    $('#fdrButton,#fdrCutoff,#windowSizeOpts,#flankLimitOpts').removeAttr('disabled')
+      .each(function(){$(this).parent().qtip('destroy',true);});
+  }
+  
+  // Enable all the things and kill the qtips
+  else{
+    $('#fdrButton,#fdrCutoff,#windowSizeOpts,#flankLimitOpts').attr('disabled','disabled')
+      .each(function(){$(this).parent().qtip({
+        content:{text:text},
+        position: {my: 'bottom center', at: 'top center'},
+        style: {
+          classes: 'qtip-dark qtip-rounded qtip-shadow',
+          tip: {width: 10, height: 5},
+        },
+        show: {event: 'mouseover', solo: true},
+        hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
+      });
+    });
+  }
+}
 /*--------------------------------
      Setup Text Completion
 ---------------------------------*/
@@ -483,11 +509,12 @@ function getCurOpts(){
 
 // Detect what options have changed
 function optsChange(opts){
+  var res = false;
   var curOp = getCurOpts();
   opts.forEach(function(cur,idx,arr){
-    if(curOp[cur] !== curOpts[cur]){return true;}
+    if(curOp[cur] !== curOpts[cur]){res = true;}
   });
-  return false;
+  return res;
 }
 
 // Shows user what options are unacceptable

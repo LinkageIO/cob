@@ -148,7 +148,7 @@ function buildGeneTables(){
   $("div.GeneTitle").html('Gene Data');
   
   // Make certain columns invisible if there will be no useful data
-  gene_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
+  gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
   
   /*--------------------------------
        Setup The Subnet Table
@@ -185,8 +185,8 @@ function buildGeneTables(){
   $("div.SubnetTitle").html('Subnet Data');
   
   // Make certain columns invisible if there will be no useful data
-  sub_table.columns('rendered:name').visible(false);
-  sub_table.columns('snp:name, fdr:name, numIntervening:name, rankIntervening:name, numSiblings:name').visible(isTerm);
+  sub_table.columns(['rendered:name']).visible(false);
+  sub_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
   
   /*----------------------------------
        Setup The Table Listeners

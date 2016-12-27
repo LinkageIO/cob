@@ -17,15 +17,15 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
   <!-- DataTables, found using their package builder -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.12/b-1.2.2/b-html5-1.2.2/sc-1.4.2/se-1.2.0/datatables.min.css"/>
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.12/b-1.2.2/b-html5-1.2.2/sc-1.4.2/se-1.2.0/datatables.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.js"></script>
 
   <!-- qTip2 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous" />
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.11/cytoscape.min.js" integrity="sha256-EwKs0HCdaDcPQ86jl+VST28j2uNGCVPdaLuUtyIsA1E=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.13/cytoscape.min.js" integrity="sha256-IhgkpyeW6Lj1Tus8fpKeSGlpSQSBeMiX/Jl5NF4wZbY=" crossorigin="anonymous"></script>
   <script
     src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
   </script>
@@ -369,7 +369,6 @@
                 <div class="input-group-btn">
                   <button id="windowSizeOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
                   <ul id="windowSizeList" class="dropdown-menu dropdown-menu-right">
-                    <li id="windowSizeEmpty"><a>Please select an ontology for FDR Window Sizes</a></li>
                   </ul>
                 </div>
               </div>
@@ -386,7 +385,6 @@
                 <div class="input-group-btn">
                   <button id="flankLimitOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
                   <ul id="flankLimitList" class="dropdown-menu dropdown-menu-right">
-                    <li id="flankLimitEmpty"><a>Please select an ontology for FDR Flank Limits</a></li>
                   </ul>
                 </div>
               </div>
@@ -483,9 +481,7 @@
       <tbody></tbody>
       </table>
       <div class="hidden" id="EnrichmentWait">
-        Your enrichment request is currently being processed on the server!<br>
-        It will appear here when it is ready.<br>
-        Feel free to keep browsing in the mean time.
+        The results of your enrichment query will appear here within about 15 seconds.
       </div>
     </div>
     <!-- End Enrichment Table Tab -->

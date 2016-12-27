@@ -80,7 +80,7 @@ function enrich(geneList,GOnt){
       405: function(){
         $('#EnrichmentWait').addClass('hidden');
         noGO = false;
-        window.alert('There is function is not availible with this organism, if needed, please contact the site admin.');
+        window.alert('This function is not availible with this organism, if needed, please contact the site admin.');
         return;
       },
       400: function(){
