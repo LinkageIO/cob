@@ -132,7 +132,7 @@ function buildGeneTables(){
       "scrollCollapse": true,
       "scroller": {displayBuffer: 1500},
       "scrollX": "100%",
-      "scrollY": ($(window).height()-275),
+      "scrollY": $(window).height()-285,
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
@@ -169,7 +169,7 @@ function buildGeneTables(){
       "rowId": 'id',
       "scrollCollapse": true,
       "scrollX": "100%",
-      "scrollY": $(window).height()-275,
+      "scrollY": $(window).height()-285,
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
