@@ -145,7 +145,7 @@ function buildGeneTables(){
     });
   
   // Set the inline titles on the tables
-  $("div.GeneTitle").html('Gene Data');
+  $("div.GeneTitle").html('Gene Data <span alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="table-glyph glyphicon glyphicon-info-sign"></span>');
   
   // Make certain columns invisible if there will be no useful data
   gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
@@ -182,7 +182,10 @@ function buildGeneTables(){
     });
   
   // Set the inline titles on the tables
-  $("div.SubnetTitle").html('Subnet Data');
+  $("div.SubnetTitle").html('Subnet Data <span alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="table-glyph glyphicon glyphicon-info-sign"></span>');
+  
+  // Set the info things
+  setupInfo('table');
   
   // Make certain columns invisible if there will be no useful data
   sub_table.columns(['rendered:name']).visible(false);

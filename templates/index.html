@@ -135,6 +135,7 @@
           // Keep track of the previous options
           restoreDefaults();
           updateOpts();
+          setupInfo('opt');
           updateFDROpts();
           
           // Make sure the table is visible
@@ -200,12 +201,39 @@
     .updateButton {
       width: 33%;
     }
-    .form-group {
+    tr.form-group > td {
       text-align: right;
+      padding-top: 3px;
+      padding-bottom: 3px;
+      padding-left: 10px;
     }
-    .OntologyTitle, .TermTitle, .NetworkTitle, .GeneTitle, .SubnetTitle, .EnrichmentTitle {
+    .opt-label {
+      vertical-align: middle;
+    }
+    .opt-glyph { 
+      opacity: 0.3;
+      pointer-events: auto;
+      z-index: 10;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    #windowSizeInfo, #flankLimitInfo {
+      transform: translateY(0%);
+    }
+    #logSpacingInfo {
+      position: relative;
+      vertical-align: middle;
+    }
+    .table-glyph {
+      opacity: 0.3;
+      pointer-events: auto;
+      top: 50%;
+      transform: scale(0.75,0.75) translateY(20%);
+    }
+    .NetworkTitle, .OntologyTitle, .TermTitle, .GeneTitle, .SubnetTitle, .EnrichmentTitle {
       float: left;
-      font-size: x-large;
+      font-size: 1.75em;
     }
     .dataTables_info{
       float: left;
@@ -219,10 +247,6 @@
     }
     table {
       background-color: white;
-    }
-    label {
-      line-height: 275%;
-      padding-right: 10px;
     }
   </style>
 </head>
@@ -339,38 +363,48 @@
         <table style="width:100%">
         <tr><td colspan="2"><h3>Network Options</h3></td></tr>
           <tr class="form-group">
-            <td><label>Minimum Node Degree</label></td>
-            <td><input type="text" class="form-control" id="nodeCutoff"></td>
+            <td><label class="opt-label">Minimum Node Degree</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="nodeCutoff">
+              <i alt="How many connections a gene must have within the network to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Minimum Edge Score</label></td>
-            <td><input type="text" class="form-control" id="edgeCutoff"></td>
+            <td><label class="opt-label">Minimum Edge Score</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="edgeCutoff">
+              <i alt="The minimum signifigance score necessary for an edge to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>
-              <button id="fdrButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>FDR Filter (For Term)</b></button>
-            </label></td>
-            <td><input type="text" class="form-control" id="fdrCutoff"></td>
+            <td>
+              <button id="fdrButton" type="button" class="opt-label btn btn-default active" data-toggle="button" aria-pressed="true"><b>FDR Filter (Term)</b></button>
+            </td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="fdrCutoff">
+              <i id="fdrCutoffInfo" alt="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Window Size (For Term)</label></td>
-            <td>
-              <div class="input-group">
+            <td><label class="opt-label">Window Size (Term)</label></td>
+            <td class="input-group">
+              <div class="has-feedback">
                 <input type="text" class="form-control" id="windowSize">
-                <div class="input-group-btn">
-                  <button id="windowSizeOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
-                  <ul id="windowSizeList" class="dropdown-menu dropdown-menu-right">
-                  </ul>
-                </div>
+                <i id="windowSizeInfo" alt="The window size that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              </div>
+              <div class="input-group-btn">
+                <button id="windowSizeOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
+                <ul id="windowSizeList" class="dropdown-menu dropdown-menu-right">
+                </ul>
               </div>
             </td>
           </tr>
@@ -378,15 +412,16 @@
             <div class="alert alert-danger hidden" id="windowSizeError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Flank Limit (For Term)</label></td>
-            <td>
-              <div class="input-group">
+            <td><label class="opt-label">Flank Limit (Term)</label></td>
+            <td class="input-group">
+              <div class="has-feedback">
                 <input type="text" class="form-control" id="flankLimit">
-                <div class="input-group-btn">
-                  <button id="flankLimitOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Enabled <span class="caret"></span></button>
-                  <ul id="flankLimitList" class="dropdown-menu dropdown-menu-right">
-                  </ul>
-                </div>
+                <i id="flankLimitInfo" alt="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              </div>
+              <div class="input-group-btn">
+                <button id="flankLimitOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
+                <ul id="flankLimitList" class="dropdown-menu dropdown-menu-right">
+                </ul>
               </div>
             </td>
           </tr>
@@ -394,48 +429,66 @@
             <div class="alert alert-danger hidden" id="flankLimitError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Visible Neighbors (For Custom)</label></td>
-            <td><input type="text" class="form-control" id="visNeighbors"></td>
+            <td><label class="opt-label">Neighbors (Custom)</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="visNeighbors">
+              <i alt="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="visNeighborsError" role="alert"></div>
           </td></tr>
         <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
           <tr class="form-group">
-            <td><label>Node Size</label></td>
-            <td><input type="text" class="form-control" id="nodeSize"></td>
+            <td><label class="opt-label">Gene Size</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="nodeSize">
+              <i alt="How large the genes appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="nodeSizeError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>SNP Colors (For Polywas)</label></td>
-            <td><input type="text" class="form-control" id="snpLevels"></td>
+            <td><label class="opt-label">SNP Colors (Polywas)</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="snpLevels">
+              <i alt="How many different colors to use to differentiate SNPs within a stack, after which the colors will repeat." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="snpLevelsError" role="alert"></div>
           </td></tr>
-          <tr class="form-group"><td colspan="2">
-            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (For Polywas)</b></button>
+          <tr class="form-group"><td colspan="2" style="text-align:right">
+            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><span id="logSpacingInfo" alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
           </td></tr>
         <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
           <tr class="form-group">
-            <td><label>Enrichment Probability Cutoff</label></td>
-            <td><input type="text" class="form-control" id="pCutoff"></td>
+            <td><label class="opt-label">Probability Cutoff</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="pCutoff">
+              <i alt="The P value used to determine what enrichment results are significant." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="pCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Minimum Loci in GO Term</label></td>
-            <td><input type="text" class="form-control" id="minTerm"></td>
+            <td><label class="opt-label">Min Genes (GO)</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="minTerm">
+              <i alt="How many genes a GO term must contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="minTermError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label>Maximum Loci in GO Term</label></td>
-            <td><input type="text" class="form-control" id="maxTerm"></td>
+            <td><label class="opt-label">Max Genes (GO)</label></td>
+            <td class="has-feedback">
+              <input type="text" class="form-control" id="maxTerm">
+              <i alt="How many genes a GO term may contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+            </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>

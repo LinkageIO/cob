@@ -43,6 +43,7 @@ function enrich(geneList,GOnt){
   if(GOnt){
     var address = 'go_enrichment';
     var title = 'GO Enrichment';
+    var desc = 'Write me!';
     var cols = [
       {'data':'id', 'name':'id', 'title':'ID'},
       {'data':'name', 'name':'name', 'title':'Name'},
@@ -54,6 +55,7 @@ function enrich(geneList,GOnt){
   else{
     var address = 'gene_word_search';
     var title = 'GeneWordSearch';
+    var desc = 'Write me!';
     var cols = [
       {'data':'word', 'name':'word', 'title':'Word'},
       {'data':'pval', 'name':'pval', 'title':'P Val'},
@@ -124,7 +126,9 @@ function enrich(geneList,GOnt){
         ],
         "columns": cols
       });
-      $("div.EnrichmentTitle").html(title);
+      $("div.EnrichmentTitle").html(title+' '+'<span alt="'+desc+'" class="table-glyph glyphicon glyphicon-info-sign"></span>');
+      
+      setupInfo('table');
     }
   });
 }

@@ -397,28 +397,42 @@ function toggleFDR(on,notAvail){
   
   // Diable all the things and kick on the qtip
   if(on){
-    $('#fdrButton,#fdrCutoff,#windowSizeOpts,#flankLimitOpts').removeAttr('disabled')
-      .each(function(){$(this).parent().qtip('destroy',true);});
+    $('#fdrButton,#fdrCutoff').removeAttr('disabled').each(function(){
+      $(this).parent().qtip('destroy',true);});
+    $('#fdrCutoffInfo').qtip().disable(false);
   }
   
   // Enable all the things and kill the qtips
   else{
-    $('#fdrButton,#fdrCutoff,#windowSizeOpts,#flankLimitOpts').attr('disabled','disabled')
-      .each(function(){$(this).parent().qtip({
-        content:{text:text},
-        position: {my: 'bottom center', at: 'top center'},
-        style: {
-          classes: 'qtip-dark qtip-rounded qtip-shadow',
-          tip: {width: 10, height: 5},
-        },
+    $('#fdrCutoffInfo').qtip().disable(true);
+    $('#fdrButton,#fdrCutoff').attr('disabled','disabled').each(function(){
+      $(this).parent().qtip({
+        content:{text: text},
+        position: {my: 'center left', at: 'center right'},
+        style: {classes: 'qtip-bootstrap'},
         show: {event: 'mouseover', solo: true},
-        hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
+        hide: {event: 'mouseout unfocus'},
       });
     });
   }
 }
+
 /*--------------------------------
-     Setup Text Completion
+     Setup Option Information
+---------------------------------*/
+// Enable the qtips on the options 
+function setupInfo(glyphSet){
+  $('.'+glyphSet+'-glyph').qtip({
+    content:{attr: 'alt'},
+    position: {my: 'center left', at: 'center right'},
+    style: {classes: 'qtip-bootstrap'},
+    show: {event: 'mouseover', solo: true},
+    hide: {event: 'mouseout unfocus'},
+  });
+}
+
+/*--------------------------------
+      Setup Text Completion
 ---------------------------------*/
 function setupTextComplete(network, selector){
   // AJAX request to get the data
