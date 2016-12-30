@@ -43,7 +43,7 @@ function enrich(geneList,GOnt){
   if(GOnt){
     var address = 'go_enrichment';
     var title = 'GO Enrichment';
-    var desc = 'Write me!';
+    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab.';
     var cols = [
       {'data':'id', 'name':'id', 'title':'ID'},
       {'data':'name', 'name':'name', 'title':'Name'},
@@ -55,7 +55,7 @@ function enrich(geneList,GOnt){
   else{
     var address = 'gene_word_search';
     var title = 'GeneWordSearch';
-    var desc = 'Write me!';
+    var desc = 'This table contains all of the significant results after running a GeneWordSearch query on the given set of genes. These results are based on functional annotations that are associated with the same reference genome as the current network.';
     var cols = [
       {'data':'word', 'name':'word', 'title':'Word'},
       {'data':'pval', 'name':'pval', 'title':'P Val'},

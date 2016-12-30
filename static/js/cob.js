@@ -393,26 +393,23 @@ function toggleFDR(on,notAvail){
   if(notAvail === undefined){NA = false;}
   var text;
   if(notAvail){text = 'There is no FDR available for this term.';}
-  else{text = 'Please select a network and an ontology to see FDR options.';}
-  
-  // Diable all the things and kick on the qtip
-  if(on){
-    $('#fdrButton,#fdrCutoff').removeAttr('disabled').each(function(){
-      $(this).parent().qtip('destroy',true);});
-    $('#fdrCutoffInfo').qtip().disable(false);
-  }
+  else{text = 'Select a network and an ontology to see FDR options.';}
   
   // Enable all the things and kill the qtips
+  if(on){
+    $('.fdr-toggle').removeAttr('disabled');
+    $('#fdrRow').qtip('destroy',true);
+  }
+  
+  // Diable all the things and kick on the qtip
   else{
-    $('#fdrCutoffInfo').qtip().disable(true);
-    $('#fdrButton,#fdrCutoff').attr('disabled','disabled').each(function(){
-      $(this).parent().qtip({
-        content:{text: text},
-        position: {my: 'center left', at: 'center right'},
-        style: {classes: 'qtip-bootstrap'},
-        show: {event: 'mouseover', solo: true},
-        hide: {event: 'mouseout unfocus'},
-      });
+    $('.fdr-toggle').attr('disabled','disabled');
+    $('#fdrRow').qtip({
+      content:{text: text},
+      position: {my: 'center left', at: 'center right'},
+      style: {classes: 'qtip-bootstrap'},
+      show: {event: 'mouseover', solo: true},
+      hide: {event: 'mouseout unfocus'},
     });
   }
 }

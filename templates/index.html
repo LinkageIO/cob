@@ -203,6 +203,7 @@
     }
     tr.form-group > td {
       text-align: right;
+      position: relative;
       padding-top: 3px;
       padding-bottom: 3px;
       padding-left: 10px;
@@ -213,7 +214,6 @@
     .opt-glyph { 
       opacity: 0.3;
       pointer-events: auto;
-      z-index: 10;
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
@@ -224,6 +224,7 @@
     #logSpacingInfo {
       position: relative;
       vertical-align: middle;
+      transform: translateY(0%);
     }
     .table-glyph {
       opacity: 0.3;
@@ -363,7 +364,7 @@
         <table style="width:100%">
         <tr><td colspan="2"><h3>Network Options</h3></td></tr>
           <tr class="form-group">
-            <td><label class="opt-label">Minimum Node Degree</label></td>
+            <td><label class="opt-label">Min Node Degree</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="nodeCutoff">
               <i alt="How many connections a gene must have within the network to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
@@ -373,7 +374,7 @@
             <div class="alert alert-danger hidden" id="nodeCutoffError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label class="opt-label">Minimum Edge Score</label></td>
+            <td><label class="opt-label">Min Edge Score</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="edgeCutoff">
               <i alt="The minimum signifigance score necessary for an edge to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
@@ -382,12 +383,12 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
-          <tr class="form-group">
+          <tr id="fdrRow" class="form-group">
             <td>
-              <button id="fdrButton" type="button" class="opt-label btn btn-default active" data-toggle="button" aria-pressed="true"><b>FDR Filter (Term)</b></button>
+              <button id="fdrButton" type="button" class="opt-label btn btn-default active fdr-toggle" data-toggle="button" aria-pressed="true"><b>FDR Filter (Term)</b></button>
             </td>
             <td class="has-feedback">
-              <input type="text" class="form-control" id="fdrCutoff">
+              <input type="text" class="form-control fdr-toggle" id="fdrCutoff">
               <i id="fdrCutoffInfo" alt="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
@@ -401,8 +402,8 @@
                 <input type="text" class="form-control" id="windowSize">
                 <i id="windowSizeInfo" alt="The window size that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
-              <div class="input-group-btn">
-                <button id="windowSizeOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
+              <div id="windowSizeSel" class="input-group-btn">
+                <button id="windowSizeOpts" class="btn btn-default dropdown-toggle fdr-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
                 <ul id="windowSizeList" class="dropdown-menu dropdown-menu-right">
                 </ul>
               </div>
@@ -418,8 +419,8 @@
                 <input type="text" class="form-control" id="flankLimit">
                 <i id="flankLimitInfo" alt="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
-              <div class="input-group-btn">
-                <button id="flankLimitOpts" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
+              <div id="flankLimitSel" class="input-group-btn">
+                <button id="flankLimitOpts" class="btn btn-default dropdown-toggle fdr-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
                 <ul id="flankLimitList" class="dropdown-menu dropdown-menu-right">
                 </ul>
               </div>
@@ -429,7 +430,7 @@
             <div class="alert alert-danger hidden" id="flankLimitError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
-            <td><label class="opt-label">Neighbors (Custom)</label></td>
+            <td><label class="opt-label">Vis Neighbors (Custom)</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="visNeighbors">
               <i alt="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>

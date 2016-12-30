@@ -145,7 +145,7 @@ function buildGeneTables(){
     });
   
   // Set the inline titles on the tables
-  $("div.GeneTitle").html('Gene Data <span alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="table-glyph glyphicon glyphicon-info-sign"></span>');
+  $("div.GeneTitle").html('Gene Data <span alt="This table contains information for all of the genes matched by your query. The ones that are rendered in the graph are denoted by an \'X\' in the first column. The remaining are genes that matched the query, but were discluded due to the parameters set in the options tab. They can be added to the graph by simply clicking them. To see just the genes that are selected and their neighbors, go to the \'Subnetwork\' tab." class="table-glyph glyphicon glyphicon-info-sign"></span>');
   
   // Make certain columns invisible if there will be no useful data
   gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
@@ -182,7 +182,7 @@ function buildGeneTables(){
     });
   
   // Set the inline titles on the tables
-  $("div.SubnetTitle").html('Subnet Data <span alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="table-glyph glyphicon glyphicon-info-sign"></span>');
+  $("div.SubnetTitle").html('Subnet Data <span alt="This table contains information  for all of the selected genes and their first neighbors. This is the same data that is contained in the main gene table, forpurposes of making navigating an interesting subnetwork easier." class="table-glyph glyphicon glyphicon-info-sign"></span>');
   
   // Set the info things
   setupInfo('table');
@@ -239,7 +239,11 @@ function buildGeneTables(){
         $('#SubnetTable').DataTable().row('#'+this['id']).select();}
       window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
     }
-    else{geneSelect();}
+    else{
+      $('#GeneTable').DataTable().rows().deselect();
+      $('#GeneTable').DataTable().rows($('#SubnetTable').DataTable().rows('.selected').ids(true)).select();
+      geneSelect();
+    }
   });
 }
 
