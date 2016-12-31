@@ -22,8 +22,8 @@ app = Flask(__name__)
 
 # Networks and Ontologies to Load
 print('starting')
-network_names = ['ZmRoot','Mt_General']
-ont_names = ['ZmIonome','ZmWallace','Mt_GWAS']
+network_names = ['ZmRoot']
+ont_names = ['ZmIonome','ZmWallace']
 
 # Folder with annotation files
 scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
@@ -176,7 +176,7 @@ def available_ontologies(network):
 def available_terms(ontology):
     return jsonify(terms[ontology])
 
-# Route for sending available typeahead data
+# Route for sending available gene names in the network
 @app.route("/available_genes/<path:network>")
 def available_genes(network):
     return jsonify({'geneIDs': network_genes[network]})

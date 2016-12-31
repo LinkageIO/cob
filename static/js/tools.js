@@ -25,6 +25,11 @@ function setupTextComplete(network, selector){
   $.ajax({
     url: ($SCRIPT_ROOT + 'available_genes/' + network),
     success: function(data){
+      // Build a sample query
+      var query = '';
+      for(var i=0; i<5; i++){query += data.geneIDs[Math.floor(Math.random() * (data.geneIDs.length-1))] + ', ';}
+      $('#geneList').html(query);
+      
       // Destoy the old one and make a new completion engine
       $(selector).textcomplete('destroy');
       $(selector).textcomplete([{
@@ -35,8 +40,7 @@ function setupTextComplete(network, selector){
         search: function(term, callback){
           callback($.map(data.geneIDs, function(word){
             return word.toLowerCase().indexOf(term.toLowerCase()) === 0 ? word : null;
-          }));
-        },
+        }));},
         
         // When selected, add the gene, plus a comma to separate
         replace: function(word){return word + ', ';}
