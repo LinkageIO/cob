@@ -41,111 +41,9 @@
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
     $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')}).appendTo('head');
     
-    /* ------------------------------
-          General State Variables
-    ------------------------------ */
-    // Shortcuts to current graph parameters
-    var curNetwork = '';
-    var curOntology = '';
-    var curTerm = '';
-    var curOpts = {};
-    
-    // Shortcut to current cytoscape object
-    var cy = null;
-    
-    // Save of all node objects returned for qucker graph manipulation
-    var geneDict = null;
-    
-    // Saves whether data is a term or a custom network
-    var isTerm = false;
-    
-    // Holder for the timer id of the subnet pop effect
-    var popTimerID = 1;
-    
-    // Track genes that are selected for persistence
-    var curSel = [];
-    
-    // Track whether an addGenes request is already in process
-    var noAdd = false;
-    
-    // Places to hold needed information to revert from subnet graphs
-    var pastGeneDicts = [];
-    var pastPoly = [];
-    var pastQuery = [];
-    
-    /* ----------------------------
-          Enrichment Variables
-    ---------------------------- */
-    // List of genes that were queried for enrichment, Used for parameter updating
-    var enrichGenes = null;
-    
-    // Saves whether there is currently a GO request pending
-    var noGO = false;
-    
-    // Saves whether enrichment is GO or GWS
-    var isGO = true;
-    
-    /* ----------------------------
-          Option Variables
-    ---------------------------- */
-    // Var to keep track of position of options toggles
-    var fdrFilter = true;
-    var logSpacing = true;
-    
-    // Flag for indicating FDR toggle has been changed since last reload
-    var fdrFlag = false;
-    
-    // Dictionary containing metadata for all of the parameters
-    var optVals = {
-      'nodeCutoff':{'title':'Minimum Node Degree',
-        'default':1,'min':0,'max':20,'int':true},
-      'edgeCutoff':{'title':'Minimum Edge Score',
-        'default':3.0,'min':1.0,'max':20.0,'int':false},
-      'windowSize':{'title':'Window Size (For Term)',
-        'default':50000,'min':0,'max':1000000,'int':true},
-      'flankLimit':{'title':'Flank Limit (For Term)',
-        'default':2,'min':0,'max':20,'int':true},
-      'visNeighbors':{'title':'Visible Neighbors (For Custom)',
-        'default':25,'min':0,'max':150,'int':true},
-      'fdrCutoff':{'title':'Maximum FDR (if available)',
-        'default':0.35,'min':0.0,'max':5.0,'int':false},
-      'nodeSize':{'title':'Node Size',
-        'default':10,'min':5,'max':50,'int':true},
-      'snpLevels':{'title':'SNP Colors (For Polywas)',
-        'default':3,'min':1,'max':10,'int':true},
-      'pCutoff':{'title':'Enrichment Probability Cutoff',
-        'default':0.05,'min':0.0,'max':1.0,'int':false},
-      'minTerm':{'title':'Minimum Loci in GO Term',
-        'default':5,'min':1,'max':99,'int':true},
-      'maxTerm':{'title':'Maximum Loci in GO Term',
-        'default':300,'min':100,'max':1000,'int':true},
-    };
-
-    /* ----------------------------
-          Load The Scripts
-    ---------------------------- */
-    $.getScript($SCRIPT_ROOT + 'static/js/genes.js');
-    $.getScript($SCRIPT_ROOT + 'static/js/graph.js');
-    $.getScript($SCRIPT_ROOT + 'static/js/polywas-layout.js');
-    $.getScript($SCRIPT_ROOT + 'static/js/enrichment.js');
     $(document).ready(function(){
-      // Load the important scripts and stuff when finished
-      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'), function(){updateHUD();
-        $.getScript(($SCRIPT_ROOT + 'static/js/tables.js'), function(){
-          // Keep track of the previous options
-          restoreDefaults();
-          updateOpts();
-          setupInfo('opt');
-          updateFDROpts();
-          
-          // Make sure the table is visible
-          $('#NetworkWait').addClass("hidden");
-          $('#Network').removeClass("hidden");
-
-          // Build some tables!
-          buildNetworkTable();
-        });
-      });
+      // Load the main script to setup everything
+      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'));
     });
   </script>
 
@@ -367,7 +265,7 @@
             <td><label class="opt-label">Min Node Degree</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="nodeCutoff">
-              <i alt="How many connections a gene must have within the network to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="nodeCutoffInfo" title="How many connections a gene must have within the network to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -377,19 +275,19 @@
             <td><label class="opt-label">Min Edge Score</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="edgeCutoff">
-              <i alt="The minimum signifigance score necessary for an edge to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="edgeCutoffInfo" title="The minimum signifigance score necessary for an edge to be included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
-          <tr id="fdrRow" class="form-group">
+          <tr id="fdrRow" title="Hey!" class="form-group">
             <td>
-              <button id="fdrButton" type="button" class="opt-label btn btn-default active fdr-toggle" data-toggle="button" aria-pressed="true"><b>FDR Filter (Term)</b></button>
+              <button id="fdrButton" type="button" class="opt-label btn btn-default active" data-toggle="button"><b>FDR Filter (Term)</b></button>
             </td>
             <td class="has-feedback">
               <input type="text" class="form-control fdr-toggle" id="fdrCutoff">
-              <i id="fdrCutoffInfo" alt="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="fdrCutoffInfo" title="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -400,7 +298,7 @@
             <td class="input-group">
               <div class="has-feedback">
                 <input type="text" class="form-control" id="windowSize">
-                <i id="windowSizeInfo" alt="The window size that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+                <i id="windowSizeInfo" title="The window size that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="windowSizeSel" class="input-group-btn">
                 <button id="windowSizeOpts" class="btn btn-default dropdown-toggle fdr-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
@@ -417,7 +315,7 @@
             <td class="input-group">
               <div class="has-feedback">
                 <input type="text" class="form-control" id="flankLimit">
-                <i id="flankLimitInfo" alt="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+                <i id="flankLimitInfo" title="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="flankLimitSel" class="input-group-btn">
                 <button id="flankLimitOpts" class="btn btn-default dropdown-toggle fdr-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FDR Opts <span class="caret"></span></button>
@@ -433,7 +331,7 @@
             <td><label class="opt-label">Vis Neighbors (Custom)</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="visNeighbors">
-              <i alt="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="visNeighborsInfo" title="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -444,7 +342,7 @@
             <td><label class="opt-label">Gene Size</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="nodeSize">
-              <i alt="How large the genes appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="nodeSizeInfo" title="How large the genes appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -454,21 +352,21 @@
             <td><label class="opt-label">SNP Colors (Polywas)</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="snpLevels">
-              <i alt="How many different colors to use to differentiate SNPs within a stack, after which the colors will repeat." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="snpLevelsInfo" title="How many different colors to use to differentiate SNPs within a stack, after which the colors will repeat." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="snpLevelsError" role="alert"></div>
           </td></tr>
           <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><span id="logSpacingInfo" alt="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
+            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><span id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
           </td></tr>
         <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Probability Cutoff</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="pCutoff">
-              <i alt="The P value used to determine what enrichment results are significant." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="pCutoffInfo" title="The P value used to determine what enrichment results are significant." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -478,7 +376,7 @@
             <td><label class="opt-label">Min Genes (GO)</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="minTerm">
-              <i alt="How many genes a GO term must contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="minTermInfo" title="How many genes a GO term must contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -488,7 +386,7 @@
             <td><label class="opt-label">Max Genes (GO)</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="maxTerm">
-              <i alt="How many genes a GO term may contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="maxTermInfo" title="How many genes a GO term may contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
@@ -515,6 +413,7 @@
 
     <!-- Gene Table Tab -->
     <div role="tabpanel" class="tab-pane" id="GeneTab"><br>
+      <h5 id="GeneTableWait">Please follow the instructions in the network tab to build a network. Information on the genes in that network will appear here.</h5>
       <table class="table" id="GeneTable">
       <tbody></tbody>
       </table>
@@ -523,6 +422,7 @@
 
     <!-- Subnetwork Table Tab -->
     <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
+      <h5 id="SubnetTableWait">Please follow the instructions in the Network tab, then if you select genes in the main gene table (in the Genes tab), you will be able to see just those and their neighbors here.</h5>
       <table class="table" id="SubnetTable">
       <tbody></tbody>
       </table>
@@ -531,11 +431,12 @@
     
     <!-- Enrichment Table Tab -->
     <div role="tabpanel" class="tab-pane" id="EnrichmentTab"><br>
+      <h5 id="EnrichmentWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
       <table class="table" id="EnrichmentTable">
       <tbody></tbody>
       </table>
-      <div class="hidden" id="EnrichmentWait">
-        The results of your enrichment query will appear here within about 15 seconds.
+      <div class="hidden" id="EnrichmentProg">
+        The results of your enrichment query will appear here within about 30 seconds.
       </div>
     </div>
     <!-- End Enrichment Table Tab -->

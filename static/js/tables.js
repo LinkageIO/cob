@@ -1,12 +1,4 @@
 /*----------------------------------
-        Table Tab Listeners
------------------------------------*/
-// Redraw the Subnet Table when shown
-$('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
-  if($.fn.DataTable.isDataTable('#SubnetTable')){$('#SubnetTable').DataTable().draw();}
-});
-
-/*----------------------------------
     Selection Table Constructors
 -----------------------------------*/
 // Build a Fresh Network Table
@@ -107,20 +99,20 @@ function buildGeneTables(){
     //{data: 'parentAvgEffectSize', name:'parentAvgEffectSize', title: 'Avg Parent Effect Size'},
   ];
   
-  /*--------------------------------
-       Setup The Gene Table
-  ---------------------------------*/
-  // Get gene table data
+  // Destroy the old tables if present
+  destroyGeneTables();
+  
+  // Hide the wait messages
+  $('#GeneTableWait').toggleClass('hidden',true);
+  $('#SubnetTableWait').toggleClass('hidden',true);
+  
+  // Get gene data
   var geneData = [];
   Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
   
-  // Destroy the old tables, remove columns, remove listeners
-  if($.fn.DataTable.isDataTable('#GeneTable')){
-    $('#GeneTable').DataTable().destroy();
-    $('#GeneTable').off().empty();
-  }
-  
-  // Set up the main gene table
+  /*--------------------------------
+       Setup The Gene Table
+  ---------------------------------*/
   var gene_table = $('#GeneTable').DataTable({
       "data": geneData,
       "deferRender": false,
@@ -136,29 +128,25 @@ function buildGeneTables(){
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
-        {"extend": 'csv',"filename": 'genenetwork'},
-        {"text": 'Graph Subnet', "action": makeSubnet},
-        {"text": 'GWS', "action": gws},
-        {"text": 'GO', "action": gont},
+        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
+        {text:'GO', action:gont, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
+        {text:'GWS', action:gws, titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'},
       ],
       "columns": cols,
     });
   
-  // Set the inline titles on the tables
-  $("div.GeneTitle").html('Gene Data <span alt="This table contains information for all of the genes matched by your query. The ones that are rendered in the graph are denoted by an \'X\' in the first column. The remaining are genes that matched the query, but were discluded due to the parameters set in the options tab. They can be added to the graph by simply clicking them. To see just the genes that are selected and their neighbors, go to the \'Subnetwork\' tab." class="table-glyph glyphicon glyphicon-info-sign"></span>');
-  
-  // Make certain columns invisible if there will be no useful data
+    // Make certain columns invisible if there will be no useful data
   gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
+  
+  // Set the inline titles on the tables
+  $("div.GeneTitle").html('Gene Data <span id="GeneTableInfo" title="This table contains information for all of the genes matched by your query. The ones that are rendered in the graph are denoted by an \'X\' in the first column. The remaining are genes that matched the query, but were discluded due to the parameters set in the options tab. They can be added to the graph by simply clicking them. To see just the genes that are selected and their neighbors, go to the \'Subnetwork\' tab." class="table-glyph glyphicon glyphicon-info-sign"></span>');
+  
+  
   
   /*--------------------------------
        Setup The Subnet Table
   ---------------------------------*/
-  // Destroy the old one if needed
-  if($.fn.DataTable.isDataTable('#SubnetTable')){
-    $('#SubnetTable').DataTable().destroy();
-    $('#SubnetTable').off().empty();
-  }
-  
   // Set up the subnetwork gene table
   var sub_table = $('#SubnetTable').DataTable({
       "data": [],
@@ -173,19 +161,16 @@ function buildGeneTables(){
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
-        {"extend": 'csv',"filename": 'subnetwork'},
-        {"text": 'Graph Subnet', "action": makeSubnet},
-        {"text": 'GWS', "action": gws},
-        {"text": 'GO', "action": gont},
+        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
+        {text:'GO', action:gont, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
+        {text:'GWS', action:gws, titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'},
       ],
       "columns": cols,
     });
   
   // Set the inline titles on the tables
-  $("div.SubnetTitle").html('Subnet Data <span alt="This table contains information  for all of the selected genes and their first neighbors. This is the same data that is contained in the main gene table, forpurposes of making navigating an interesting subnetwork easier." class="table-glyph glyphicon glyphicon-info-sign"></span>');
-  
-  // Set the info things
-  setupInfo('table');
+  $("div.SubnetTitle").html('Subnet Data <span id="SubnetTableInfo" title="This table contains information  for all of the selected genes and their first neighbors. This is the same data that is contained in the main gene table, forpurposes of making navigating an interesting subnetwork easier." class="table-glyph glyphicon glyphicon-info-sign"></span>');
   
   // Make certain columns invisible if there will be no useful data
   sub_table.columns(['rendered:name']).visible(false);
@@ -194,6 +179,13 @@ function buildGeneTables(){
   /*----------------------------------
        Setup The Table Listeners
   -----------------------------------*/
+  // Set the info in the titles
+  infoTips('#GeneTableInfo, #SubnetTableInfo');
+  
+  // Set up qtips on table buttons
+  infoTips(gene_table.buttons(0,null).nodes(),'bottom center','top center');
+  infoTips(sub_table.buttons(0,null).nodes(),'bottom center','top center');
+  
   // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
     if(this['id'].length > 0){
@@ -248,6 +240,25 @@ function buildGeneTables(){
 }
 
 /*---------------------------------------
+           Table Cleanup
+---------------------------------------*/
+function destroyGeneTables(){
+  // Deconstruct the tables if they exist
+  if($.fn.DataTable.isDataTable('#GeneTable')){
+    $('#GeneTable').DataTable().destroy();
+    $('#GeneTable').off().empty();
+  }
+  if($.fn.DataTable.isDataTable('#SubnetTable')){
+    $('#SubnetTable').DataTable().destroy();
+    $('#SubnetTable').off().empty();
+  }
+  
+  // Show the wait messages
+  $('#GeneTableWait').toggleClass('hidden',false);
+  $('#SubnetTableWait').toggleClass('hidden',false);
+}
+
+/*---------------------------------------
       Run Enrichment Functions
 ---------------------------------------*/
 function gws(e,dt,node,config){
@@ -262,9 +273,9 @@ function gont(e,dt,node,cofig){
   enrich(geneList,true);
 }
 
-/*---------------------------------------
-      Gene and Subnet Table Updater
----------------------------------------*/
+/*-------------------------------
+      Subnet Table Updater
+-------------------------------*/
 function updateSubnetTable(newGenes, newGenesSel){
   // Get the table api ref
   var tbl = $('#SubnetTable').DataTable();

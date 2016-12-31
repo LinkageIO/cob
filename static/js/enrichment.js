@@ -37,7 +37,7 @@ function enrich(geneList,GOnt){
   
   // Nav to tab
   $('#navTabs a[href="#EnrichmentTab"]').tab('show');
-  $('#EnrichmentWait').removeClass('hidden');
+  $('#EnrichmentProg').removeClass('hidden');
   
   // Set the variables if we are doing GO
   if(GOnt){
@@ -80,13 +80,13 @@ function enrich(geneList,GOnt){
     type: 'POST',
     statusCode:{
       405: function(){
-        $('#EnrichmentWait').addClass('hidden');
+        $('#EnrichmentProg').addClass('hidden');
         noGO = false;
         window.alert('This function is not availible with this organism, if needed, please contact the site admin.');
         return;
       },
       400: function(){
-        $('#EnrichmentWait').addClass('hidden');
+        $('#EnrichmentProg').addClass('hidden');
         noGO = false;
         window.alert('There were no significant enrichment results for this query.');
         return;
@@ -106,7 +106,7 @@ function enrich(geneList,GOnt){
       }
       
       // Nav to tab
-      $('#EnrichmentWait').addClass('hidden');
+      $('#EnrichmentProg').addClass('hidden');
       $('#navTabs a[href="#EnrichmentTab"]').tab('show');
       
       // Build new table from data
@@ -122,13 +122,13 @@ function enrich(geneList,GOnt){
         "scrollY": $(window).height()-325,
         "searching": true,
         "buttons": [
-          {"extend": 'csv',"filename": address},
+          {extend:'csv', filename:address, titleAttr:'Export the results in this table to a CSV file'},
         ],
         "columns": cols
       });
-      $("div.EnrichmentTitle").html(title+' '+'<span alt="'+desc+'" class="table-glyph glyphicon glyphicon-info-sign"></span>');
+      $("div.EnrichmentTitle").html(title+' '+'<span id="EnrichmentTableInfo" title="'+desc+'" class="table-glyph glyphicon glyphicon-info-sign"></span>');
       
-      setupInfo('table');
+      infoTips('#EnrichmentTableInfo');
     }
   });
 }
