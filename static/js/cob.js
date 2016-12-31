@@ -162,7 +162,7 @@ $('#OntologyTable tbody').on('click','tr', function(){
   $('#Term').removeClass("hidden");
 
   // Fetch and build the network table
-  buildTermTable(curOntology);
+  buildTermTable(curNetwork,curOntology);
   
   // Set up the FDR Opts
   updateFDR();

@@ -1,11 +1,14 @@
 #!/usr/bin/python3
 import re
 import os
+import gc
 import sys
 import json
 import copy
 import glob
+import time
 import logging
+import threading
 import numpy as np
 import pandas as pd
 import camoco as co
@@ -24,6 +27,8 @@ app = Flask(__name__)
 print('starting')
 network_names = ['ZmRoot']
 ont_names = ['ZmIonome','ZmWallace']
+network_ttl = 9000
+cleanup_freq = 60
 
 # Folder with annotation files
 scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
@@ -49,20 +54,28 @@ optLimits = {
 # ----------------------------------------
 #    Load things to memeory to prepare
 # ----------------------------------------
-# Generate network list based on allowed list and load them into memory
+# Generate network list based on allowed list
 print('Preloading networks into memory...')
 networks = {x:co.COB(x) for x in network_names}
+network_info = [[net.name, net._global('parent_refgen'), net.description] for name,net in networks.items()]
 print('Availible Networks: ' + str(networks))
 
 # Generate ontology list based on allowed list and load them into memory
 print('Preloading GWASes into Memory...')
 onts = {x:co.GWAS(x) for x in ont_names}
-print('Availible GWASes: ' + str(onts))
+onts_info = {}
+for m,net in networks.items():
+    ref = net._global('parent_refgen')
+    onts_info[net.name] = []
+    for n,ont in onts.items():
+        if ont.refgen.name == ref:
+            onts_info[net.name].append([ont.name,ont.refgen.name,ont.description])
+print('Availible GWASes: ' + str(onts_info))
 
 # Prefetch the gene names for all the networks
 print('Fetching gene names for networks...')
 network_genes = {}
-for name, net in networks.items():
+for name,net in networks.items():
     ids = list(net._expr.index.values)
     als = co.RefGen(net._global('parent_refgen')).aliases(ids)
     for k,v in als.items():
@@ -90,7 +103,6 @@ for ont in gwas_data_db.keys():
             gwas_meta_db[ont][net]['windowSize'].append(int(x))
         for x in gwas['FlankLimit'].unique():
             gwas_meta_db[ont][net]['flankLimit'].append(int(x))
-del gwas
 
 # Find any functional annotations we have 
 print('Finding functional annotations...')
@@ -117,7 +129,76 @@ for name,ont in onts.items():
         len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000))))
         for term in ont.iter_terms()]}
 
-# Set up the logging file
+#---------------------------------------------
+#          Network Memory Management
+#---------------------------------------------
+# Build the network data structure
+networks = {}
+for name in network_names:
+    networks[name] = {'net':None, 'mutex':False, 'lastAccess':0}
+
+# Ensure the network is in memory
+def _loadNet(network):
+    # Spin lock until the mutex is opened
+    while networks[network]['mutex']:
+        time.sleep(0.5)
+    
+    # Take the mutex
+    networks[network]['mutex'] = True
+    
+    # Load in the network if not there
+    if networks[network]['net'] == None:
+        networks[network]['net'] = co.COB(network)
+        print('Reloaded Network: '+network)
+    
+    # Update the last access time 
+    networks[network]['lastAccess'] = int(time.time())
+    
+    # Release the mutex
+    networks[network]['mutex'] = False
+    
+    return
+
+# Daemon to go through and dump old networks periodically
+def _cleanNets():
+    print('Network Cleaner Started')
+    while True:
+        gc.collect()
+        time.sleep(cleanup_freq)
+        now = int(time.time())
+        for name in networks.keys():
+            # Get the mutex
+            while networks[name]['mutex']:
+                time.sleep(0.5)
+            networks[name]['mutex'] = True
+            
+            # Dump the network if too old
+            if ((now - networks[name]['lastAccess']) > network_ttl):
+                if not networks[name]['net'] == None:
+                    print('Dropped Network: '+name)
+                    networks[name]['net'] = None
+            
+            # Release the mutex
+            networks[name]['mutex'] = False
+
+# Put the cleaner in a thread
+cleanThread = threading.Thread(target=_cleanNets,daemon=True)
+cleanThread.start()
+
+# Load a network at indication that it will be used in future
+def warnNet(network):
+    t = threading.Thread(target=_loadNet,args=(network,))
+    t.start()
+    return
+
+# Frontend function to retrieve cob network
+def getNet(network):
+    _loadNet(network)
+    return networks[network]['net']
+
+#---------------------------------------------
+#              Final Setup
+#---------------------------------------------
 handler = logging.FileHandler('COBErrors.log')
 handler.setLevel(logging.INFO)
 app.logger.addHandler(handler)
@@ -153,27 +234,18 @@ def available_datasets(type=None,*args):
 # Route for sending the available networks
 @app.route("/available_networks")
 def available_networks():
-    # Return the list in table friendly format
-    return jsonify({'data': [[net.name, net._global('parent_refgen'), net.description] for name,net in networks.items()]})
+    return jsonify({'data': network_info})
 
 # Route for sending the available ontologies relevant to a network
 @app.route("/available_ontologies/<path:network>")
 def available_ontologies(network):
-    # Find the refgen we need
-    ref = networks[network]._global('parent_refgen')
-    
-    # Filter all but the ontologies related to our network
-    res = []
-    for name,ont in onts.items():
-        if ont.refgen.name == ref:
-            res.append([ont.name,ont.refgen.name,ont.description])
-    
-    # Return the list in table friendly format
-    return jsonify({'data':res})
+    warnNet(network)
+    return jsonify({'data':onts_info[network]})
 
 # Route for sending the available terms
-@app.route("/available_terms/<path:ontology>")
-def available_terms(ontology):
+@app.route("/available_terms/<path:network>/<path:ontology>")
+def available_terms(network,ontology):
+    warnNet(network)
     return jsonify(terms[ontology])
 
 # Route for sending available gene names in the network
@@ -199,8 +271,10 @@ def fdr_options(network,ontology):
 @app.route("/term_network", methods=['POST'])
 def term_network():
     # Get data from the form and derive some stuff
-    cob = networks[str(request.form['network'])]
+    cob = getNet(str(request.form['network']))
+    print('Pulled net')
     ontology = onts[str(request.form['ontology'])]
+    print('Pulled ont')
     term = str(request.form['term'])
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
@@ -217,6 +291,7 @@ def term_network():
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
+    print('set cutoff')
     genes = cob.refgen.candidate_genes(
         ontology[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
@@ -226,7 +301,7 @@ def term_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-    
+    print('got genes')
     # Base of the result dict
     net = {}
     
@@ -258,7 +333,7 @@ def term_network():
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
     # Get data from the form
-    cob = networks[str(request.form['network'])]
+    cob = getNet(str(request.form['network']))
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     maxNeighbors = safeOpts('maxNeighbors',int(request.form['maxNeighbors']))
@@ -349,7 +424,7 @@ def custom_network():
 @app.route("/gene_connections", methods=['POST'])
 def gene_connections():
     # Get data from the form
-    cob = networks[str(request.form['network'])]
+    cob = getNet(str(request.form['network']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     allGenes = str(request.form['allGenes'])
     newGenes = str(request.form['newGenes'])
@@ -373,7 +448,7 @@ def gene_connections():
 
 @app.route("/gene_word_search", methods=['POST'])
 def gene_word_search():
-    cob = networks[str(request.form['network'])]
+    cob = getNet(str(request.form['network']))
     pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
     geneList = str(request.form['geneList'])
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
@@ -390,7 +465,7 @@ def gene_word_search():
 
 @app.route("/go_enrichment", methods=['POST'])
 def go_enrichment():
-    cob = networks[str(request.form['network'])]
+    cob = getNet(str(request.form['network']))
     pCutoff = safeOpts('pCutoff',float(request.form['pCutoff']))
     minTerm = safeOpts('minTerm',int(request.form['minTerm']))
     maxTerm = safeOpts('maxTerm',int(request.form['maxTerm']))
@@ -456,7 +531,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
             ldegree = locality.ix[gene.id]['local']
             gdegree = locality.ix[gene.id]['global']
         except KeyError as e:
-            ldegree = gdegree = 0
+            ldegree = gdegree = 3
 
         # Catch for bug in camoco
         try:
@@ -539,5 +614,4 @@ def getEdges(geneList, cob):
         'target' : target,
         'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
-    
     return edges

@@ -47,10 +47,10 @@ function buildOntologyTable(network){
 }
 
 // Build a Fresh Term Table
-function buildTermTable(ontology){
+function buildTermTable(network,ontology){
   $('#TermTable').DataTable().destroy();
   $('#TermTable').DataTable({
-      "ajax": ($SCRIPT_ROOT + 'available_terms/' + ontology),
+      "ajax": ($SCRIPT_ROOT+'available_terms/'+network+'/'+ontology),
       "bAutoWidth": false,
       "bPaginate": false,
       "bJQueryUI": false,
