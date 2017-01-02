@@ -1,4 +1,4 @@
-Copyright (c) 2015 Rob Schaefer
+Copyright (c) 2015 Rob Schaefer, Joe Jeffers
 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

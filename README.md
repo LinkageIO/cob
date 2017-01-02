@@ -1,3 +1,5 @@
+![COB LOGO](https://s3-us-west-2.amazonaws.com/camoco/COBLogo.png)
+
 COB - The Co-expression Browser
 ===============================
 

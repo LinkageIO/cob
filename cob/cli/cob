@@ -1,0 +1,3 @@
+#!/usr/bin/env python
+
+gunicorn -c cob/guniConfig.py COB:app
