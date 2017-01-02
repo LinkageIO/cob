@@ -272,9 +272,7 @@ def fdr_options(network,ontology):
 def term_network():
     # Get data from the form and derive some stuff
     cob = getNet(str(request.form['network']))
-    print('Pulled net')
     ontology = onts[str(request.form['ontology'])]
-    print('Pulled ont')
     term = str(request.form['term'])
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
@@ -291,7 +289,6 @@ def term_network():
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
-    print('set cutoff')
     genes = cob.refgen.candidate_genes(
         ontology[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
@@ -301,7 +298,6 @@ def term_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-    print('got genes')
     # Base of the result dict
     net = {}
     
