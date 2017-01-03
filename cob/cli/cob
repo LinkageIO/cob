@@ -7,14 +7,24 @@ import argparse
 import subprocess
 
 # Provide some config options
-parser = argparse.ArgumentParser(description='Start an instance of the COB Server')
+parser = argparse.ArgumentParser(description='Manage instances of the COB server.')
 parser.add_argument('-c','--config',dest='userConf',action='store',default=None,help=
 'Provide a YAML formatted configuration file, if not provided, general Camoco config file is used.')
 parser.add_argument('-d','--daemon',dest='daemon',action='store_true',default=False,
 help='Run gunicorn as a daemon (allows closing of this terminal).')
 parser.add_argument('-k','--kill',dest='kill',action='store_true',default=False,
-help='Kill running servers.')
+help='Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.')
+parser.add_argument('-l','--list',dest='list',action='store_true',default=False,
+help='Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.')
+parser.add_argument('-n','--name',dest='name',action='store',default=None,
+help='Name of server to start or kill.')
 args = parser.parse_args()
+
+# Helper function to kill servers defined by a list of pid files
+def killServers(pids):
+    for pid in pids:
+        subprocess.run('kill `cat '+pid+'`',shell=True)
+        print('Killed: '+pid.split('_')[-1])
 
 # Pull the camoco conf file to find the base dir
 camocoConf = yaml.load(open(os.path.expanduser('~/.camoco.conf'),'r'))
@@ -23,14 +33,28 @@ camocoConf = yaml.load(open(os.path.expanduser('~/.camoco.conf'),'r'))
 base = os.path.join(camocoConf['options']['basedir'],'web')
 os.makedirs(base, exist_ok=True)
 
-if args.kill:
+if args.list:
     pids = glob.glob(base+'/*/.pid_*')
     if len(pids) < 1:
-        print('No running COBs found')
+        print('No runnning servers')
     else:
+        print('Running Servers:')
         for pid in pids:
-            subprocess.run('kill `cat '+pid+'`',shell=True)
-            print('Killed: '+pid.split('_')[-1])
+            print(pid.split('_')[-1])
+
+# Handle the kill command
+elif args.kill:
+    # Get the relevant PIDs
+    if args.name:
+        pids = glob.glob(base+'/*/.pid_'+args.name)
+    else:
+        pids = glob.glob(base+'/*/.pid_*')
+    
+    # Kill them if they exist
+    if len(pids) < 1:
+        print('No running servers found')
+    else:
+        killServers(pids)
 
 else:    
     # Default config values
@@ -76,6 +100,10 @@ else:
             else:
                 opts[key] = val
 
+    # Override the name if needed
+    if args.name:
+        opts['name'] = args.name
+    
     # Setup the scratch folder
     opts['scratch'] = os.path.join(base,opts['name'])
     os.makedirs(opts['scratch'], exist_ok=True)
@@ -84,9 +112,16 @@ else:
     if args.daemon:
         daemon = '--daemon --pid '+os.path.join(opts['scratch'],'.pid_'+opts['name'])
     else:
-        daemon = ''
-
+        daemon = '--pid '+os.path.join(opts['scratch'],'.pid_'+opts['name'])
+        
+    # Check if running, kill if so
+    pids = glob.glob(opts['scratch']+'/.pid_*')
+    if len(pids) > 0:
+        print('Found running server with this name, killing...')
+        killServers(pids)
+    
     # Run the server!
+    print('Starting your server...')
     subprocess.run('gunicorn'+
         ' --bind localhost:'+str(opts['port'])+
         ' --threads '+str(opts['threads'])+
@@ -95,3 +130,6 @@ else:
         ' '+daemon+
         ' --env "CONF='+yaml.dump(opts)+'"'+
         ' cob.server:app',shell=True)
+    
+    if args.daemon:
+        print('Your server is now loading, when ready you can access it at \'localhost:'+str(opts['port'])+'\'. To kill it, simply run \'cob -k\'.')
