@@ -1,0 +1,2 @@
+recursive-include cob/templates *
+recursive-include cob/static *

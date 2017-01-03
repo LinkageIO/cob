@@ -1,4 +1,3 @@
-// Things having to do with the enrichment tables
 /*-------------------------------------------
       Build Enrichment Table Function
 -------------------------------------------*/
@@ -38,12 +37,14 @@ function enrich(geneList,GOnt){
   
   // Nav to tab
   $('#navTabs a[href="#EnrichmentTab"]').tab('show');
-  $('#EnrichmentWait').removeClass('hidden');
+  $('#EnrichmentWait').addClass('hidden');
+  $('#EnrichmentProg').removeClass('hidden');
   
   // Set the variables if we are doing GO
   if(GOnt){
     var address = 'go_enrichment';
     var title = 'GO Enrichment';
+    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab.';
     var cols = [
       {'data':'id', 'name':'id', 'title':'ID'},
       {'data':'name', 'name':'name', 'title':'Name'},
@@ -55,6 +56,7 @@ function enrich(geneList,GOnt){
   else{
     var address = 'gene_word_search';
     var title = 'GeneWordSearch';
+    var desc = 'This table contains all of the significant results after running a GeneWordSearch query on the given set of genes. These results are based on functional annotations that are associated with the same reference genome as the current network.';
     var cols = [
       {'data':'word', 'name':'word', 'title':'Word'},
       {'data':'pval', 'name':'pval', 'title':'P Val'},
@@ -70,22 +72,22 @@ function enrich(geneList,GOnt){
   $.ajax({
     url: ($SCRIPT_ROOT + address),
     data: {
-      network: lastNetwork,
+      network: curNetwork,
       geneList: geneList,
-      pCutoff: lastOpts['pCutoff'],
-      minTerm: lastOpts['minTerm'],
-      maxTerm: lastOpts['maxTerm'],
+      pCutoff: curOpts['pCutoff'],
+      minTerm: curOpts['minTerm'],
+      maxTerm: curOpts['maxTerm'],
     },
     type: 'POST',
     statusCode:{
       405: function(){
-        $('#EnrichmentWait').addClass('hidden');
+        $('#EnrichmentProg').addClass('hidden');
         noGO = false;
-        window.alert('There is function is not availible with this organism, if needed, please contact the site admin.');
+        window.alert('This function is not availible with this organism, if needed, please contact the site admin.');
         return;
       },
       400: function(){
-        $('#EnrichmentWait').addClass('hidden');
+        $('#EnrichmentProg').addClass('hidden');
         noGO = false;
         window.alert('There were no significant enrichment results for this query.');
         return;
@@ -105,7 +107,7 @@ function enrich(geneList,GOnt){
       }
       
       // Nav to tab
-      $('#EnrichmentWait').addClass('hidden');
+      $('#EnrichmentProg').addClass('hidden');
       $('#navTabs a[href="#EnrichmentTab"]').tab('show');
       
       // Build new table from data
@@ -121,11 +123,21 @@ function enrich(geneList,GOnt){
         "scrollY": $(window).height()-325,
         "searching": true,
         "buttons": [
-          {"extend": 'csv',"filename": address},
+          {extend:'csv', filename:address, titleAttr:'Export the results in this table to a CSV file'},
         ],
         "columns": cols
       });
-      $("div.EnrichmentTitle").html(title);
+      $("div.EnrichmentTitle").html(title+' '+'<span id="EnrichmentTableInfo" title="'+desc+'" class="table-glyph glyphicon glyphicon-info-sign"></span>');
+      
+      infoTips('#EnrichmentTableInfo');
     }
   });
+}
+
+function destroyEnrichment(){
+    if($.fn.DataTable.isDataTable('#EnrichmentTable')){
+        $('#EnrichmentTable').DataTable().destroy();
+        $('#EnrichmentTable').off().empty();
+    }
+    $('#EnrichmentWait').removeClass('hidden');
 }

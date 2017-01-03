@@ -38,11 +38,6 @@ Just make sure to swap out for your own servername (this ones mine ;)
 
 Annotations
 -----------
-`GeneWordSearch` is now necessary for annotations, though it is available on PyPI. It will
-store its database either in `~/.gws/` or the folder defined by the environment variable
-`GWS_STORE`. As for inputting annotations for COB to use, after the first run, it will
-create a folder at either `~/.cob/` or the place denoted by `COB_ANNOTATIONS`. If you
-put a `.tsv` or `.csv` file in this folder, with the first part of the file name being
-the name of the organism you denoted, it will be processed when the server starts.
-
-The organism name can be found with the command `<your_cob_instance>.refgen.organism`
+Annotations and FDR results are now simply provided by the RefGenFunc and GWASData
+classes in Camoco, thus to add them to the site, simply initialize them for their 
+respective reference genome or GWAS data set and they will appear!

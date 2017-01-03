@@ -1,14 +1,17 @@
 #!/usr/bin/python3
 import re
 import os
+import gc
 import sys
 import json
 import copy
 import glob
+import time
+import yaml
 import logging
+import threading
 import numpy as np
 import pandas as pd
-import camoco as co
 from math import isinf
 from itertools import chain
 from genewordsearch.Classes import WordFreq
@@ -16,47 +19,79 @@ from genewordsearch.GeneWordSearch import geneWords
 from genewordsearch.DBBuilder import geneWordBuilder
 from genewordsearch.GeneWordSearch import geneWordSearch
 
+print('Loading Camoco...')
+import camoco as co
+
 # Take a huge swig from the flask
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 app = Flask(__name__)
 
-# Networks to load
-network_names = ['ZmRoot']
+# Get the config object
+conf = yaml.load(os.getenv('CONF'))
+dflt = conf['defaults']
 
 # Folder with annotation files
-scratch_folder = os.getenv('COB_ANNOTATIONS', os.path.expandvars('$HOME/.cob/'))
-os.makedirs(scratch_folder, exist_ok=True)
-os.environ['GWS_STORE'] = scratch_folder
+os.makedirs(conf['scratch'], exist_ok=True)
+os.environ['GWS_STORE'] = conf['scratch']
 
 # Max number of genes for custom queries
-geneLimit = {'min':1, 'max':150}
+geneLimit = {'min':1,'max':150}
 
 # Option Limits
-optLimits = {
-    'nodeCutoff': {'min':0, 'max':20},
-    'edgeCutoff': {'min':1.0, 'max':20.0},
-    'windowSize': {'min':0, 'max':1000000},
-    'flankLimit': {'min':0, 'max':20},
-    'maxNeighbors': {'min':0, 'max':150},
-    'pCutoff': {'min':0.0, 'max':1.0},
-    'minTerm': {'min':1, 'max':100},
-    'maxTerm': {'min':100, 'max':1000}'
+opts = {
+  'nodeCutoff':{'title':'Min Node Degree',
+    'default':dflt['nodeCutoff'],'min':0,'max':20,'int':True},
+  'edgeCutoff':{'title':'Min Edge Score',
+    'default':dflt['edgeCutoff'],'min':1.0,'max':20.0,'int':False},
+  'fdrCutoff':{'title':'FDR Filter (Term)',
+    'default':dflt['fdrCutoff'],'min':0.0,'max':5.0,'int':False},
+  'windowSize':{'title':'Window Size (Term)',
+    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True},
+  'flankLimit':{'title':'Flank Limit (Term)',
+    'default':dflt['flankLimit'],'min':0,'max':20,'int':True},
+  'visNeighbors':{'title':'Vis Neighbors (Custom)',
+    'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
+  'nodeSize':{'title':'Gene Size',
+    'default':dflt['nodeSize'],'min':5,'max':50,'int':True},
+  'snpLevels':{'title':'SNP Colors (Polywas)',
+    'default':dflt['snpLevels'],'min':1,'max':10,'int':True},
+  'pCutoff':{'title':'Probability Cutoff',
+    'default':dflt['pCutoff'],'min':0.0,'max':1.0,'int':False},
+  'minTerm':{'title':'Min Genes (GO)',
+    'default':dflt['minTerm'],'min':1,'max':99,'int':True},
+  'maxTerm':{'title':'Max Genes (GO)',
+    'default':dflt['maxTerm'],'min':100,'max':1000,'int':True},
 }
 
 # ----------------------------------------
 #    Load things to memeory to prepare
 # ----------------------------------------
-
-# Generate network list based on allowed list and load them into memory
+# Generate network list based on allowed list
 print('Preloading networks into memory...')
-networks = {x:co.COB(x) for x in network_names}
-network_list = {'data': [[net.name, net.description] for name,net in networks.items()]}
+if len(conf['networks']) < 1:
+    conf['networks'] = list(co.available_datasets('Expr')['Name'].values)
+networks = {x:co.COB(x) for x in conf['networks']}
+network_info = [[net.name, net._global('parent_refgen'), net.description] for name,net in networks.items()]
 print('Availible Networks: ' + str(networks))
 
-# Prefetch the gene neames for all the networks
+# Generate ontology list based on allowed list and load them into memory
+print('Preloading GWASes into Memory...')
+if len(conf['gwas']) < 1:
+    conf['gwas'] = list(co.available_datasets('GWAS')['Name'].values)
+onts = {x:co.GWAS(x) for x in conf['gwas']}
+onts_info = {}
+for m,net in networks.items():
+    ref = net._global('parent_refgen')
+    onts_info[net.name] = []
+    for n,ont in onts.items():
+        if ont.refgen.name == ref:
+            onts_info[net.name].append([ont.name,ont.refgen.name,ont.description])
+print('Availible GWASes: ' + str(onts_info))
+
+# Prefetch the gene names for all the networks
 print('Fetching gene names for networks...')
 network_genes = {}
-for name, net in networks.items():
+for name,net in networks.items():
     ids = list(net._expr.index.values)
     als = co.RefGen(net._global('parent_refgen')).aliases(ids)
     for k,v in als.items():
@@ -64,16 +99,26 @@ for name, net in networks.items():
     network_genes[name] = list(set(ids))
 print('Found gene names')
 
-# Generate in Memory Avalible GWAS datasets list
-print('Finding available GWAS datasets...')
-gwas_sets = {"data" : list(co.available_datasets('GWAS')[
-            ['Name','Description']].itertuples(index=False))}
-
 # Find all of the GWAS data we have available
 print('Finding GWAS Data...')
 gwas_data_db = {}
 for gwas in co.available_datasets('GWASData')['Name']:
-    gwas_data_db[gwas] = co.GWASData(gwas) 
+    gwas_data_db[gwas] = co.GWASData(gwas)
+
+# Find the available window sizes and flank limits for each GWAS/COB combo
+print('Finding GWAS Metadata...')
+gwas_meta_db = {}
+for ont in gwas_data_db.keys():
+    gwas_meta_db[ont] = {}
+    for net in gwas_data_db[ont].get_data()['COB'].unique():
+        gwas_meta_db[ont][net] = {}
+        gwas = gwas_data_db[ont].get_data(cob=net)
+        gwas_meta_db[ont][net]['windowSize'] = []
+        gwas_meta_db[ont][net]['flankLimit'] = []
+        for x in gwas['WindowSize'].unique():
+            gwas_meta_db[ont][net]['windowSize'].append(int(x))
+        for x in gwas['FlankLimit'].unique():
+            gwas_meta_db[ont][net]['flankLimit'].append(int(x))
 
 # Find any functional annotations we have 
 print('Finding functional annotations...')
@@ -81,8 +126,8 @@ func_data_db = {}
 for func in co.available_datasets('RefGenFunc')['Name']:
     print('Processing annotations for {}...'.format(func))
     func_data_db[func] = co.RefGenFunc(func)
-    func_data_db[func].to_csv(os.path.join(scratch_folder,(func+'.tsv')))
-    geneWordBuilder(func,[os.path.join(scratch_folder,(func+'.tsv'))],[1],['2 end'],['tab'],[True])
+    func_data_db[func].to_csv(os.path.join(conf['scratch'],(func+'.tsv')))
+    geneWordBuilder(func,[os.path.join(conf['scratch'],(func+'.tsv'))],[1],['2 end'],['tab'],[True])
 
 # Find any GO ontologies we have for the networks we have
 print('Finding applicable GO Ontologies...')
@@ -95,13 +140,15 @@ for name in co.available_datasets('GOnt')['Name']:
 # Generate in memory term lists
 print('Finding all available terms...')
 terms = {}
-for ont in gwas_sets['data']:
-    terms[ont[0]] = {'data': [(term.id,term.desc,len(term.loci),
-        len(co.GWAS(ont[0]).refgen.candidate_genes(term.effective_loci(window_size=50000))))
-        for term in co.GWAS(ont[0]).iter_terms()]}
+for name,ont in onts.items():
+    terms[name] = {'data': [(term.id,term.desc,len(term.loci),
+        len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000))))
+        for term in ont.iter_terms()]}
 
-# Set up the logging file
-handler = logging.FileHandler('COBErrors.log')
+#---------------------------------------------
+#              Final Setup
+#---------------------------------------------
+handler = logging.FileHandler(os.path.join(conf['scratch'],'COBErrors.log'))
 handler.setLevel(logging.INFO)
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
@@ -115,50 +162,90 @@ print('All Ready!')
 def index():
     return send_from_directory('templates', 'index.html')
 
+# Sends the default values in JSON format
+@app.route('/defaults')
+def defaults():
+    return jsonify({'fdrFilter':conf['defaults']['fdrFilter'],
+        'logSpacing':conf['defaults']['logSpacing'],
+        'opts':opts
+    })
+
 # Sends off the js and such when needed
 @app.route('/static/<path:path>')
 def send_js(path):
     return send_from_directory('static',path)
 
-# Route for sending the avalible datasets and networks
+# Route for sending the avalible datasets in a general fashion
 @app.route("/available_datasets/<path:type>")
 def available_datasets(type=None,*args):
-    if((type == 'GWAS') or (type == 'Ontology')):
-        return jsonify(gwas_sets)
-    elif((type == 'Expr') or (type == 'Network')):
-        return jsonify(network_list)
-    elif(type == 'All'):
-        return str(co.available_datasets())
+    # Find the datasets
+    if(type == None):
+        datasets = co.available_datasets()
     else:
-        return jsonify({"data" : list(co.available_datasets(type)[
-                    ['Name','Description']].itertuples(index=False))})
+        datasets = co.available_datasets(type)
+    
+    # Return the results in a table friendly format
+    return jsonify({"data" : list(datasets[
+                ['Name','Description']].itertuples(index=False))})
 
-# Route for sending available typeahead data
+# Route for sending the available networks
+@app.route("/available_networks")
+def available_networks():
+    return jsonify({'data': network_info})
+
+# Route for sending the available ontologies relevant to a network
+@app.route("/available_ontologies/<path:network>")
+def available_ontologies(network):
+    return jsonify({'data':onts_info[network]})
+
+# Route for sending the available terms
+@app.route("/available_terms/<path:network>/<path:ontology>")
+def available_terms(network,ontology):
+    return jsonify(terms[ontology])
+
+# Route for sending available gene names in the network
 @app.route("/available_genes/<path:network>")
 def available_genes(network):
     return jsonify({'geneIDs': network_genes[network]})
 
-# Route for finding and sending the available terms
-@app.route("/terms/<path:ontology>")
-def ontology_terms(ontology):
-    return jsonify(terms[ontology])
+# Route for getting FDR availablity data
+@app.route("/fdr_options/<path:network>/<path:ontology>")
+def fdr_options(network,ontology):
+    # Default to empty list
+    ans = {'windowSize': [], 'flankLimit':[]}
+    
+    # If the combo is in the db, use that as answer
+    if ontology in gwas_meta_db:
+        if network in gwas_meta_db[ontology]:
+            ans = gwas_meta_db[ontology][network]
+    
+    # Return it in JSON
+    return jsonify(ans)
 
 # Route for sending the CoEx Network Data for graphing from prebuilt term
 @app.route("/term_network", methods=['POST'])
 def term_network():
     # Get data from the form and derive some stuff
     cob = networks[str(request.form['network'])]
-    ontology = str(request.form['ontology'])
+    ontology = onts[str(request.form['ontology'])]
     term = str(request.form['term'])
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
     windowSize = safeOpts('windowSize',int(request.form['windowSize']))
     flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
     
+    # Detrmine if there is a FDR cutoff or not
+    try:
+        float(request.form['fdrCutoff'])
+    except ValueError:
+        fdrCutoff = None
+    else:
+        fdrCutoff = safeOpts('fdrCutoff',float(request.form['fdrCutoff']))
+    
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
     genes = cob.refgen.candidate_genes(
-        co.GWAS(ontology)[term].effective_loci(window_size=windowSize),
+        ontology[term].effective_loci(window_size=windowSize),
         flank_limit=flankLimit,
         chain=True,
         include_parent_locus=True,
@@ -166,23 +253,22 @@ def term_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-    
     # Base of the result dict
     net = {}
     
-    # If there are GWAS results, pass them in
-    if ontology in gwas_data_db:
-        gwas_data = gwas_data_db[ontology].get_data(cob=cob.name,
+    # If there are GWAS results, and a FDR Cutoff
+    if fdrCutoff and ontology.name in gwas_data_db:
+        gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
-        net['nodes'] = getNodes(genes, cob, term, gwas_data=gwas_data, nodeCutoff=nodeCutoff)
+        net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
     
-    # Otherwise just run it without
+    # Otherwise just run it without GWAS Data
     else:
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
-    for node in net['nodes']:
+    for node in net['nodes'].values():
         if node['data']['render'] == 'x':
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
@@ -201,7 +287,7 @@ def custom_network():
     cob = networks[str(request.form['network'])]
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    maxNeighbors = safeOpts('maxNeighbors',int(request.form['maxNeighbors']))
+    visNeighbors = safeOpts('visNeighbors',int(request.form['visNeighbors']))
     geneList = str(request.form['geneList'])
     
     # Make sure there aren't too many genes
@@ -222,7 +308,7 @@ def custom_network():
     for name in copy.copy(rejected):
         # Find all the neighbors, sort by score
         try:
-            gene = cob.refgen.from_ids(name)
+            gene = cob.refgen.from_id(name)
         except ValueError:
             continue
         nbs = cob.neighbors(gene).reset_index().sort_values('score')
@@ -234,7 +320,7 @@ def custom_network():
         new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
         
         # Build the set of genes that should be rendered
-        nbs = nbs[:maxNeighbors]
+        nbs = nbs[:visNeighbors]
         render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
         
         # Remove the query gene if it's present
@@ -274,7 +360,7 @@ def custom_network():
     
     # Get the edges of the nodes that will be rendered
     render_list = []
-    for node in net['nodes']:
+    for node in net['nodes'].values():
         if node['data']['render'] == 'x':
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
@@ -291,21 +377,22 @@ def gene_connections():
     # Get data from the form
     cob = networks[str(request.form['network'])]
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    geneList = str(request.form['geneList'])
-    newGene = str(request.form['newGene'])
-    geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
-    
+    allGenes = str(request.form['allGenes'])
+    newGenes = str(request.form['newGenes'])
+    allGenes = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', allGenes)))
+    newGenes = set(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', newGenes)))
     
     # Set the Significant Edge Score
     cob.set_sig_edge_zscore(edgeCutoff)
     
     # Get the edges!
-    edges = getEdges(geneList, cob)
+    edges = getEdges(allGenes, cob)
     
     # Filter the ones that are not attached to the new one
-    edges = list(filter(
-        lambda x: ((x['data']['source'] == newGene) or (x['data']['target'] == newGene))
-        ,edges))
+    if(len(newGenes) > 0):
+        edges = list(filter(
+            lambda x: ((x['data']['source'] in newGenes) or (x['data']['target'] in newGenes))
+            ,edges))
     
     # Return it as a JSON object
     return jsonify({'edges': edges})
@@ -364,20 +451,20 @@ def go_enrichment():
 # --------------------------------------------
 def safeOpts(name,val):
     # Get the parameters into range
-    val = min(val,optLimits[name]['max'])
-    val = max(val,optLimits[name]['min'])
+    val = min(val,opts[name]['max'])
+    val = max(val,opts[name]['min'])
     return val
 
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-def getNodes(genes, cob, term, primary=None, render=None,
-    gwas_data=pd.DataFrame(), nodeCutoff=0):
+def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
+    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None):
     # Cache the locality
     locality = cob.locality(genes)
     
     # Containers for the node info
-    nodes = []
+    nodes = {}
     parent_set = set()
 
     # Look for alises
@@ -392,17 +479,17 @@ def getNodes(genes, cob, term, primary=None, render=None,
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
-            local_degree = locality.ix[gene.id]['local']
-            global_degree = locality.ix[gene.id]['global']
+            ldegree = locality.ix[gene.id]['local']
+            gdegree = locality.ix[gene.id]['global']
         except KeyError as e:
-            local_degree = global_degree = 0
+            ldegree = gdegree = 3
 
         # Catch for bug in camoco
         try:
-            num_interv = str(gene.attr['num_intervening'])
+            numInterv = str(gene.attr['num_intervening'])
         except KeyError as e:
             #print('Num Attr fail on gene: ' + str(gene.id))
-            num_interv = 'NAN'
+            numInterv = 'nan'
 
         # Pull any aliases from our database
         alias = ''
@@ -412,8 +499,8 @@ def getNodes(genes, cob, term, primary=None, render=None,
         
         # Fetch the FDR if we can
         fdr = np.nan
-        if gene.id in gwas_data.index:
-            fdr = gwas_data.loc[gene.id]['fdr']
+        if gene.id in gwasData.index:
+            fdr = gwasData.loc[gene.id]['fdr']
             
         # Pull any annotations from our databases
         anote = ''
@@ -425,23 +512,25 @@ def getNodes(genes, cob, term, primary=None, render=None,
         node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
-            'render': 'x',
+            'render': ' ',
             'term': term,
-            'snp': gene.attr['parent_locus'],
+            'snp': gene.attr['parent_locus'].replace('<','[').replace('>',']'),
             'alias': alias,
             'origin': 'N/A',
             'chrom': str(gene.chrom),
             'start': str(gene.start),
             'end': str(gene.end),
             'cur_ldegree': str(0),
-            'ldegree': str(local_degree),
-            'gdegree': str(global_degree),
+            'ldegree': str(ldegree),
+            'gdegree': str(gdegree),
             'fdr': str(fdr),
-            'num_intervening': num_interv,
-            'rank_intervening': str(gene.attr['intervening_rank']),
-            'num_siblings': str(gene.attr['num_siblings']),
-            #'parent_num_iterations': str(gene.attr['parent_numIterations']),
-            #'parent_avg_effect_size': str(gene.attr['parent_avgEffectSize']),
+            'windowSize': str(windowSize),
+            'flankLimit': str(flankLimit),
+            'numIntervening': numInterv,
+            'rankIntervening': str(gene.attr['intervening_rank']),
+            'numSiblings': str(gene.attr['num_siblings']),
+            #'parentNumIterations': str(gene.attr['parent_numIterations']),
+            #'parentAvgEffectSize': str(gene.attr['parent_avgEffectSize']),
             'annotations': anote,
         }}
         
@@ -452,18 +541,14 @@ def getNodes(genes, cob, term, primary=None, render=None,
             else:
                 node['data']['origin'] = 'neighbor'
         
-        # Denote whether or not to render it if there is a list
-        if render:
-            if (gene.id in render) and (local_degree >= nodeCutoff):
-                node['data']['render'] = 'x'
-            else:
-                node['data']['render'] = ' '
-            # Save the node to the list
-            nodes.append(node)
-        else:
-            if local_degree >= nodeCutoff:
-                node['data']['render'] = 'x'
-                nodes.append(node)
+        # Denote whether or not to render it
+        if ldegree >= nodeCutoff:
+            if (not fdrCutoff) or gwasData.empty or fdr <= fdrCutoff:
+                if (not render) or (gene.id in render):
+                    node['data']['render'] = 'x'
+        
+        # Save the node to the list
+        nodes[gene.id] = node
         
     return nodes
 
@@ -480,5 +565,4 @@ def getEdges(geneList, cob):
         'target' : target,
         'weight' : str(weight)
     }} for source,target,weight,significant,distance in subnet.itertuples(index=False)]
-    
     return edges
