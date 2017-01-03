@@ -37,6 +37,7 @@ function enrich(geneList,GOnt){
   
   // Nav to tab
   $('#navTabs a[href="#EnrichmentTab"]').tab('show');
+  $('#EnrichmentWait').addClass('hidden');
   $('#EnrichmentProg').removeClass('hidden');
   
   // Set the variables if we are doing GO
@@ -131,4 +132,12 @@ function enrich(geneList,GOnt){
       infoTips('#EnrichmentTableInfo');
     }
   });
+}
+
+function destroyEnrichment(){
+    if($.fn.DataTable.isDataTable('#EnrichmentTable')){
+        $('#EnrichmentTable').DataTable().destroy();
+        $('#EnrichmentTable').off().empty();
+    }
+    $('#EnrichmentWait').removeClass('hidden');
 }

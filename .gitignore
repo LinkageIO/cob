@@ -1,1 +1,3 @@
 sensitive/*
+cob.egg-info
+cob/__pycache__

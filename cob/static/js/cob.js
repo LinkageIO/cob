@@ -57,31 +57,8 @@ var fdrFilterDefault = true;
 var fdrFilter = fdrFilterDefault;
 var fdrFlag = false;
 
-// Dictionary containing metadata for all of the parameters
-var optVals = {
-  'nodeCutoff':{'title':'Min Node Degree',
-    'default':1,'min':0,'max':20,'int':true},
-  'edgeCutoff':{'title':'Min Edge Score',
-    'default':3.0,'min':1.0,'max':20.0,'int':false},
-  'fdrCutoff':{'title':'FDR Filter (Term)',
-    'default':0.35,'min':0.0,'max':5.0,'int':false},
-  'windowSize':{'title':'Window Size (Term)',
-    'default':50000,'min':0,'max':1000000,'int':true},
-  'flankLimit':{'title':'Flank Limit (Term)',
-    'default':2,'min':0,'max':20,'int':true},
-  'visNeighbors':{'title':'Vis Neighbors (Custom)',
-    'default':25,'min':0,'max':150,'int':true},
-  'nodeSize':{'title':'Gene Size',
-    'default':10,'min':5,'max':50,'int':true},
-  'snpLevels':{'title':'SNP Colors (Polywas)',
-    'default':3,'min':1,'max':10,'int':true},
-  'pCutoff':{'title':'Probability Cutoff',
-    'default':0.05,'min':0.0,'max':1.0,'int':false},
-  'minTerm':{'title':'Min Genes (GO)',
-    'default':5,'min':1,'max':99,'int':true},
-  'maxTerm':{'title':'Max Genes (GO)',
-    'default':300,'min':100,'max':1000,'int':true},
-};
+// Dictionary to contain metadata for all of the parameters
+var optVals = {};
 
 /*-----------------------------------------------
               Initialization
@@ -95,10 +72,27 @@ $.getScript($SCRIPT_ROOT + 'static/js/enrichment.js');
 
 // Execute some setup after loading tools
 $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
-  // Set the options
-  restoreDefaults();
-  updateOpts();
-  
+  $.ajax({
+    url: ($SCRIPT_ROOT + 'defaults'),
+    type: 'GET',
+    success: function(data){
+      // Set the options
+      optVals = data.opts;
+      
+      // Reset state of logSpacingButton
+      logSpacingDefault = data.logSpacing;
+      logSpacing = logSpacingDefault;
+
+      // Reset FDR state variables
+      fdrFilterDefault = data.fdrFilter;
+      fdrFilter = fdrFilterDefault;
+      
+      // Set the options
+      restoreDefaults();
+      updateOpts();
+    }
+  });
+
   // Setup the Heads Up Display
   updateHUD();
 });
@@ -122,7 +116,12 @@ $('#NetworkTable tbody').on('click','tr', function(){
   curNetwork = $('td', this).eq(0).text();
 
   // Clean up the graph
-  if(cy !== null){cy.destroy();cy = null;destroyGeneTables();}
+  if(cy !== null){
+    cy.destroy();
+    cy = null;
+    destroyGeneTables();
+    destroyEnrichment();
+  }
   updateHUD();
 
   // Prep the Ontology Table
@@ -153,7 +152,12 @@ $('#OntologyTable tbody').on('click','tr', function(){
   curOntology = $('td',this).eq(0).text();
 
   // Clean up the graph
-  if(cy !== null){cy.destroy();cy = null;destroyGeneTables();}
+  if(cy !== null){
+    cy.destroy();
+    cy = null;
+    destroyGeneTables();
+    destroyEnrichment();
+  }
   updateHUD();
 
   // Prep the Term Table
