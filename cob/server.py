@@ -317,7 +317,7 @@ def custom_network():
         rejected.remove(name)
         primary.add(gene.id)
         render.add(gene.id)
-        new_genes = list(set(nbs.gene_a).union(set(nbs.gene_b)))
+        new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
         
         # Build the set of genes that should be rendered
         nbs = nbs[:visNeighbors]
