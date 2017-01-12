@@ -75,6 +75,7 @@ function initCyto(nodes,edges,poly){
     wheelSensitivity: 0.25,
     textureOnViewport: true,
     hideEdgesOnViewport: false,
+    boxSelectionEnabled: true,
     layout: opts,
     style: [
         {selector: '[type = "chrom"]',
