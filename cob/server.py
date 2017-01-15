@@ -123,11 +123,13 @@ for ont in gwas_data_db.keys():
 # Find any functional annotations we have 
 print('Finding functional annotations...')
 func_data_db = {}
-for func in co.available_datasets('RefGenFunc')['Name']:
-    print('Processing annotations for {}...'.format(func))
-    func_data_db[func] = co.RefGenFunc(func)
-    func_data_db[func].to_csv(os.path.join(conf['scratch'],(func+'.tsv')))
-    geneWordBuilder(func,[os.path.join(conf['scratch'],(func+'.tsv'))],[1],['2 end'],['tab'],[True])
+for ref in co.available_datasets('RefGen')['Name']:
+    refgen = co.RefGen(ref)
+    if refgen.has_annotations():
+        print('Processing annotations for {}...'.format(ref))
+        func_data_db[ref] = refgen
+        func_data_db[ref].export_annotations(os.path.join(conf['scratch'],(ref+'.tsv')))
+        geneWordBuilder(ref,[os.path.join(conf['scratch'],(ref+'.tsv'))],[1],['2 end'],['tab'],[True])
 
 # Find any GO ontologies we have for the networks we have
 print('Finding applicable GO Ontologies...')
@@ -472,7 +474,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
     
     # Look for annotations
     if cob._global('parent_refgen') in func_data_db:
-        func_data = func_data_db[cob._global('parent_refgen')][[gene.id for gene in genes]]
+        func_data = func_data_db[cob._global('parent_refgen')].get_annotations([gene.id for gene in genes])
     else:
         func_data = {}
 
