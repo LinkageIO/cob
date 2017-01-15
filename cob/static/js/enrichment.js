@@ -120,7 +120,7 @@ function enrich(geneList,GOnt){
         "rowId": 'id',
         "scrollCollapse": true,
         "scrollX": "100%",
-        "scrollY": $(window).height()-325,
+        "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
         "searching": true,
         "buttons": [
           {extend:'csv', filename:address, titleAttr:'Export the results in this table to a CSV file'},

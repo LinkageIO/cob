@@ -12,7 +12,7 @@ function buildNetworkTable(){
       "scrollCollapse": true,
       "dom": '<"NetworkTitle">ft',
       "order": [[0,'asc']],
-      "scrollY": ($(window).height()/7),
+      "scrollY": '10vh',
       "select": true,
       "searching": true,
     });
@@ -38,7 +38,7 @@ function buildOntologyTable(network){
         "emptyTable":"No ontologies available for this network. Please enter query genes in the \"Custom Gene List\" Tab."},
       "order": [[0,'asc']],
       "scrollCollapse": true,
-      "scrollY": ($(window).height()/7),
+      "scrollY": '10vh',
       "select": true,
       "searching": true,
     });
@@ -64,7 +64,7 @@ function buildTermTable(network,ontology){
         "emptyTable":"No terms available for this ontology. Please enter query genes in the \"Custom Gene List\" Tab."},
       "order": [[0,'asc']],
       "scrollCollapse": true,
-      "scrollY": ($(window).height()/4),
+      "scrollY": '23vh',
       "select": true,
       "searching": true,
     });
@@ -123,8 +123,7 @@ function buildGeneTables(){
       "rowId": 'id',
       "scrollCollapse": true,
       "scroller": {displayBuffer: 1500},
-      "scrollX": "100%",
-      "scrollY": $(window).height()-285,
+      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
@@ -157,7 +156,7 @@ function buildGeneTables(){
       "rowId": 'id',
       "scrollCollapse": true,
       "scrollX": "100%",
-      "scrollY": $(window).height()-285,
+      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [

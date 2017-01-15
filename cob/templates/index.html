@@ -48,11 +48,6 @@
   </script>
 
   <style>
-    #cob {
-      float: left;
-      width: 33%;
-      height: 100%;
-    }
     #cobHead{
       display: flex;
       justify-content: left;
@@ -66,19 +61,13 @@
       font-size: 2.5em;
     }
     #cy {
-      width: 67%;
-      height: 100%;
-      position: absolute;
-      left: 33%;
-      top: 0;
-      z-index: 5;
+      height:100vh;
     }
     #cyTitle{
       position: absolute;
       bottom: 0;
       color: DimGrey;
       z-index: 1;
-      left: 33%;
       font-size: 1.5em;
     }
     #backButton{
@@ -115,6 +104,7 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
+      z-index: 5;
     }
     #windowSizeInfo, #flankLimitInfo {
       transform: translateY(0%);
@@ -148,6 +138,7 @@
       background-color: white;
     }
   </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 </head>
 
 <!-- Actual Body -->
@@ -171,7 +162,9 @@
 </div>
 
 <!-- Selection Column -->
-<div id='cob' class='container'>
+<div class="container-fluid">
+<div id='theRow' class="row">
+<div id='cob' class='col-md-4'>
   <div id='cobHead' class='container'>CoEx Browser</div>
 
 <div>
@@ -454,20 +447,26 @@
   </div>
 </div>
 
+
+
 <!-- Box for Cytoscape Graph -->
-<div id='cy'></div>
+<div class="col-md-8">
+  <div id='cy'></div>
 
-<button id="backButton" type="button" class="hidden btn btn-default" aria-label="Restore Graph">
-  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-</button>
+  <button id="backButton" type="button" class="hidden btn btn-default" aria-label="Restore Graph">
+    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+  </button>
 
-<!-- Box for title indicating current network -->
-<div id='cyTitle'></div>
-<div id='graphButtons'>
-  <input type="button" class="btn btn-primary" id="graphMLButton" value="GraphML">
-  <input type="button" class="btn btn-primary" id="pngButton" value="PNG">
-  <input type="button" class="btn btn-success" id="toggleLayoutButton" value="Toggle Layout">
-  <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+  <!-- Box for title indicating current network -->
+  <div id='cyTitle'></div>
+  <div id='graphButtons'>
+    <input type="button" class="btn btn-primary" id="graphMLButton" value="GraphML">
+    <input type="button" class="btn btn-primary" id="pngButton" value="PNG">
+    <input type="button" class="btn btn-success" id="toggleLayoutButton" value="Toggle Layout">
+    <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+  </div>
+</div>
+</div>
 </div>
 </body>
 </html>

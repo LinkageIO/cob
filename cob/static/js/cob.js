@@ -92,6 +92,8 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
       updateOpts();
     }
   });
+  // Setup the info tips
+  infoTips($('.opt-glyph'));
 
   // Setup the Heads Up Display
   updateHUD();
