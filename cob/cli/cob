@@ -55,6 +55,11 @@ elif args.kill:
         print('No running servers found')
     else:
         killServers(pids)
+        for pid in pids:
+            try:
+                os.remove(pid)
+            except FileNotFoundError:
+                pass
 
 else:    
     # Default config values
