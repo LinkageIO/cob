@@ -72,6 +72,7 @@ else:
         'gwas':[],
         'defaults':{
             'logSpacing':True,
+            'visEnrich':True,
             'fdrFilter':True,
             'nodeCutoff':1,
             'edgeCutoff':3.0,
@@ -133,7 +134,7 @@ else:
         ' --timeout '+str(opts['timeout'])+
         ' --graceful-timeout '+str(opts['timeout'])+
         ' '+daemon+
-        ' --env "CONF='+yaml.dump(opts)+'"'+
+        ' --env "COB_CONF='+yaml.dump(opts)+'"'+
         ' cob.server:app',shell=True)
     try:
         p.wait()

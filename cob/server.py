@@ -14,10 +14,6 @@ import numpy as np
 import pandas as pd
 from math import isinf
 from itertools import chain
-from genewordsearch.Classes import WordFreq
-from genewordsearch.GeneWordSearch import geneWords
-from genewordsearch.DBBuilder import geneWordBuilder
-from genewordsearch.GeneWordSearch import geneWordSearch
 
 print('Loading Camoco...')
 import camoco as co
@@ -26,13 +22,27 @@ import camoco as co
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 app = Flask(__name__)
 
+# Try Importing GWS
+try:
+    from genewordsearch.Classes import WordFreq
+    from genewordsearch.GeneWordSearch import geneWords
+    from genewordsearch.DBBuilder import geneWordBuilder
+    from genewordsearch.GeneWordSearch import geneWordSearch
+    hasGWS = True
+except ImportError:
+    hasGWS = False
+
+# ----------------------------------------
+#   Parse configuration from environment
+# ----------------------------------------
 # Get the config object
-conf = yaml.load(os.getenv('CONF'))
+conf = yaml.load(os.getenv('COB_CONF'))
 dflt = conf['defaults']
 
 # Folder with annotation files
 os.makedirs(conf['scratch'], exist_ok=True)
-os.environ['GWS_STORE'] = conf['scratch']
+if hasGWS:
+    os.environ['GWS_STORE'] = conf['scratch']
 
 # Max number of genes for custom queries
 geneLimit = {'min':1,'max':150}
@@ -71,7 +81,14 @@ print('Preloading networks into memory...')
 if len(conf['networks']) < 1:
     conf['networks'] = list(co.available_datasets('Expr')['Name'].values)
 networks = {x:co.COB(x) for x in conf['networks']}
-network_info = [[net.name, net._global('parent_refgen'), net.description] for name,net in networks.items()]
+
+network_info = []
+for name,net in networks.items():
+    network_info.append({
+        'name':net.name,
+        'refgen':net._global('parent_refgen'),
+        'desc':net.description
+    })
 print('Availible Networks: ' + str(networks))
 
 # Generate ontology list based on allowed list and load them into memory
@@ -85,7 +102,11 @@ for m,net in networks.items():
     onts_info[net.name] = []
     for n,ont in onts.items():
         if ont.refgen.name == ref:
-            onts_info[net.name].append([ont.name,ont.refgen.name,ont.description])
+            onts_info[net.name].append({
+                'name':ont.name,
+                'refgen':ont.refgen.name,
+                'desc':ont.description
+            })
 print('Availible GWASes: ' + str(onts_info))
 
 # Prefetch the gene names for all the networks
@@ -129,7 +150,8 @@ for ref in co.available_datasets('RefGen')['Name']:
         print('Processing annotations for {}...'.format(ref))
         func_data_db[ref] = refgen
         func_data_db[ref].export_annotations(os.path.join(conf['scratch'],(ref+'.tsv')))
-        geneWordBuilder(ref,[os.path.join(conf['scratch'],(ref+'.tsv'))],[1],['2 end'],['tab'],[True])
+        if hasGWS:
+            geneWordBuilder(ref,[os.path.join(conf['scratch'],(ref+'.tsv'))],[1],['2 end'],['tab'],[True])
 
 # Find any GO ontologies we have for the networks we have
 print('Finding applicable GO Ontologies...')
@@ -143,10 +165,15 @@ for name in co.available_datasets('GOnt')['Name']:
 print('Finding all available terms...')
 terms = {}
 for name,ont in onts.items():
-    terms[name] = {'data': [(term.id,term.desc,len(term.loci),
-        len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000))))
-        for term in ont.iter_terms()]}
-
+    terms[name] = []
+    for term in ont.iter_terms():
+        terms[name].append({
+            'name':term.id,
+            'desc':term.desc,
+            'snps':len(term.loci),
+            'genes':len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000)))
+        })
+    
 #---------------------------------------------
 #              Final Setup
 #---------------------------------------------
@@ -167,8 +194,10 @@ def index():
 # Sends the default values in JSON format
 @app.route('/defaults')
 def defaults():
-    return jsonify({'fdrFilter':conf['defaults']['fdrFilter'],
+    return jsonify({
+        'fdrFilter':conf['defaults']['fdrFilter'],
         'logSpacing':conf['defaults']['logSpacing'],
+        'visEnrich':conf['defaults']['visEnrich'],
         'opts':opts
     })
 
@@ -198,12 +227,12 @@ def available_networks():
 # Route for sending the available ontologies relevant to a network
 @app.route("/available_ontologies/<path:network>")
 def available_ontologies(network):
-    return jsonify({'data':onts_info[network]})
+    return jsonify({'data': onts_info[network]})
 
 # Route for sending the available terms
 @app.route("/available_terms/<path:network>/<path:ontology>")
 def available_terms(network,ontology):
-    return jsonify(terms[ontology])
+    return jsonify({'data': terms[ontology]})
 
 # Route for sending available gene names in the network
 @app.route("/available_genes/<path:network>")
@@ -274,6 +303,10 @@ def term_network():
         if node['data']['render'] == 'x':
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
+    
+    # Tell what enrichment options are available
+    net['hasGO'] = cob._global('parent_refgen') in GOnt_db
+    net['hasGWS'] = hasGWS and (cob._global('parent_refgen') in func_data_db)
     
     # Log Data Point to COB Log
     cob.log(term + ': Found ' +
@@ -367,6 +400,10 @@ def custom_network():
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
     
+    # Tell what enrichment options are available
+    net['hasGO'] = cob._global('parent_refgen') in GOnt_db
+    net['hasGWS'] = hasGWS and (cob._global('parent_refgen') in func_data_db)
+    
     # Log Data Point to COB Log
     cob.log('Custom Term: Found ' +
         str(len(net['nodes'])) + ' nodes, ' +
@@ -407,7 +444,7 @@ def gene_word_search():
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     
     # Run the analysis and return the JSONified results
-    if cob._global('parent_refgen') in func_data_db:
+    if hasGWS and (cob._global('parent_refgen') in func_data_db):
         results = geneWordSearch(geneList, cob._global('parent_refgen'), minChance=pCutoff)
     else:
         abort(405)
@@ -443,7 +480,12 @@ def go_enrichment():
     # Extract the results for returning
     terms = []
     for term in enr:
-        terms.append({'id':term.id,'name':term.name,'desc':term.desc})
+        terms.append({
+            'id':term.id,
+            'pval':term.attrs['pval'],
+            'name':term.name,
+            'desc':term.desc
+        })
     df = pd.DataFrame(terms).drop_duplicates(subset='id')
     cob.log('Found {} enriched terms.', str(df.shape[0]))
     return jsonify(df.to_json(orient='index'))

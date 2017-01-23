@@ -36,6 +36,10 @@ var pastQuery = [];
 /* ----------------------------
       Enrichment Variables
 ---------------------------- */
+// Store availability of enrinchment options
+var hasGO = false;
+var hasGWS = false;
+
 // List of genes that were queried for enrichment, Used for parameter updating
 var enrichGenes = null;
 
@@ -51,6 +55,10 @@ var isGO = true;
 // Store state of logSpacingButton
 var logSpacingDefault = true;
 var logSpacing = logSpacingDefault;
+
+// Store state of visEnrichButton
+var visEnrichDefault = true;
+var visEnrich = visEnrichDefault;
 
 // FDR state variables, flag is to indicate need to reload
 var fdrFilterDefault = true;
@@ -82,7 +90,11 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
       // Reset state of logSpacingButton
       logSpacingDefault = data.logSpacing;
       logSpacing = logSpacingDefault;
-
+      
+      // Reset state of visEnrichButton
+      visEnrichDefault = data.visEnrich;
+      visEnrich = visEnrichDefault;
+      
       // Reset FDR state variables
       fdrFilterDefault = data.fdrFilter;
       fdrFilter = fdrFilterDefault;
@@ -109,87 +121,19 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tables.js'), function(){
   buildNetworkTable();
 });
 
-/*-----------------------------------------------
-      Gene Selection Tables Event Listeners
------------------------------------------------*/
-// A row on the Ontology Table is selected
-$('#NetworkTable tbody').on('click','tr', function(){
-  // Save the selected row
-  curNetwork = $('td', this).eq(0).text();
-
-  // Clean up the graph
-  if(cy !== null){
-    cy.destroy();
-    cy = null;
-    destroyGeneTables();
-    destroyEnrichment();
-  }
-  updateHUD();
-
-  // Prep the Ontology Table
-  curOntology = '';
-  $('#GeneSelectWait').addClass("hidden");
-  $('#GeneSelect').removeClass("hidden");
-
-  // Clean up the Term Table
-  curTerm = '';
-  $('#Term').addClass('hidden');
-  $('#TermWait').removeClass('hidden');
-  
-  // Fetch and build the next table
-  buildOntologyTable(curNetwork);
-  
-  // Set up the text completion engine for the gene list
-  setupTextComplete(curNetwork, '#geneList');
-  
-  // Clean out the FDR Options
-  updateFDR();
-});
-
-// A row on the Term Table is selected
-$('#OntologyTable tbody').on('click','tr', function(){
-  if($('#OntologyTable').DataTable().rows().count() < 1){return;}
-  
-  // Highlight the relevant row
-  curOntology = $('td',this).eq(0).text();
-
-  // Clean up the graph
-  if(cy !== null){
-    cy.destroy();
-    cy = null;
-    destroyGeneTables();
-    destroyEnrichment();
-  }
-  updateHUD();
-
-  // Prep the Term Table
-  curTerm = '';
-  $('#TermWait').addClass("hidden");
-  $('#Term').removeClass("hidden");
-
-  // Fetch and build the network table
-  buildTermTable(curNetwork,curOntology);
-  
-  // Set up the FDR Opts
-  updateFDR();
-});
-
-// A row on the Network Table is selected
-$('#TermTable tbody').on('click','tr',function(){
-    // Highlight the last line
-    curTerm = $('td',this).eq(0).text();
-
-    // Get the new Graph
-    loadGraph(true,true,true);
-});
-
 /*----------------------------------------------
      Gene Selection Button Event Listeners
 ----------------------------------------------*/
 // Build graph button is clicked
 $("#TermGenesButton").click(function(){
   if($('#geneList').val().length > 1){
+    // Clear tables
+    resetOntology();
     curOntology = '';
+    curTerm = '';
+    $('#TermTable').addClass('hidden');
+    $('#TermWait').removeClass('hidden');
+    
     updateFDR();
     loadGraph(true,false,false);}
   else{window.alert('You need to enter at least one gene.');}
@@ -209,6 +153,11 @@ $('#fdrButton').click(function(){
 // Toggle for Log Spacing in Polywas is pressed
 $('#logSpacingButton').click(function(){
   logSpacing = !(logSpacing);
+});
+
+// Toggle for visEnrich is pressed
+$('#visEnrichButton').click(function(){
+  visEnrich = !(visEnrich);
 });
 
 // Reset all the options on the options tab

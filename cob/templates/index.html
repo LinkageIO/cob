@@ -109,7 +109,7 @@
     #windowSizeInfo, #flankLimitInfo {
       transform: translateY(0%);
     }
-    #logSpacingInfo {
+    #logSpacingInfo, #visEnrichInfo {
       position: relative;
       vertical-align: middle;
       transform: translateY(0%);
@@ -185,23 +185,16 @@
     <div role="tabpanel" class="tab-pane active" id="NetworkTab">
       <!-- Section For Network Selection -->
       <br>
-      <h5 id="NetworkWait">We are gathering the networks, please wait.</h5>
+      <h5 id="NetworkTableWait">We are gathering the networks, please wait.</h5>
       <div class="hidden" id="Network">
         <table class="table table-hover" id="NetworkTable">
-          <thead>
-            <tr>
-              <th>Network</th>
-              <th>RefGen</th>
-              <th>Description</th>
-            </tr>
-          </thead>
           <tbody></tbody>
         </table>
       </div>
 
       <!-- Section For Term Selection -->
       <br>
-      <h5 id="GeneSelectWait">This selection will appear once you select a network above.</h5>
+      <h5 id="GeneSelectWait">This section will appear once you select a network above.</h5>
       <div class="hidden" id="GeneSelect">
         <ul class="nav nav-tabs" role="tablist" id="GeneSelectTabs">
           <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
@@ -210,29 +203,12 @@
         <div class="tab-content">
           <div role="tabpanel" class="tab-pane active" id="TermTableTab">
             <br><table class="table table-hover" id="OntologyTable">
-                <thead>
-                  <tr>
-                    <th>Ontology</th>
-                    <th>RefGen</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
                 <tbody></tbody>
               </table>
-            <br><h5 id="TermWait" class="">This selection will appear once you select an ontology above.</h5>
-            <div class="hidden" id="Term">
-              <table class="table table-hover" id="TermTable">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Desc</th>
-                    <th>SNPs</th>
-                    <th>Genes</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
+            <br><h5 id="TermTableWait" class="">This selection will appear once you select an ontology above.</h5>
+            <table class="table table-hover" id="TermTable">
+              <tbody></tbody>
+            </table>
           </div>
 
           <div role="tabpanel" class="tab-pane" id="TermGenesTab">
@@ -386,6 +362,9 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
+          <tr class="form-group"><td colspan="2" style="text-align:right">
+            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><span id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
+          </td></tr>
         </table>
         <br>
         <table style="width:100%">
@@ -408,7 +387,7 @@
     <!-- Gene Table Tab -->
     <div role="tabpanel" class="tab-pane" id="GeneTab"><br>
       <h5 id="GeneTableWait">Please follow the instructions in the network tab to build a network. Information on the genes in that network will appear here.</h5>
-      <table class="table" id="GeneTable">
+      <table class="table table-hover" id="GeneTable">
       <tbody></tbody>
       </table>
     </div>
@@ -417,7 +396,7 @@
     <!-- Subnetwork Table Tab -->
     <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
       <h5 id="SubnetTableWait">Please follow the instructions in the Network tab, then if you select genes in the main gene table (in the Genes tab), you will be able to see just those and their neighbors here.</h5>
-      <table class="table" id="SubnetTable">
+      <table class="table table-hover" id="SubnetTable">
       <tbody></tbody>
       </table>
     </div>
@@ -425,11 +404,11 @@
     
     <!-- Enrichment Table Tab -->
     <div role="tabpanel" class="tab-pane" id="EnrichmentTab"><br>
-      <h5 id="EnrichmentWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
-      <table class="table" id="EnrichmentTable">
+      <h5 id="EnrichmentTableWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
+      <table class="table table-hover" id="EnrichmentTable">
       <tbody></tbody>
       </table>
-      <div class="hidden" id="EnrichmentProg">
+      <div class="hidden" id="EnrichmentTableProg">
         The results of your enrichment query will appear here within about 30 seconds.
       </div>
     </div>
@@ -446,8 +425,6 @@
     </div>
   </div>
 </div>
-
-
 
 <!-- Box for Cytoscape Graph -->
 <div class="col-md-8">
