@@ -168,6 +168,11 @@ function initCyto(nodes,edges,poly){
          css: {
            'background-color': 'Red',
          }},
+       {selector: ':selected',
+         css: {
+           'border-color': 'black',
+           'border-width' : 3,
+         }},
        {selector: '.highlightedEdge',
          css: {
            'line-color': '#ffc800',
