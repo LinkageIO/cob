@@ -15,7 +15,7 @@ function buildNetworkTable(){
       "order": [[0,'asc']],
       "paginate": false,
       "scrollCollapse": true,
-      "scrollY": '23vh',
+      "scrollY": '10vh',
       "select": true,
       "searching": true,
     });
