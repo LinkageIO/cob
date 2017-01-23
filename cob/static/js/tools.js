@@ -1,4 +1,6 @@
-// Clear all computed results and start over
+/*--------------------------------
+    Reset all Graphs and Tables 
+---------------------------------*/
 function clearResults(){
   if(cy !== null){
     cy.destroy();

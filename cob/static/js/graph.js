@@ -51,7 +51,7 @@ function getPolyLayoutOpts(){
 // Function to return an object for the layout options
 function getForceLayoutOpts(){
   return {
-    name: 'cose-bilkent',
+    name: 'cose',
     animate: false,
     randomize: true,
   };
@@ -70,7 +70,7 @@ function initCyto(nodes,edges,poly){
     container: $('#cy'),
 
     // Rendering Options
-    pixelRatio: 2.25,
+    pixelRatio: 2.0,
     motionBlur: true,
     boxSelectionEnabled: true,
     wheelSensitivity: 0.25,
