@@ -121,6 +121,14 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tables.js'), function(){
   buildNetworkTable();
 });
 
+// Handle hidding the break when the columns aren't stacked
+$(window).ready(function(){
+  $('#colBreak').toggleClass('hidden',(window.innerWidth >= 992));
+});
+$(window).resize(function(){
+  $('#colBreak').toggleClass('hidden',(window.innerWidth >= 992));
+});
+
 /*----------------------------------------------
      Gene Selection Button Event Listeners
 ----------------------------------------------*/

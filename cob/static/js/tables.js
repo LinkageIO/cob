@@ -127,6 +127,14 @@ function buildGeneTables(){
   var geneData = [];
   Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
   
+  // Set button information messages
+  var csvTitle = 'Export all genes in this table to a CSV file';
+  var gsTitle = 'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph';
+  var gwsTitle = 'Run a GeneWordSearch enrichment analysis on the genes in this table';
+  if(hasGO){var goTitle = 'Run a GO term enrichment analysis on the genes in this table';}
+  else{var goTitle = 'GO enrichment not available for this organism, please contact site admin if needed.';}
+  
+  
   /*--------------------------------
        Setup The Gene Table
   ---------------------------------*/
@@ -144,12 +152,11 @@ function buildGeneTables(){
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
-        {text:'GO', action:gont, enabled:hasGO, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
-        {text:'GWS', action:gws, 
-          available: function(dt,config){return hasGWS;},
-          titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'
+        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
+        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
+        {text:'GWS', action:gws, titleAttr:gwsTitle,
+          available: function(dt,config){return hasGWS;}
         },
       ],
       "columns": cols,
@@ -178,12 +185,11 @@ function buildGeneTables(){
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
-        {text:'GO', action:gont, enabled:hasGO, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
-        {text:'GWS', action:gws, 
-          available: function(dt,config){return hasGWS;},
-          titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'
+        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
+        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
+        {text:'GWS', action:gws, titleAttr:gwsTitle,
+          available: function(dt,config){return hasGWS;}
         },
       ],
       "columns": cols,

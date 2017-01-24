@@ -41,7 +41,7 @@ function enrich(geneList,GOnt){
   if(GOnt){
     var address = 'go_enrichment';
     var title = 'GO Enrichment';
-    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab.';
+    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab. P Values are uncorrected for multiple comparisons.';
     var cols = [
       {'data':'id', 'name':'id', 'title':'ID'},
       {'data':'pval', 'name':'pval', 'title': 'P Val'},
