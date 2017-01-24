@@ -172,7 +172,7 @@ function initCyto(nodes,edges,poly){
        {selector: ':selected',
          css: {
            'border-color': 'black',
-           'border-width' : 3,
+           'border-width' : 1.5,
          }},
        {selector: '.highlightedEdge',
          css: {

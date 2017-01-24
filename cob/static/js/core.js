@@ -137,7 +137,7 @@ function geneSelect(){
     var geneSel = [];
     cy.nodes('.highlighted, .neighbor').forEach(function(cur,idx,arr){geneSet.add(cur.id());});
     genes.forEach(function(cur, idx, arr){geneSel.push('#'+cur.id());});
-    
+
     // Update the subnetwork table
     updateSubnetTable(geneSet, geneSel);
     
@@ -231,3 +231,4 @@ function restoreGraph(){
     }
   });
 }
+
