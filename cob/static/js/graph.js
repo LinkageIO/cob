@@ -76,6 +76,7 @@ function initCyto(nodes,edges,poly){
     wheelSensitivity: 0.25,
     textureOnViewport: true,
     hideEdgesOnViewport: false,
+    boxSelectionEnabled: true,
     layout: opts,
     style: [
         {selector: '[type = "chrom"]',
@@ -167,6 +168,11 @@ function initCyto(nodes,edges,poly){
        {selector: '.highlighted',
          css: {
            'background-color': 'Red',
+         }},
+       {selector: ':selected',
+         css: {
+           'border-color': 'black',
+           'border-width' : 3,
          }},
        {selector: '.highlightedEdge',
          css: {
