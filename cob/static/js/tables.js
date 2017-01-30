@@ -150,7 +150,7 @@ function buildGeneTables(){
       "scroller": {displayBuffer: 1500},
       "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
       "searching": true,
-      "select": {"style": 'multi+shift'},
+      "select": {style: 'multi+shift'},
       "buttons": [
         {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
         {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},

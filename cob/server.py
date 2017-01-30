@@ -336,6 +336,7 @@ def custom_network():
     cob.set_sig_edge_zscore(edgeCutoff)
 
     # Get the genes
+    cob.log("Getting Neighbors")
     primary = set()
     neighbors = set()
     render = set()
@@ -346,7 +347,7 @@ def custom_network():
             gene = cob.refgen.from_id(name)
         except ValueError:
             continue
-        nbs = cob.neighbors(gene).reset_index().sort_values('score')
+        nbs = cob.neighbors(gene,names_as_index=False,names_as_cols=True).sort_values('score')
         
         # Strip everything except the gene IDs and add to the grand neighbor list
         rejected.remove(name)
@@ -364,6 +365,7 @@ def custom_network():
         
         # Add to the set of neighbor genes
         neighbors = neighbors.union(set(new_genes))
+    cob.log('Found Neighbors')
     
     # Get gene objects from IDs, but save list both lists for later
     genes_set = primary.union(neighbors)
@@ -380,7 +382,6 @@ def custom_network():
         include_num_intervening=True,
         include_rank_intervening=True,
         include_num_siblings=True)
-    
     # Filter the candidates down to the provided list of genes
     genes = list(filter((lambda x: x.id in genes_set), genes))
     
