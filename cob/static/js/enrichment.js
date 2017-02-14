@@ -29,24 +29,22 @@ function enrich(geneList,GOnt){
   noGO = true;
   isGO = GOnt;
   
-  // Destroy old table if there
-  if($.fn.DataTable.isDataTable('#EnrichmentTable')){
-    $('#EnrichmentTable').DataTable().destroy();
-    $('#EnrichmentTable').off().empty();
-  }
+  // Destroy the old table
+  destroyTable('Enrichment',true);
   
   // Nav to tab
   $('#navTabs a[href="#EnrichmentTab"]').tab('show');
-  $('#EnrichmentWait').addClass('hidden');
-  $('#EnrichmentProg').removeClass('hidden');
+  $('#EnrichmentTableWait').addClass('hidden');
+  $('#EnrichmentTableProg').removeClass('hidden');
   
   // Set the variables if we are doing GO
   if(GOnt){
     var address = 'go_enrichment';
     var title = 'GO Enrichment';
-    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab.';
+    var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab. P Values are uncorrected for multiple comparisons.';
     var cols = [
       {'data':'id', 'name':'id', 'title':'ID'},
+      {'data':'pval', 'name':'pval', 'title': 'P Val'},
       {'data':'name', 'name':'name', 'title':'Name'},
       {'data':'desc', 'name':'desc', 'title':'Description'},
     ];
@@ -66,9 +64,16 @@ function enrich(geneList,GOnt){
       {'data':'overlap', 'name':'overlap', 'title':'Overlap'},
     ];
   }
-  // Run the request to get results
+  
+  // Format the gene list as needed
+  if(visEnrich){
+    geneList = geneList.filter(function(gene){
+      return geneDict[gene].data.render === 'x';
+    });
+  }
   geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});
-
+  
+  // Send the Request!
   $.ajax({
     url: ($SCRIPT_ROOT + address),
     data: {
@@ -81,19 +86,20 @@ function enrich(geneList,GOnt){
     type: 'POST',
     statusCode:{
       405: function(){
-        $('#EnrichmentProg').addClass('hidden');
+        $('#EnrichmentTableProg').addClass('hidden');
         noGO = false;
         window.alert('This function is not availible with this organism, if needed, please contact the site admin.');
         return;
       },
       400: function(){
-        $('#EnrichmentProg').addClass('hidden');
+        $('#EnrichmentTableProg').addClass('hidden');
         noGO = false;
         window.alert('There were no significant enrichment results for this query.');
         return;
       }
     },
     success: function(data){
+      destroyTable('Enrichment',false);
       noGO = false;
       
       // Parse the data appropriately
@@ -107,7 +113,7 @@ function enrich(geneList,GOnt){
       }
       
       // Nav to tab
-      $('#EnrichmentProg').addClass('hidden');
+      $('#EnrichmentTableProg').addClass('hidden');
       $('#navTabs a[href="#EnrichmentTab"]').tab('show');
       
       // Build new table from data
@@ -120,7 +126,7 @@ function enrich(geneList,GOnt){
         "rowId": 'id',
         "scrollCollapse": true,
         "scrollX": "100%",
-        "scrollY": $(window).height()-325,
+        "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
         "searching": true,
         "buttons": [
           {extend:'csv', filename:address, titleAttr:'Export the results in this table to a CSV file'},
@@ -132,12 +138,4 @@ function enrich(geneList,GOnt){
       infoTips('#EnrichmentTableInfo');
     }
   });
-}
-
-function destroyEnrichment(){
-    if($.fn.DataTable.isDataTable('#EnrichmentTable')){
-        $('#EnrichmentTable').DataTable().destroy();
-        $('#EnrichmentTable').off().empty();
-    }
-    $('#EnrichmentWait').removeClass('hidden');
 }

@@ -16,10 +16,17 @@ function termNet(resolve, reject, poly){
       fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
     },
     type: 'POST',
-    statusCode: {400: function(){reject('Getting the term network went wrong somehow.');}},
+    statusCode: {
+      400: function(){reject('Getting the term network went wrong somehow. Try refreshing and starting again.');},
+      500: function(){reject('Getting the term network went wrong somehow. Try refreshing and starting again.');}
+    },
     success: function(data){
-        geneDict = data.nodes;
+      geneDict = data.nodes;
+      
+      // Set some statuses
       isTerm = true;
+      hasGO = data.hasGO;
+      hasGWS = data.hasGWS;
       
       // Clean the data trackers
       pastGeneDicts = [];
@@ -44,10 +51,17 @@ function customNet(resolve, reject, poly){
       geneList: $('#geneList').val(),
     },
     type: 'POST',
-    statusCode: {400: function(){reject('No input genes were present in the network.');}},
+    statusCode: {
+      400: function(){reject('Getting the term network went wrong somehow. Try refreshing and starting again.');},
+      500: function(){reject('Getting the term network went wrong somehow. Try refreshing and starting again.');}
+    },
     success: function(data){
       geneDict = data.nodes;
+      
+      // Set some statuses
       isTerm = false;
+      hasGO = data.hasGO;
+      hasGWS = data.hasGWS;
       
       // If there we're any rejected genes, alert the user
       if(data.rejected.length > 0){

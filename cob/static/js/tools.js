@@ -1,4 +1,19 @@
 /*--------------------------------
+    Reset all Graphs and Tables 
+---------------------------------*/
+function clearResults(){
+  if(cy !== null){
+    cy.destroy();
+    cy = null;
+    destroyTable('Gene',true);
+    destroyTable('Subnet',true);
+    destroyTable('Enrichment',true);
+  }
+  updateHUD();
+  updateFDR();
+}
+
+/*--------------------------------
     Information Tooltip Setup 
 ---------------------------------*/
 // Function to set up consistent information qtips on a given jQuery selector
@@ -165,9 +180,11 @@ function restoreDefaults(){
   fdrFilter = fdrFilterDefault;
   updateFDR();
   
-  // Log Spacing Special Case
+  // Log Spacing and Vis Enrich
   logSpacing = logSpacingDefault;
+  visEnrich = visEnrichDefault;
   $('#logSpacingButton').toggleClass('active',logSpacing);
+  $('#visEnrichButton').toggleClass('active',visEnrich);
 }
 
 // Update the values in the lastOps dict

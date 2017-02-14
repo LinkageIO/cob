@@ -72,6 +72,7 @@ function initCyto(nodes,edges,poly){
     // Rendering Options
     pixelRatio: 2.0,
     motionBlur: true,
+    boxSelectionEnabled: true,
     wheelSensitivity: 0.25,
     textureOnViewport: true,
     hideEdgesOnViewport: false,
@@ -171,7 +172,7 @@ function initCyto(nodes,edges,poly){
        {selector: ':selected',
          css: {
            'border-color': 'black',
-           'border-width' : 3,
+           'border-width' : 1.5,
          }},
        {selector: '.highlightedEdge',
          css: {

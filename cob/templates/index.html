@@ -25,9 +25,9 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.13/cytoscape.min.js" integrity="sha256-IhgkpyeW6Lj1Tus8fpKeSGlpSQSBeMiX/Jl5NF4wZbY=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.14/cytoscape.min.js" integrity="sha256-6BSV+486t1fI5kCmINCZfBHVcsED36v+3MzwiHncbvU=" crossorigin="anonymous"></script>
   <script
-    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.4.0/cytoscape-qtip.js">
+    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.5.2/cytoscape-qtip.js">
   </script>
   <script
     src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/v1.0.1/cytoscape-graphml.js">
@@ -48,11 +48,6 @@
   </script>
 
   <style>
-    #cob {
-      float: left;
-      width: 33%;
-      height: 100%;
-    }
     #cobHead{
       display: flex;
       justify-content: left;
@@ -66,11 +61,7 @@
       font-size: 2.5em;
     }
     #cy {
-      width: 67%;
-      height: 100%;
-      position: absolute;
-      left: 33%;
-      top: 0;
+      height:100vh;
       z-index: 5;
     }
     #cyTitle{
@@ -78,7 +69,6 @@
       bottom: 0;
       color: DimGrey;
       z-index: 1;
-      left: 33%;
       font-size: 1.5em;
     }
     #backButton{
@@ -115,11 +105,24 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
+      z-index: 5;
+    }
+    #cob {
+      z-index: 5;
+      height: 100vh;
+    }
+    #colBreak{
+      height: 0;
+      border-top: 1px solid rgba(0,0,0,0.2);
+    }
+    #geneList {
+      max-width: 100%;
+      max-height: 55vh;
     }
     #windowSizeInfo, #flankLimitInfo {
       transform: translateY(0%);
     }
-    #logSpacingInfo {
+    #logSpacingInfo, #visEnrichInfo {
       position: relative;
       vertical-align: middle;
       transform: translateY(0%);
@@ -148,6 +151,7 @@
       background-color: white;
     }
   </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 </head>
 
 <!-- Actual Body -->
@@ -155,7 +159,7 @@
 
 <!-- Cytoscape Wait Modal -->
 <style></style>
-<div class="modal fade" id="cyWait" tabindex="-1" role="dialog">
+<div class="modal fade" id="cyWait" tabindex="-1" role="dialog" data-backdrop="static">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header"><h4 class="modal-title">
@@ -163,7 +167,7 @@
       </div>
       <div class="modal-body" id="geneStatus">
         <p>We are now getting the node data (if needed) and running the layout algorithm.</p>
-        <p>For bigger networks this can take upwards of 30 seconds so please
+        <p>For bigger networks this can take upwards of 60 seconds so please
         be patient, the page goes unresponsive while processing the layout.</p>
       </div>
     </div>
@@ -171,7 +175,9 @@
 </div>
 
 <!-- Selection Column -->
-<div id='cob' class='container'>
+<div class="container-fluid">
+<div id='theRow' class="row">
+<div id='cob' class='col-md-4'>
   <div id='cobHead' class='container'>CoEx Browser</div>
 
 <div>
@@ -192,23 +198,16 @@
     <div role="tabpanel" class="tab-pane active" id="NetworkTab">
       <!-- Section For Network Selection -->
       <br>
-      <h5 id="NetworkWait">We are gathering the networks, please wait.</h5>
+      <h5 id="NetworkTableWait">We are gathering the networks, please wait.</h5>
       <div class="hidden" id="Network">
         <table class="table table-hover" id="NetworkTable">
-          <thead>
-            <tr>
-              <th>Network</th>
-              <th>RefGen</th>
-              <th>Description</th>
-            </tr>
-          </thead>
           <tbody></tbody>
         </table>
       </div>
 
       <!-- Section For Term Selection -->
       <br>
-      <h5 id="GeneSelectWait">This selection will appear once you select a network above.</h5>
+      <h5 id="GeneSelectWait">This section will appear once you select a network above.</h5>
       <div class="hidden" id="GeneSelect">
         <ul class="nav nav-tabs" role="tablist" id="GeneSelectTabs">
           <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
@@ -217,29 +216,12 @@
         <div class="tab-content">
           <div role="tabpanel" class="tab-pane active" id="TermTableTab">
             <br><table class="table table-hover" id="OntologyTable">
-                <thead>
-                  <tr>
-                    <th>Ontology</th>
-                    <th>RefGen</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
                 <tbody></tbody>
               </table>
-            <br><h5 id="TermWait" class="">This selection will appear once you select an ontology above.</h5>
-            <div class="hidden" id="Term">
-              <table class="table table-hover" id="TermTable">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Desc</th>
-                    <th>SNPs</th>
-                    <th>Genes</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
+            <br><h5 id="TermTableWait" class="">This selection will appear once you select an ontology above.</h5>
+            <table class="table table-hover" id="TermTable">
+              <tbody></tbody>
+            </table>
           </div>
 
           <div role="tabpanel" class="tab-pane" id="TermGenesTab">
@@ -393,6 +375,9 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
+          <tr class="form-group"><td colspan="2" style="text-align:right">
+            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><span id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
+          </td></tr>
         </table>
         <br>
         <table style="width:100%">
@@ -415,7 +400,7 @@
     <!-- Gene Table Tab -->
     <div role="tabpanel" class="tab-pane" id="GeneTab"><br>
       <h5 id="GeneTableWait">Please follow the instructions in the network tab to build a network. Information on the genes in that network will appear here.</h5>
-      <table class="table" id="GeneTable">
+      <table class="table table-hover" id="GeneTable">
       <tbody></tbody>
       </table>
     </div>
@@ -424,7 +409,7 @@
     <!-- Subnetwork Table Tab -->
     <div role="tabpanel" class="tab-pane" id="SubnetTab"><br>
       <h5 id="SubnetTableWait">Please follow the instructions in the Network tab, then if you select genes in the main gene table (in the Genes tab), you will be able to see just those and their neighbors here.</h5>
-      <table class="table" id="SubnetTable">
+      <table class="table table-hover" id="SubnetTable">
       <tbody></tbody>
       </table>
     </div>
@@ -432,11 +417,11 @@
     
     <!-- Enrichment Table Tab -->
     <div role="tabpanel" class="tab-pane" id="EnrichmentTab"><br>
-      <h5 id="EnrichmentWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
-      <table class="table" id="EnrichmentTable">
+      <h5 id="EnrichmentTableWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
+      <table class="table table-hover" id="EnrichmentTable">
       <tbody></tbody>
       </table>
-      <div class="hidden" id="EnrichmentProg">
+      <div class="hidden" id="EnrichmentTableProg">
         The results of your enrichment query will appear here within about 30 seconds.
       </div>
     </div>
@@ -449,25 +434,32 @@
       Contact Joe Jeffers (jeffe174@umn.edu) with any questions/comments/concerns.
     </div>
     <!-- End About Tab -->
-    
     </div>
   </div>
 </div>
 
 <!-- Box for Cytoscape Graph -->
-<div id='cy'></div>
-
-<button id="backButton" type="button" class="hidden btn btn-default" aria-label="Restore Graph">
-  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-</button>
-
-<!-- Box for title indicating current network -->
-<div id='cyTitle'></div>
-<div id='graphButtons'>
-  <input type="button" class="btn btn-primary" id="graphMLButton" value="GraphML">
-  <input type="button" class="btn btn-primary" id="pngButton" value="PNG">
-  <input type="button" class="btn btn-success" id="toggleLayoutButton" value="Toggle Layout">
-  <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+<div class="col-md-8">
+  <hr id="colBreak" class="">
+  
+  <!-- Back button for graph -->
+  <button id="backButton" type="button" class="hidden btn btn-default" aria-label="Restore Graph">
+    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+  </button>
+  
+  <!-- Box for cytoscape.js -->
+  <div id='cy'></div>
+  
+  <!-- Box for title indicating current network -->
+  <div id='cyTitle'></div>
+  <div id='graphButtons'>
+    <input type="button" class="btn btn-primary" id="graphMLButton" value="GraphML">
+    <input type="button" class="btn btn-primary" id="pngButton" value="PNG">
+    <input type="button" class="btn btn-success" id="toggleLayoutButton" value="Toggle Layout">
+    <input type="button" class="btn btn-danger" id="clearSelectionButton" value="Clear Selection">
+  </div>
+</div>
+</div>
 </div>
 </body>
 </html>

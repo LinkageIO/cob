@@ -3,31 +3,37 @@
 -----------------------------------*/
 // Build a Fresh Network Table
 function buildNetworkTable(){
-  $('#NetworkTable').DataTable().destroy();
+  destroyTable('Network',false);
   $('#NetworkTable').DataTable({
       "ajax": ($SCRIPT_ROOT + 'available_networks'),
-      "bAutoWidth": false,
-      "bPaginate": false,
-      "bJQueryUI": false,
-      "scrollCollapse": true,
+      "columns": [
+        {data:'name', name:'name', title:'Network'},
+        {data:'refgen', name:'refgen', title:'RefGen'},
+        {data:'desc', name:'desc', title:'Description'}
+      ],
       "dom": '<"NetworkTitle">ft',
       "order": [[0,'asc']],
-      "scrollY": ($(window).height()/7),
+      "paginate": false,
+      "scrollCollapse": true,
+      "scrollY": '10vh',
       "select": true,
       "searching": true,
     });
   $("div.NetworkTitle").html('Network');
+  $('#NetworkTable tbody').on('click','tr', networkListner);
   return;
 }
 
 // Build a Fresh Ontology Table
 function buildOntologyTable(network){
-  $('#OntologyTable').DataTable().destroy();
+  destroyTable('Ontology',false);
   $('#OntologyTable').DataTable({
       "ajax": ($SCRIPT_ROOT + 'available_ontologies/' + network),
-      "bAutoWidth": false,
-      "bPaginate": false,
-      "bJQueryUI": false,
+      "columns": [
+        {data:'name', name:'name', title:'Ontology'},
+        {data:'refgen', name:'refgen', title:'RefGen'},
+        {data:'desc', name:'desc', title:'Description'}
+      ],
       "dom": '<"OntologyTitle">ft',
       "initComplete": function(settings, json){
         if(json.data.length < 1){
@@ -36,24 +42,29 @@ function buildOntologyTable(network){
       },
       "language":{
         "emptyTable":"No ontologies available for this network. Please enter query genes in the \"Custom Gene List\" Tab."},
-      "order": [[0,'asc']],
-      "scrollCollapse": true,
-      "scrollY": ($(window).height()/7),
-      "select": true,
-      "searching": true,
+        "order": [[0,'asc']],
+        "paginate": false,
+        "scrollCollapse": true,
+        "scrollY": '10vh',
+        "select": true,
+        "searching": true,
     });
   $("div.OntologyTitle").html('Ontology');
+  $('#OntologyTable tbody').on('click','tr', ontologyListener);
   return;
 }
 
 // Build a Fresh Term Table
 function buildTermTable(network,ontology){
-  $('#TermTable').DataTable().destroy();
+  destroyTable('Term',false);
   $('#TermTable').DataTable({
       "ajax": ($SCRIPT_ROOT+'available_terms/'+network+'/'+ontology),
-      "bAutoWidth": false,
-      "bPaginate": false,
-      "bJQueryUI": false,
+      "columns": [
+        {data:'name', name:'name', title:'Name'},
+        {data:'desc', name:'desc', title:'Desc'},
+        {data:'snps', name:'snps', title:'SNPs'},
+        {data:'genes', name:'genes', title:'Genes'}
+      ],
       "dom": '<"TermTitle">frtip',
       "initComplete": function(settings, json){
         if(json.data.length < 1){
@@ -63,13 +74,22 @@ function buildTermTable(network,ontology){
       "language":{
         "emptyTable":"No terms available for this ontology. Please enter query genes in the \"Custom Gene List\" Tab."},
       "order": [[0,'asc']],
+      "paginate": false,
       "scrollCollapse": true,
-      "scrollY": ($(window).height()/4),
+      "scrollY": '23vh',
       "select": true,
       "searching": true,
     });
   $("div.TermTitle").html('Terms');
+  $('#TermTable tbody').on('click','tr',termListener);
   return;
+}
+
+function resetOntology(){
+  if($.fn.DataTable.isDataTable('#OntologyTable')){
+    $('#OntologyTable').DataTable().rows().deselect();
+  }
+  destroyTable('Term',true);
 }
 
 /*--------------------------------
@@ -100,15 +120,20 @@ function buildGeneTables(){
   ];
   
   // Destroy the old tables if present
-  destroyGeneTables();
-  
-  // Hide the wait messages
-  $('#GeneTableWait').toggleClass('hidden',true);
-  $('#SubnetTableWait').toggleClass('hidden',true);
+  destroyTable('Gene',false);
+  destroyTable('Subnet',false);
   
   // Get gene data
   var geneData = [];
   Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
+  
+  // Set button information messages
+  var csvTitle = 'Export all genes in this table to a CSV file';
+  var gsTitle = 'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph';
+  var gwsTitle = 'Run a GeneWordSearch enrichment analysis on the genes in this table';
+  if(hasGO){var goTitle = 'Run a GO term enrichment analysis on the genes in this table';}
+  else{var goTitle = 'GO enrichment not available for this organism, please contact site admin if needed.';}
+  
   
   /*--------------------------------
        Setup The Gene Table
@@ -123,15 +148,16 @@ function buildGeneTables(){
       "rowId": 'id',
       "scrollCollapse": true,
       "scroller": {displayBuffer: 1500},
-      "scrollX": "100%",
-      "scrollY": $(window).height()-285,
+      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
       "searching": true,
-      "select": {"style": 'multi+shift'},
+      "select": {style: 'multi+shift'},
       "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
-        {text:'GO', action:gont, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
-        {text:'GWS', action:gws, titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'},
+        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
+        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
+        {text:'GWS', action:gws, titleAttr:gwsTitle,
+          available: function(dt,config){return hasGWS;}
+        },
       ],
       "columns": cols,
     });
@@ -141,8 +167,6 @@ function buildGeneTables(){
   
   // Set the inline titles on the tables
   $("div.GeneTitle").html('Gene Data <span id="GeneTableInfo" title="This table contains information for all of the genes matched by your query. The ones that are rendered in the graph are denoted by an \'X\' in the first column. The remaining are genes that matched the query, but were discluded due to the parameters set in the options tab. They can be added to the graph by simply clicking them. To see just the genes that are selected and their neighbors, go to the \'Subnetwork\' tab." class="table-glyph glyphicon glyphicon-info-sign"></span>');
-  
-  
   
   /*--------------------------------
        Setup The Subnet Table
@@ -157,14 +181,16 @@ function buildGeneTables(){
       "rowId": 'id',
       "scrollCollapse": true,
       "scrollX": "100%",
-      "scrollY": $(window).height()-285,
+      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
       "searching": true,
       "select": {"style": 'multi+shift'},
       "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:'Export all genes in this table to a CSV file'},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph'},
-        {text:'GO', action:gont, titleAttr:'Run a GO term enrichment analysis on the genes in this table'},
-        {text:'GWS', action:gws, titleAttr:'Run a GeneWordSearch enrichment analysis on the genes in this table'},
+        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
+        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
+        {text:'GWS', action:gws, titleAttr:gwsTitle,
+          available: function(dt,config){return hasGWS;}
+        },
       ],
       "columns": cols,
     });
@@ -242,20 +268,20 @@ function buildGeneTables(){
 /*---------------------------------------
            Table Cleanup
 ---------------------------------------*/
-function destroyGeneTables(){
-  // Deconstruct the tables if they exist
-  if($.fn.DataTable.isDataTable('#GeneTable')){
-    $('#GeneTable').DataTable().destroy();
-    $('#GeneTable').off().empty();
-  }
-  if($.fn.DataTable.isDataTable('#SubnetTable')){
-    $('#SubnetTable').DataTable().destroy();
-    $('#SubnetTable').off().empty();
+function destroyTable(table,hide){
+  // Deconstruct the table if they exist
+  var tableID = '#'+table+'Table'
+  if($.fn.DataTable.isDataTable(tableID)){
+    $(tableID).DataTable().destroy();
+    $(tableID).off().empty();
   }
   
   // Show the wait messages
-  $('#GeneTableWait').toggleClass('hidden',false);
-  $('#SubnetTableWait').toggleClass('hidden',false);
+  if(table === 'Ontology'){tableID = '#GeneSelect';}
+  var waitID = tableID + 'Wait';
+  
+  $(tableID).toggleClass('hidden',hide);
+  $(waitID).toggleClass('hidden',!(hide));
 }
 
 /*---------------------------------------
@@ -297,4 +323,50 @@ function updateSubnetTable(newGenes, newGenesSel){
   // Update the selections
   tbl.rows('.selected').deselect();
   tbl.rows(newGenesSel).select();
+}
+
+/*--------------------------------
+  Listeners for Selection Tables 
+---------------------------------*/
+function networkListner(){
+  // Save the selected row
+  curNetwork = $('td', this).eq(0).text();
+  
+  // Clear obsolete graph
+  clearResults();
+  
+  // Clean up tables
+  curOntology = '';
+  curTerm = '';
+  destroyTable('Term',true);
+
+  // Fetch and build the next table
+  buildOntologyTable(curNetwork);
+  
+  // Set up the text completion engine for the gene list
+  setupTextComplete(curNetwork, '#geneList');
+}
+
+function ontologyListener(){
+  if($('#OntologyTable').DataTable().rows().count() < 1){return;}
+  
+  // Highlight the relevant row
+  curOntology = $('td',this).eq(0).text();
+  
+  // Clear obsolete graph
+  clearResults();
+
+  // Prep the Term Table
+  curTerm = '';
+  
+  // Fetch and build the network table
+  buildTermTable(curNetwork,curOntology);
+}
+
+function termListener(){
+    // Highlight the last line
+    curTerm = $('td',this).eq(0).text();
+
+    // Get the new Graph
+    loadGraph(true,true,true);
 }
