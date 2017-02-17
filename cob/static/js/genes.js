@@ -41,13 +41,18 @@ function termNet(resolve, reject, poly){
 
 // Pull the nodes for a custom defined set of genes
 function customNet(resolve, reject, poly){
+  // Fail safe to pull neighbors if actually needed
+  if(getOpt('visNeighbors') > 0){hasNeighbors = true;}
+  
+  // Run the request!
   $.ajax({
     url: ($SCRIPT_ROOT + 'custom_network'),
     data: {
       network: curNetwork,
+      hasNeighbors: hasNeighbors,
       nodeCutoff: curOpts['nodeCutoff'],
       edgeCutoff: curOpts['edgeCutoff'],
-      visNeighbors: curOpts['visNeighbors'],
+      visNeighbors: hasNeighbors ? curOpts['visNeighbors'] : 'None',
       geneList: $('#geneList').val(),
     },
     type: 'POST',

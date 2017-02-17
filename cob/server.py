@@ -322,8 +322,16 @@ def custom_network():
     cob = networks[str(request.form['network'])]
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    visNeighbors = safeOpts('visNeighbors',int(request.form['visNeighbors']))
     geneList = str(request.form['geneList'])
+    
+    # Detrmine if we want neighbors or not
+    try:
+        int(request.form['visNeighbors'])
+    except ValueError:
+        visNeighbors = None
+    else:
+        visNeighbors = safeOpts('visNeighbors',int(request.form['visNeighbors']))
+    
     
     # Make sure there aren't too many genes
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
@@ -347,25 +355,29 @@ def custom_network():
             gene = cob.refgen.from_id(name)
         except ValueError:
             continue
-        nbs = cob.neighbors(gene,names_as_index=False,names_as_cols=True).sort_values('score')
         
-        # Strip everything except the gene IDs and add to the grand neighbor list
+        # Add this gene to the requisite lists
         rejected.remove(name)
         primary.add(gene.id)
         render.add(gene.id)
-        new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
         
-        # Build the set of genes that should be rendered
-        nbs = nbs[:visNeighbors]
-        render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
-        
-        # Remove the query gene if it's present
-        if gene.id in new_genes:
-            new_genes.remove(gene.id)
-        
-        # Add to the set of neighbor genes
-        neighbors = neighbors.union(set(new_genes))
-    cob.log('Found Neighbors')
+        if visNeighbors is not None:
+            # Get the neighbors from Camoco
+            nbs = cob.neighbors(gene, names_as_index=False, names_as_cols=True).sort_values('score')
+            
+            # Strip everything except the gene IDs and add to the grand neighbor list
+            new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
+            
+            # Build the set of genes that should be rendered
+            nbs = nbs[:visNeighbors]
+            render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
+            
+            # Remove the query gene if it's present
+            if gene.id in new_genes:
+                new_genes.remove(gene.id)
+            
+            # Add to the set of neighbor genes
+            neighbors = neighbors.union(set(new_genes))
     
     # Get gene objects from IDs, but save list both lists for later
     genes_set = primary.union(neighbors)

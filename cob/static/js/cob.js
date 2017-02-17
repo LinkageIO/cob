@@ -19,6 +19,9 @@ var isPoly = function(){return cy.options().layout.name === 'polywas';}
 // Saves whether data is a term or a custom network
 var isTerm = false;
 
+// Saves whether data includes neighbors or not
+var hasNeighbors = true;
+
 // Holder for the timer id of the subnet pop effect
 var popTimerID = 1;
 
@@ -133,7 +136,12 @@ $(window).resize(function(){
      Gene Selection Button Event Listeners
 ----------------------------------------------*/
 // Build graph button is clicked
-$("#TermGenesButton").click(function(){
+$("#wNeighborsButton,#woNeighborsButton").click(function(evt){
+  // Take care of whether or not neighbors are wanted
+  hasNeighbors = evt.target.id === 'wNeighborsButton';
+  if(hasNeighbors && (getOpt('visNeighbors') < 1)){setOpt('visNeighbors');}
+  else{setOpt('visNeighbors',0);}
+  
   if($('#geneList').val().length > 1){
     // Clear tables
     resetOntology();
@@ -199,7 +207,8 @@ $("#opts").keypress(function(evt){
 -----------------------------------*/
 // Redraw the Subnet Table when shown
 $('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function(){
-  if($.fn.DataTable.isDataTable('#SubnetTable')){$('#SubnetTable').DataTable().draw();}
+  if($.fn.DataTable.isDataTable('#SubnetTable')){
+    $('#SubnetTable').DataTable().draw();}
 });
 
 /*--------------------------------------

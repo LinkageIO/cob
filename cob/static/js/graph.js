@@ -25,7 +25,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   }
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(curOpts["nodeSize"]));
+  updateNodeSize(getOpt('nodeSize'));
   
   // Set up the graph event listeners
   setGeneListeners();
@@ -43,9 +43,9 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    nodeDiameter: parseInt(curOpts["nodeSize"]),
+    nodeDiameter: getOpt('nodeSize'),
     logSpacing: logSpacing,
-    snpLevels: parseInt(curOpts["snpLevels"]),
+    snpLevels: getOpt('snpLevels'),
   };
 }
 // Function to return an object for the layout options
