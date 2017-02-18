@@ -174,6 +174,12 @@ function initCyto(nodes,edges,poly){
            'border-color': 'black',
            'border-width' : 1.5,
          }},
+       {selector: ':selected[type = "gene"]',
+         css: {
+           'content': 'data(id)',
+           'font-size': '11',
+           'z-index': '3',
+        }},
        {selector: '.highlightedEdge',
          css: {
            'line-color': '#ffc800',
