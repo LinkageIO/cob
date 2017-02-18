@@ -146,7 +146,7 @@ $("#wNeighborsButton,#woNeighborsButton").click(function(evt){
   // Take care of whether or not neighbors are wanted
   hasNeighbors = evt.target.id === 'wNeighborsButton';
   if(hasNeighbors && (getOpt('visNeighbors') < 1)){setOpt('visNeighbors');}
-  else{setOpt('visNeighbors',0);}
+  else if(!(hasNeighbors)){setOpt('visNeighbors',0);}
   
   if($('#geneList').val().length > 1){
     // Clear tables
