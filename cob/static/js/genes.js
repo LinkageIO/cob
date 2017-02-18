@@ -84,7 +84,7 @@ function customNet(resolve, reject, poly){
 }
 
 /*------------------------------------------
-          Add Known Gene to Graph
+          Add/Remove Genes on Graph
 ------------------------------------------*/
 function addGenes(newGenes){
   // Set the add gene mutex
@@ -93,14 +93,14 @@ function addGenes(newGenes){
   // Update the new genes
   var newGenesData = [];
   newGenes.forEach(function(cur,idx,arr){
-    geneDict[cur]['data']['render'] = 'x';
+    geneDict[cur]['data']['render'] = true;
     geneDict[cur]['data']['origin'] = 'query';
     newGenesData.push(geneDict[cur]);
     $('#geneList').append('\n'+ cur +', ');
   });
   
   // Make a list of all the genes for the purposes of the query
-  var allGenes = Object.keys(geneDict).filter(cur => geneDict[cur]['data']['render'] === 'x');
+  var allGenes = Object.keys(geneDict).filter(cur => geneDict[cur]['data']['render']);
   
   // Run the server query to get the new edges
   $.ajax({
@@ -119,4 +119,15 @@ function addGenes(newGenes){
       noAdd = false;
     }
   });
+}
+
+function removeGenes(genes){
+  cy.startBatch();
+  genes.forEach(function(cur,idx,arr){
+    geneDict[cur]['data']['render'] = false;
+    $('#geneList').append('\n'+ cur +', ');
+    cy.remove('#'+cur);
+  });
+  cy.endBatch();
+  updateGraph();
 }

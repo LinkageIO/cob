@@ -9,7 +9,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
     // Get a list of the nodes to render
     var renNodes = [];
     Object.keys(nodes).forEach(function(cur,idx,arr){
-      if(nodes[cur]['data']['render'] === 'x'){renNodes.push(nodes[cur]);}
+      if(nodes[cur]['data']['render']){renNodes.push(nodes[cur]);}
     });
     
     // Check for any rendered nodes

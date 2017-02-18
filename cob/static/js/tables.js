@@ -85,6 +85,7 @@ function buildTermTable(network,ontology){
   return;
 }
 
+// Restore the term select tab to original
 function resetOntology(){
   if($.fn.DataTable.isDataTable('#OntologyTable')){
     $('#OntologyTable').DataTable().rows().deselect();
@@ -96,36 +97,70 @@ function resetOntology(){
       Gene Table Constructors
 ---------------------------------*/
 function buildGeneTables(){
-  // Enumerated column information!
-  var cols = [
-    {data: 'render', name:'rendered', title:'Vis'},
-    {data: 'id', name:'id', title:'ID'},
-    {data: 'alias', name:'alias', title:'Alias'},
-    {data: 'fdr', name:'fdr', title:'FDR'},
-    {data: 'cur_ldegree', name:'cur_ldegree', title:'Current Degree'},
-    {data: 'ldegree', name:'ldegree', title:'Term Degree'},
-    {data: 'gdegree', name:'gdegree', title:'Global Degree'},
-    {data: 'chrom', name:'chrom', title:'Chrom'},
-    {data: 'snp', name:'snp', title:'SNP'},
-    {data: 'start', name:'start', title:'Start'},
-    {data: 'end', name:'end', title:'End'},
-    {data: 'numIntervening', name:'numIntervening', title:'Num Intervening'},
-    {data: 'rankIntervening', name:'rankIntervening', title:'Rank Intervening'},
-    {data: 'numSiblings', name:'numSiblings', title:'Num Siblings'},
-    {data: 'windowSize', name:'windowSize', title:'Window Size', visible: false},
-    {data: 'flankLimit', name:'flankLimit', title:'Flank Limit', visible: false},
-    {data: 'annotations', name:'annotations', title:'Annotations'},
-    //{data: 'parentNumIterations', name:'parentNumIterations', title: 'Num Parent Interactions'},
-    //{data: 'parentAvgEffectSize', name:'parentAvgEffectSize', title: 'Avg Parent Effect Size'},
-  ];
+  // Settings for the tables!
+  var tableOpts = {
+    deferRender: false,
+    order: [[5,'dec'],[6,'dec']],
+    paging: true,
+    paginate: false,
+    rowId: 'id',
+    scrollCollapse: true,
+    scroller: {displayBuffer: 1500},
+    scrollX: '100%',
+    scrollY: $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
+    searching: true,
+    select: {
+      style: 'multi+shift',
+      selector: 'td:not(td:nth-child(1), td:nth-child(2))'
+    },
+    buttons: [
+      {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+      {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
+      {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
+      {text:'GWS', action:gws, titleAttr:gwsTitle,
+        available: function(dt,config){return hasGWS;}
+      },
+    ],
+    columns: [
+      {name:'rendered', title:'Vis', orderable: false, data: function(row){
+        if(row.render){
+          return '<a href="javascript:delGene(\''+row.id+'\')"><span class="glyphicon glyphicon-ok"></span></a>';}
+        else{
+          return '<a href="javascript:selGene(\''+row.id+'\')"><span class="glyphicon glyphicon-plus"></span></a>';}
+      }},
+      {name: 'info', title: 'Ref', orderable: false, data: function(row){
+        return '<a href="javascript:geneRef(\''+row.id+'\')"><span class="glyphicon glyphicon-new-window"></span></a>';
+      }, visible: (refLinks[curNetwork] !== undefined)},
+      {data: 'id', name:'id', title:'ID'},
+      {data: 'alias', name:'alias', title:'Alias'},
+      {data: 'fdr', name:'fdr', title:'FDR'},
+      {data: 'cur_ldegree', name:'cur_ldegree', title:'Current Degree'},
+      {data: 'ldegree', name:'ldegree', title:'Term Degree'},
+      {data: 'gdegree', name:'gdegree', title:'Global Degree'},
+      {data: 'chrom', name:'chrom', title:'Chrom'},
+      {data: 'snp', name:'snp', title:'SNP'},
+      {data: 'start', name:'start', title:'Start'},
+      {data: 'end', name:'end', title:'End'},
+      {data: 'numIntervening', name:'numIntervening', title:'Num Intervening'},
+      {data: 'rankIntervening', name:'rankIntervening', title:'Rank Intervening'},
+      {data: 'numSiblings', name:'numSiblings', title:'Num Siblings'},
+      {data: 'windowSize', name:'windowSize', title:'Window Size', visible: false},
+      {data: 'flankLimit', name:'flankLimit', title:'Flank Limit', visible: false},
+      {data: 'annotations', name:'annotations', title:'Annotations'},
+      //{data: 'parentNumIterations', name:'parentNumIterations', title: 'Num Parent Interactions'},
+      //{data: 'parentAvgEffectSize', name:'parentAvgEffectSize', title: 'Avg Parent Effect Size'},
+  ]};
   
+  // Deep copy the options to prevent interference
+  var geneOpts = $.extend(true,{},tableOpts);
+  var subOpts = $.extend(true,{},tableOpts);
+  
+  /*--------------------------------
+              Prep Work
+  ---------------------------------*/
   // Destroy the old tables if present
   destroyTable('Gene',false);
   destroyTable('Subnet',false);
-  
-  // Get gene data
-  var geneData = [];
-  Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
   
   // Set button information messages
   var csvTitle = 'Export all genes in this table to a CSV file';
@@ -134,33 +169,17 @@ function buildGeneTables(){
   if(hasGO){var goTitle = 'Run a GO term enrichment analysis on the genes in this table';}
   else{var goTitle = 'GO enrichment not available for this organism, please contact site admin if needed.';}
   
-  
   /*--------------------------------
        Setup The Gene Table
   ---------------------------------*/
-  var gene_table = $('#GeneTable').DataTable({
-      "data": geneData,
-      "deferRender": false,
-      "dom": '<"GeneTitle">frtpB',
-      "order": [[0,'dec'],[3,'asc'],[4,'dec']],
-      "paging": true,
-      "paginate": true,
-      "rowId": 'id',
-      "scrollCollapse": true,
-      "scroller": {displayBuffer: 1500},
-      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
-      "searching": true,
-      "select": {style: 'multi+shift'},
-      "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
-        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
-        {text:'GWS', action:gws, titleAttr:gwsTitle,
-          available: function(dt,config){return hasGWS;}
-        },
-      ],
-      "columns": cols,
-    });
+  // Get gene data
+  var geneData = [];
+  Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
+  
+  // Build the table
+  geneOpts.data = geneData;
+  geneOpts.dom = '<"GeneTitle">frtpB';
+  var gene_table = $('#GeneTable').DataTable(geneOpts);
   
     // Make certain columns invisible if there will be no useful data
   gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
@@ -171,29 +190,10 @@ function buildGeneTables(){
   /*--------------------------------
        Setup The Subnet Table
   ---------------------------------*/
-  // Set up the subnetwork gene table
-  var sub_table = $('#SubnetTable').DataTable({
-      "data": [],
-      "dom": '<"SubnetTitle">frtpB',
-      "order": [[0,'dec'],[3,'asc'],[4,'dec']],
-      "paging": false,
-      "paginate": false,
-      "rowId": 'id',
-      "scrollCollapse": true,
-      "scrollX": "100%",
-      "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
-      "searching": true,
-      "select": {"style": 'multi+shift'},
-      "buttons": [
-        {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
-        {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
-        {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
-        {text:'GWS', action:gws, titleAttr:gwsTitle,
-          available: function(dt,config){return hasGWS;}
-        },
-      ],
-      "columns": cols,
-    });
+  // Build the table
+  subOpts.data = [];
+  subOpts.dom = '<"SubnetTitle">frtpB';
+  var sub_table = $('#SubnetTable').DataTable(subOpts);
   
   // Set the inline titles on the tables
   $("div.SubnetTitle").html('Subnet Data <span id="SubnetTableInfo" title="This table contains information  for all of the selected genes and their first neighbors. This is the same data that is contained in the main gene table, forpurposes of making navigating an interesting subnetwork easier." class="table-glyph glyphicon glyphicon-info-sign"></span>');
@@ -223,46 +223,58 @@ function buildGeneTables(){
   });
   
   // Handling a click on the two tables
-  $('#GeneTable tbody').on('click','tr', function(evt){
+  $('#GeneTable tbody').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#GeneTable').DataTable().row('#'+this['id']).deselect();
       window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
       return;
     }
-    
-    // Otherwise update all the things
-    if((evt.ctrlKey || evt.metaKey) && !(evt.shiftKey)){
-      if($(evt.currentTarget).hasClass('selected')){
-        $('#GeneTable').DataTable().row('#'+this['id']).deselect();}
-      else{
-        $('#GeneTable').DataTable().row('#'+this['id']).select();}
-      window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-    }
-    else{geneSelect();}
+    // Run the actual selection algorithm
+    geneSelect();
   });
-  $('#SubnetTable tbody').on('click','tr', function(evt){
+
+  $('#SubnetTable tbody').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
       window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
       return;
     }
-    
-    // Otherwise update all the things
-    if((evt.ctrlKey || evt.metaKey) && !(evt.shiftKey)){
-      if($(evt.currentTarget).hasClass('selected')){
-        $('#SubnetTable').DataTable().row('#'+this['id']).deselect();}
-      else{
-        $('#SubnetTable').DataTable().row('#'+this['id']).select();}
-      window.open('http://www.maizegdb.org/gene_center/gene/'+this['id']);
-    }
-    else{
-      $('#GeneTable').DataTable().rows().deselect();
-      $('#GeneTable').DataTable().rows($('#SubnetTable').DataTable().rows('.selected').ids(true)).select();
-      geneSelect();
-    }
+    // Select the genes on the main table
+    $('#GeneTable').DataTable().rows().deselect();
+    $('#GeneTable').DataTable().rows($('#SubnetTable').DataTable().rows('.selected').ids(true)).select();
+    // Run the actual selection algorithm
+    geneSelect();
   });
+}
+
+/*---------------------------------------
+         Table Helper Functions
+---------------------------------------*/
+// Helper funtion to add gene to graph with plus
+function selGene(id){
+  $('#GeneTable').DataTable().row('#'+id).select();geneSelect();
+}
+
+// Helper function to remove gene from graph with check
+function delGene(id){
+  $('#GeneTable').DataTable().row('#'+id).deselect();
+  removeGenes([id]);
+}
+
+// Run GWS enrichment on table
+function gws(e,dt,node,config){
+  // Build the gene query list
+  var geneList = dt.rows().ids();
+  enrich(geneList,false);
+}
+
+// Run GO enrichment on table
+function gont(e,dt,node,cofig){
+  // Build the gene query list
+  var geneList = dt.rows().ids();
+  enrich(geneList,true);
 }
 
 /*---------------------------------------
@@ -282,21 +294,6 @@ function destroyTable(table,hide){
   
   $(tableID).toggleClass('hidden',hide);
   $(waitID).toggleClass('hidden',!(hide));
-}
-
-/*---------------------------------------
-      Run Enrichment Functions
----------------------------------------*/
-function gws(e,dt,node,config){
-  // Build the gene query list
-  var geneList = dt.rows().ids();
-  enrich(geneList,false);
-}
-
-function gont(e,dt,node,cofig){
-  // Build the gene query list
-  var geneList = dt.rows().ids();
-  enrich(geneList,true);
 }
 
 /*-------------------------------

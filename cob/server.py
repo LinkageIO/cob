@@ -83,12 +83,15 @@ if len(conf['networks']) < 1:
 networks = {x:co.COB(x) for x in conf['networks']}
 
 network_info = []
+refLinks = {}
 for name,net in networks.items():
     network_info.append({
         'name':net.name,
         'refgen':net._global('parent_refgen'),
-        'desc':net.description
+        'desc':net.description,
     })
+    if net._global('parent_refgen') in conf['refLinks']:
+        refLinks[net.name] = conf['refLinks'][net._global('parent_refgen')]
 print('Availible Networks: ' + str(networks))
 
 # Generate ontology list based on allowed list and load them into memory
@@ -195,10 +198,11 @@ def index():
 @app.route('/defaults')
 def defaults():
     return jsonify({
+        'opts':opts,
         'fdrFilter':conf['defaults']['fdrFilter'],
         'logSpacing':conf['defaults']['logSpacing'],
         'visEnrich':conf['defaults']['visEnrich'],
-        'opts':opts
+        'refLinks':refLinks
     })
 
 # Sends off the js and such when needed
@@ -300,7 +304,7 @@ def term_network():
     # Get the edges of the nodes that will be rendered
     render_list = []
     for node in net['nodes'].values():
-        if node['data']['render'] == 'x':
+        if node['data']['render']:
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
     
@@ -409,7 +413,7 @@ def custom_network():
     # Get the edges of the nodes that will be rendered
     render_list = []
     for node in net['nodes'].values():
-        if node['data']['render'] == 'x':
+        if node['data']['render']:
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
     
@@ -569,7 +573,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
-            'render': ' ',
+            'render': False,
             'term': term,
             'snp': gene.attr['parent_locus'].replace('<','[').replace('>',']'),
             'alias': alias,
@@ -602,7 +606,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         if ldegree >= nodeCutoff:
             if (not fdrCutoff) or gwasData.empty or fdr <= fdrCutoff:
                 if (not render) or (gene.id in render):
-                    node['data']['render'] = 'x'
+                    node['data']['render'] = True
         
         # Save the node to the list
         nodes[gene.id] = node

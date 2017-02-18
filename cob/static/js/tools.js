@@ -1,4 +1,14 @@
 /*--------------------------------
+     Send out reference link
+---------------------------------*/
+function geneRef(id){
+  var link = refLinks[curNetwork];
+  link = link.replace('{id}',id);
+  link = link.replace('.WM82.A2.V1','');
+  window.open(link);
+}
+
+/*--------------------------------
     Reset all Graphs and Tables 
 ---------------------------------*/
 function clearResults(){

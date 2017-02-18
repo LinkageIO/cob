@@ -71,6 +71,9 @@ var fdrFlag = false;
 // Dictionary to contain metadata for all of the parameters
 var optVals = {};
 
+// Dictionary to contain any gene reference links
+var refLinks = {};
+
 /*-----------------------------------------------
               Initialization
 -----------------------------------------------*/
@@ -101,6 +104,9 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
       // Reset FDR state variables
       fdrFilterDefault = data.fdrFilter;
       fdrFilter = fdrFilterDefault;
+      
+      // Set the refLinks
+      refLinks = data.refLinks;
       
       // Set the options
       restoreDefaults();
