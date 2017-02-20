@@ -81,7 +81,7 @@ name: cob                   # The name of this server instance, must be unique f
                             #      each instance, can be overridden by '-n' flag
 port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
-timeout: 300                # How long a thread maybe unresponsive before termination
+timeout: 500                # How long a thread maybe unresponsive before termination
 ```
 ###Datasets
 ```
@@ -129,4 +129,6 @@ Annotations
 -----------
 FDR results are now simply provided by the GWASData class in Camoco, thus to add 
 them to the site, simply initialize them for their respective reference genome 
-or GWAS data set and they will appear!
+or GWAS data set and they will appear. This method will be deprecated pending 
+future direct inclusion of this functionality into the Camoco OverlapAnalysis class.
+Stay tuned for future changes.
