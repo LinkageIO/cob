@@ -3,29 +3,121 @@
 COB - The Co-expression Browser
 ===============================
 
-COB is a complete client/server package built to browse gene co-expression data.
-The client is written in javascript which talks to the server (written in python)
-using a RESTFUL API.
+COB is a complete client/server package built to browse gene co-expression networks
+created by [Camoco](https://github.com/schae234/Camoco). The client is written in 
+javascript, and the server is written in python. 
 
 Getting Started
 ---------------
-To begin, you need to start the server. `COB.py` contains the server code which
-is a flask app. The app can be run on its own using flask:
+This package is entirely dependent on [Camoco](https://github.com/schae234/Camoco).
+It is is designed such that once the Camoco has been installed, COB can be
+added by, inside the camoco virtual environment, running:
 ```
-$ python COB.py
+$ pip install <PYPI NAME>
 ```
-then navigate to http://localhost:50002
+Once installed, COB has a convinient command line interface to manage the server.
+To run it with all of the default options, no options are required, just execute
+in the camoco virtual environment:
+```
+$ cob
+```
+This will start the server in the current terminal window. To see the site, navigate 
+to `http://localhost:50000` in your web browser once the server has finished loading. 
+To terminate the server, press `Ctrl+C` in the same terminal window. To run the 
+server in the background, add the `-d` flag to the start command. To terminate all
+instances of the COB server, run `cob -k`. To define a specific server to kill, 
+add the `-n` flag followed by the name of the server as such:
+```
+$ cob -k -n my_server
+```
+To use a specific configuration file for server settings, the file may be defined
+with the `-c` flag:
+```
+$ cob -c my_server.conf
+```
+If no configuration file is defined, COB then checks for a section `web` in the
+main camoco configuration file `~/.camoco.conf`. If there are no settings in that
+file, it will load with default values. The full configuration options are discussed
+in the next section.
 
-**Note:** this will not, by default, serve pages over the web. The server runs on
-port 50002 which does not normally facing the internet.
+This is the full documentation for all `cob` CLI options, which can also be accessed
+by executing `cob -h`:
+```
+usage: cob [-h] [-c USERCONF] [-d] [-k] [-l] [-n NAME]
 
-**Note:**
-In order to deploy the server to the web, you must first connect COB to whatever
-web server you are running. Apache, for some reason, hates flask. Instead we
-run the flask app on a [gunicorn](http://gunicorn.org/) server. A script called
-`run.sh` is included to run the gunicorn instance. Once this is running, you can
-redirect HTTP traffic from apache by including the following as an Apache virtualhost
+Manage instances of the COB server.
 
+optional arguments:
+  -h, --help            show this help message and exit
+  -c USERCONF, --config USERCONF
+                        Provide a YAML formatted configuration file, if not
+                        provided, general Camoco config file is used.
+  -d, --daemon          Run gunicorn as a daemon (allows closing of this
+                        terminal).
+  -k, --kill            Kill running server. Use '-n' to define specific
+                        server to kill otherwise all will be.
+  -l, --list            Kill running server. Use '-n' to define specific
+                        server to kill otherwise all will be.
+  -n NAME, --name NAME  Name of server to start or kill.
+```
+
+Configuration
+-------------
+A powerful configuration engine is provided to both set options for the server
+and also options for the content for the website, such as default option 
+values. As mentioned above, these can either be provided through a standalone
+YAML configuration file ([`example.conf`](https://github.com/monprin/cob/blob/master/example.conf)
+is included in the repo) or in a section with the same format titled `web` in
+the main camoco configuration file (found at `~/.camoco.conf`). One need not 
+include one at all, this will just be started with the default values (seen 
+below). This will also trigger all available Camoco networks and GWAS datasets
+to be loaded in. To prevent this, one may specify the desired datasets. The 
+following is an annotated version of the default settings, showing all the
+potential configuration options:
+
+###Server Options
+```
+name: cob                   # The name of this server instance, must be unique for 
+                            #      each instance, can be overridden by '-n' flag
+port: 50000                 # Port to which the server will be attached
+threads: 8                  # How many individual threads the sever process may use
+timeout: 300                # How long a thread maybe unresponsive before termination
+```
+###Datasets
+```
+networks:                   # Camoco networks that are to be loaded in the server.
+  - My_Network_1            #      If this is not included, all available Camoco
+  - My_Network_2            #      networks will be loaded.
+gwas:                       # GWAS datasets that will be loaded in the server. If
+  - My_GWAS_1               #      this is not included, all GWAS datasets that 
+                            #      correspond to loaded networks will be loaded.
+```
+###Default Values
+```
+defaults:                   # This is the dictonary containing all of the defaults
+                            #      for the options on the web site
+  logSpacing: True          # Spacing of genes in Polywas layout, log or true distance
+  visEnrich: True           # Only enrich genes visible on graph or all in table
+  fdrFilter: True           # Whether to use FDR to filter query results
+  nodeCutoff: 1             # How many edges a node must have to be visible
+  edgeCutoff: 3.0           # The cutoff for significance of edge scores
+  fdrCutoff: 0.35           # If the FDR Filter is used, the cutoff for being visible
+  windowSize: 50000         # Window size used in the query
+  flankLimit: 2             # Flank limit used in the query
+  visNeighbors: 25          # Default number of neighbors visible in custom network
+  nodeSize: 10              # Size of the nodes on the graph
+  snpLevels: 3              # Number of colors to use for differentiating SNPs in Polywas
+  pCutoff: 0.05             # P value cutoff for enrichment queries
+  minTerm: 5                # Minimum number of genes a GO term must have to be included
+  maxTerm: 300              # Maximum number of genes a GO term must have to be included
+```
+
+Notes
+-----
+If you care to make this site accessible to the web, you can add a reverse proxy
+to Apache, allowing for access by using a normal URL. An example of how to do
+this is provided here, but for more detailed documentation, see the 
+[Apache docs](https://httpd.apache.org/docs/2.4/).
 ```
 <VirtualHost *:80>
        ProxyPass /cob http://127.0.0.1:50002
@@ -33,11 +125,8 @@ redirect HTTP traffic from apache by including the following as an Apache virtua
 </VirtualHost *:80>
 ```
 
-Then you can visit (for instance): http://csbio.cs.umn.edu/cob,
-Just make sure to swap out for your own servername (this ones mine ;)
-
 Annotations
 -----------
-Annotations and FDR results are now simply provided by the RefGenFunc and GWASData
-classes in Camoco, thus to add them to the site, simply initialize them for their 
-respective reference genome or GWAS data set and they will appear!
+FDR results are now simply provided by the GWASData class in Camoco, thus to add 
+them to the site, simply initialize them for their respective reference genome 
+or GWAS data set and they will appear!
