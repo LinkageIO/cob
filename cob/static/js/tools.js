@@ -1,4 +1,14 @@
 /*--------------------------------
+     Send out reference link
+---------------------------------*/
+function geneRef(id){
+  var link = refLinks[curNetwork];
+  link = link.replace('{id}',id);
+  link = link.replace('.WM82.A2.V1','');
+  window.open(link);
+}
+
+/*--------------------------------
     Reset all Graphs and Tables 
 ---------------------------------*/
 function clearResults(){
@@ -170,11 +180,25 @@ function enableFDR(enable,msg){
 /*------------------------------------
         Options Infrastructure
 ------------------------------------*/
+// Get specific opt value
+function getOpt(opt){
+  // Get the numerical interpretation of the value
+  if(optVals[opt]['int']){var val = parseInt(document.forms["opts"][opt].value);}
+  else{var val = parseFloat(document.forms["opts"][opt].value);}
+  return val;
+}
+
+// Set specific opt value
+function setOpt(opt,val){
+  // If no value provided, just use the default
+  if(val === undefined){val = optVals[opt]['default'];}
+  // Set it
+  $('#'+opt).val(val);
+}
+
 // Restore all options to default value
 function restoreDefaults(){
-  Object.keys(optVals).forEach(function(cur,idx,arr){
-    $('#'+cur).val(optVals[cur]['default']);
-  });
+  Object.keys(optVals).forEach(function(cur){setOpt(cur);});
   
   // FDR Special Case
   fdrFilter = fdrFilterDefault;
@@ -226,8 +250,7 @@ function checkOpts(){
     // Fetch all of the current values
     Object.keys(optVals).forEach(function(cur,idx,arr){
       // Get the numerical interpretation of the value
-      if(cur['int']){val = parseInt(document.forms["opts"][cur].value);}
-      else{val = parseFloat(document.forms["opts"][cur].value);}
+      var val = getOpt(cur);
       
       // Check and save name if out of bounds
       if(!((val >= optVals[cur]['min'])&&(val <= optVals[cur]['max']))){

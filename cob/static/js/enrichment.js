@@ -68,7 +68,7 @@ function enrich(geneList,GOnt){
   // Format the gene list as needed
   if(visEnrich){
     geneList = geneList.filter(function(gene){
-      return geneDict[gene].data.render === 'x';
+      return geneDict[gene].data.render;
     });
   }
   geneList = geneList.reduce(function(pre,cur){return pre + ', ' + cur;});

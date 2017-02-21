@@ -83,12 +83,15 @@ if len(conf['networks']) < 1:
 networks = {x:co.COB(x) for x in conf['networks']}
 
 network_info = []
+refLinks = {}
 for name,net in networks.items():
     network_info.append({
         'name':net.name,
         'refgen':net._global('parent_refgen'),
-        'desc':net.description
+        'desc':net.description,
     })
+    if net._global('parent_refgen') in conf['refLinks']:
+        refLinks[net.name] = conf['refLinks'][net._global('parent_refgen')]
 print('Availible Networks: ' + str(networks))
 
 # Generate ontology list based on allowed list and load them into memory
@@ -195,10 +198,11 @@ def index():
 @app.route('/defaults')
 def defaults():
     return jsonify({
+        'opts':opts,
         'fdrFilter':conf['defaults']['fdrFilter'],
         'logSpacing':conf['defaults']['logSpacing'],
         'visEnrich':conf['defaults']['visEnrich'],
-        'opts':opts
+        'refLinks':refLinks
     })
 
 # Sends off the js and such when needed
@@ -300,7 +304,7 @@ def term_network():
     # Get the edges of the nodes that will be rendered
     render_list = []
     for node in net['nodes'].values():
-        if node['data']['render'] == 'x':
+        if node['data']['render']:
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
     
@@ -322,8 +326,16 @@ def custom_network():
     cob = networks[str(request.form['network'])]
     nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
     edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    visNeighbors = safeOpts('visNeighbors',int(request.form['visNeighbors']))
     geneList = str(request.form['geneList'])
+    
+    # Detrmine if we want neighbors or not
+    try:
+        int(request.form['visNeighbors'])
+    except ValueError:
+        visNeighbors = None
+    else:
+        visNeighbors = safeOpts('visNeighbors',int(request.form['visNeighbors']))
+    
     
     # Make sure there aren't too many genes
     geneList = list(filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
@@ -347,25 +359,29 @@ def custom_network():
             gene = cob.refgen.from_id(name)
         except ValueError:
             continue
-        nbs = cob.neighbors(gene,names_as_index=False,names_as_cols=True).sort_values('score')
         
-        # Strip everything except the gene IDs and add to the grand neighbor list
+        # Add this gene to the requisite lists
         rejected.remove(name)
         primary.add(gene.id)
         render.add(gene.id)
-        new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
         
-        # Build the set of genes that should be rendered
-        nbs = nbs[:visNeighbors]
-        render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
-        
-        # Remove the query gene if it's present
-        if gene.id in new_genes:
-            new_genes.remove(gene.id)
-        
-        # Add to the set of neighbor genes
-        neighbors = neighbors.union(set(new_genes))
-    cob.log('Found Neighbors')
+        if visNeighbors is not None:
+            # Get the neighbors from Camoco
+            nbs = cob.neighbors(gene, names_as_index=False, names_as_cols=True).sort_values('score')
+            
+            # Strip everything except the gene IDs and add to the grand neighbor list
+            new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
+            
+            # Build the set of genes that should be rendered
+            nbs = nbs[:visNeighbors]
+            render = render.union(set(nbs.gene_a).union(set(nbs.gene_b)))
+            
+            # Remove the query gene if it's present
+            if gene.id in new_genes:
+                new_genes.remove(gene.id)
+            
+            # Add to the set of neighbor genes
+            neighbors = neighbors.union(set(new_genes))
     
     # Get gene objects from IDs, but save list both lists for later
     genes_set = primary.union(neighbors)
@@ -397,7 +413,7 @@ def custom_network():
     # Get the edges of the nodes that will be rendered
     render_list = []
     for node in net['nodes'].values():
-        if node['data']['render'] == 'x':
+        if node['data']['render']:
             render_list.append(node['data']['id'])
     net['edges'] = getEdges(render_list, cob)
     
@@ -557,7 +573,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         node = {'group':'nodes', 'data':{
             'id': gene.id,
             'type': 'gene',
-            'render': ' ',
+            'render': False,
             'term': term,
             'snp': gene.attr['parent_locus'].replace('<','[').replace('>',']'),
             'alias': alias,
@@ -590,7 +606,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         if ldegree >= nodeCutoff:
             if (not fdrCutoff) or gwasData.empty or fdr <= fdrCutoff:
                 if (not render) or (gene.id in render):
-                    node['data']['render'] = 'x'
+                    node['data']['render'] = True
         
         # Save the node to the list
         nodes[gene.id] = node

@@ -9,7 +9,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
     // Get a list of the nodes to render
     var renNodes = [];
     Object.keys(nodes).forEach(function(cur,idx,arr){
-      if(nodes[cur]['data']['render'] === 'x'){renNodes.push(nodes[cur]);}
+      if(nodes[cur]['data']['render']){renNodes.push(nodes[cur]);}
     });
     
     // Check for any rendered nodes
@@ -25,7 +25,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   }
   
   // Update the styles of the nodes for the new sizes
-  updateNodeSize(parseInt(curOpts["nodeSize"]));
+  updateNodeSize(getOpt('nodeSize'));
   
   // Set up the graph event listeners
   setGeneListeners();
@@ -43,9 +43,9 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
 function getPolyLayoutOpts(){
   return {
     name: 'polywas',
-    nodeDiameter: parseInt(curOpts["nodeSize"]),
+    nodeDiameter: getOpt('nodeSize'),
     logSpacing: logSpacing,
-    snpLevels: parseInt(curOpts["snpLevels"]),
+    snpLevels: getOpt('snpLevels'),
   };
 }
 // Function to return an object for the layout options
@@ -174,6 +174,12 @@ function initCyto(nodes,edges,poly){
            'border-color': 'black',
            'border-width' : 1.5,
          }},
+       {selector: ':selected[type = "gene"]',
+         css: {
+           'content': 'data(id)',
+           'font-size': '11',
+           'z-index': '3',
+        }},
        {selector: '.highlightedEdge',
          css: {
            'line-color': '#ffc800',
