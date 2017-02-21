@@ -37,9 +37,14 @@ function enrich(geneList,GOnt){
   $('#EnrichmentTableWait').addClass('hidden');
   $('#EnrichmentTableProg').removeClass('hidden');
   
+  // Derive Export Filename
+  var name = curNetwork + '.'
+  if(isTerm){name += curTerm;}else{name += 'Custom';}
+  
   // Set the variables if we are doing GO
   if(GOnt){
     var address = 'go_enrichment';
+    name += '.GO';
     var title = 'GO Enrichment';
     var desc = 'This table contains all of the significant results obtained by running a GO term enrichment analysis on the given set of genes. These results can be tweaked by the parameters in the \'Options\' tab. P Values are uncorrected for multiple comparisons.';
     var cols = [
@@ -53,6 +58,7 @@ function enrich(geneList,GOnt){
   // Set the variables for Gene Word Search
   else{
     var address = 'gene_word_search';
+    name += '.GWS';
     var title = 'GeneWordSearch';
     var desc = 'This table contains all of the significant results after running a GeneWordSearch query on the given set of genes. These results are based on functional annotations that are associated with the same reference genome as the current network.';
     var cols = [
@@ -129,7 +135,7 @@ function enrich(geneList,GOnt){
         "scrollY": $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
         "searching": true,
         "buttons": [
-          {extend:'csv', filename:address, titleAttr:'Export the results in this table to a CSV file'},
+          {extend:'csv', filename:name, titleAttr:'Export the results in this table to a CSV file'},
         ],
         "columns": cols
       });

@@ -97,6 +97,10 @@ function resetOntology(){
       Gene Table Constructors
 ---------------------------------*/
 function buildGeneTables(){
+  // Derive Export Filename
+  var name = curNetwork + '.'
+  if(isTerm){name += curTerm;}else{name += 'Custom';}
+  
   // Settings for the tables!
   var tableOpts = {
     deferRender: false,
@@ -114,7 +118,7 @@ function buildGeneTables(){
       selector: 'td:not(td:nth-child(1), td:nth-child(2))'
     },
     buttons: [
-      {extend:'csv', filename:'genenetwork', titleAttr:csvTitle},
+      {extend:'csv', filename:name, titleAttr:csvTitle},
       {text:'Graph Subnet', action:makeSubnet, titleAttr:gsTitle},
       {text:'GO', action:gont, enabled:hasGO, titleAttr:goTitle},
       {text:'GWS', action:gws, titleAttr:gwsTitle,

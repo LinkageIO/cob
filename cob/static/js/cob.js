@@ -284,9 +284,41 @@ $('#graphMLButton').click(function(){
   // Get the graph
   var txt = cy.graphml();
   
-  // Remove Chromosomes and SNP Groups
+  // Do some modifications to file
   doc = $.parseXML(txt);
+  
+  // Remove uncessary elements and attributes
   $(doc).find('[id^="SNPG"], node:contains("chrom")').remove();
+  $(doc).find('data').removeAttr('type');
+  
+  // Find the attribute types for nodes and edges
+  var nodeAttrs = new Set();
+  var edgeAttrs = new Set();
+  $(doc).find('node>data').each(function(idx,cur){nodeAttrs.add($(cur).attr('key'));});
+  $(doc).find('edge>data').each(function(idx,cur){edgeAttrs.add($(cur).attr('key'));});
+  
+  // Function to find the key string
+  function setKey(key,parent){
+    // Figure out the type of the key
+    var type = 'string';
+    var val = $(doc).find('data[key="'+key+'"]').first().text();
+    if((!isNaN(val)) && (val.length > 0)){
+      if(Number.isInteger(+val)){type = 'int'}
+      else{type = 'double'}
+    }
+    
+    // Build the XML line
+    var line = '<key id="'+key+'" for="'+parent+'" attr.name="'+key+'" attr.type="'+type+'"/>';
+    
+    // Add it to the graph
+    $(doc).find('graph').before(line);
+  }
+  
+  // Add eaach of the keys to the header
+  nodeAttrs.forEach(function(cur){setKey(cur,'node');});
+  edgeAttrs.forEach(function(cur){setKey(cur,'edge');});
+  
+  // Re-Serialize the graph
   txt = (new XMLSerializer()).serializeToString(doc);
   
   // Derive Filename
