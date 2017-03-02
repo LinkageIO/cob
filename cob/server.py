@@ -276,25 +276,31 @@ def term_network():
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
     genes = cob.refgen.candidate_genes(
-        ontology[term].effective_loci(window_size=windowSize),
+        #ontology[term].effective_loci(window_size=windowSize),
+        ontology[term].strongest_loci(window_size=windowSize,attr='numIterations',lowest=False),
         flank_limit=flankLimit,
         chain=True,
         include_parent_locus=True,
         #include_parent_attrs=['numIterations', 'avgEffectSize'],
         include_num_intervening=True,
         include_rank_intervening=True,
-        include_num_siblings=True)
+        include_num_siblings=True
+    )
+    cob.log('Found {} candidate genes',len(genes))
     # Base of the result dict
     net = {}
     
     # If there are GWAS results, and a FDR Cutoff
     if fdrCutoff and ontology.name in gwas_data_db:
+        cob.log('Fetching genes with FDR < {}',fdrCutoff)
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
-        net['nodes'] = getNodes(genes, cob, term, gwasData=gwasData,  nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
-    
-    # Otherwise just run it without GWAS Data
+        net['nodes'] = getNodes(
+                genes, cob, term, gwasData=gwasData, nodeCutoff=nodeCutoff, 
+                windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff
+        )
     else:
+        # Otherwise just run it without GWAS Data
         net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit)
     
     # Get the edges of the nodes that will be rendered
