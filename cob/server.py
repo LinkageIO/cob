@@ -126,8 +126,8 @@ print('Found gene names')
 # Find all of the GWAS data we have available
 print('Finding GWAS Data...')
 gwas_data_db = {}
-for gwas in co.available_datasets('GWASData')['Name']:
-    gwas_data_db[gwas] = co.GWASData(gwas)
+for gwas in co.available_datasets('Overlap')['Name']:
+    gwas_data_db[gwas] = co.Overlap(gwas)
 
 # Find the available window sizes and flank limits for each GWAS/COB combo
 print('Finding GWAS Metadata...')
@@ -549,7 +549,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
             ldegree = locality.ix[gene.id]['local']
             gdegree = locality.ix[gene.id]['global']
         except KeyError as e:
-            ldegree = gdegree = 3
+            ldegree = gdegree = 'nan'
 
         # Catch for bug in camoco
         try:
@@ -567,7 +567,8 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         # Fetch the FDR if we can
         fdr = np.nan
         if gene.id in gwasData.index:
-            fdr = gwasData.loc[gene.id]['fdr']
+            fdr = gwasData.loc[gene.id]['fdr'].min()
+            if np.isnan(fdr): 
             
         # Pull any annotations from our databases
         anote = ''

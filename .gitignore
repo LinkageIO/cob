@@ -1,3 +1,7 @@
 sensitive/*
 cob.egg-info
 cob/__pycache__
+*.swp
+*.swo
+build/*
+dist/*
