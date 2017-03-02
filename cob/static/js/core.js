@@ -38,7 +38,7 @@ function loadGraph(newGraph,poly,term,nodes,edges){
             cy.startBatch();
             // Update Node Degrees
             Object.keys(geneDict).forEach(function(cur,idx,arr){
-              if(geneDict[cur]['data']['render'] === 'x'){
+              if(geneDict[cur]['data']['render']){
                 geneDict[cur]['data']['cur_ldegree'] = cy.getElementById(cur).degree();}
               else{geneDict[cur]['data']['cur_ldegree'] = 0;}
             });
@@ -214,7 +214,7 @@ function restoreGraph(){
   $('#geneList').html(pastQuery.pop());
   
   // Make a list of all the genes for the purposes of the query
-  var allGenes = Object.keys(geneDict).filter(cur => geneDict[cur]['data']['render'] === 'x');
+  var allGenes = Object.keys(geneDict).filter(cur => geneDict[cur]['data']['render']);
   
   // Run the server query to get the edges for this set
   $.ajax({

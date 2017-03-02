@@ -83,11 +83,13 @@
       right: 0;
       z-index: 10;
     }
-    #reGraphButton, #reEnrichButton, #resetOptsButton {
-      width: 95%;
+    .build-btn-table {
+      width: 100%;
     }
-    .updateButton {
-      width: 33%;
+    .build-btn {
+      width: 95%;
+      display: block;
+      margin: auto;
     }
     tr.form-group > td {
       text-align: right;
@@ -231,7 +233,16 @@
               <textarea type="text" class="form-control" rows="20" id="geneList" placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a"></textarea>
             </div>
             <br>
-            <input type="button" class="btn btn-primary" id="TermGenesButton" value="Build Graph">
+            <table class="build-btn-table">
+              <tr>
+                <td style="width:50%">
+                  <input type="button" class="btn btn-primary build-btn" id="wNeighborsButton" value="Build with Neighbors">
+                </td>
+                <td style="width:50%">
+                  <input type="button" class="btn btn-primary build-btn" id="woNeighborsButton" value="Build without Neighbors">
+                </td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
@@ -380,16 +391,16 @@
           </td></tr>
         </table>
         <br>
-        <table style="width:100%">
+        <table class="build-btn-table">
           <tr>
-            <td class="updateButton">
-              <input type="button" class="btn btn-danger" id="resetOptsButton" value="Restore Defaults">
+            <td style="width:33%">
+              <input type="button" class="btn btn-danger build-btn" id="resetOptsButton" value="Restore Defaults">
             </td>
-            <td class="updateButton">
-              <input type="button" class="btn btn-primary" id="reEnrichButton" value="Refresh Enrichment">
+            <td style="width:33%">
+              <input type="button" class="btn btn-primary build-btn" id="reEnrichButton" value="Refresh Enrichment">
             </td>
-            <td class="updateButton">
-              <input type="button" class="btn btn-primary" id="reGraphButton" value="Refresh Graph">
+            <td style="width:33%">
+              <input type="button" class="btn btn-primary build-btn" id="reGraphButton" value="Refresh Graph">
             </td>
           </tr>
         </table>
