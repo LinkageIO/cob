@@ -30,7 +30,7 @@ def killServers(pids):
 camocoConf = yaml.load(open(os.path.expanduser('~/.camoco.conf'),'r'))
 
 # Location of scratch folder
-base = os.path.join(camocoConf['options']['basedir'],'web')
+base = os.path.join(os.path.expanduser(camocoConf['options']['basedir']),'web')
 os.makedirs(base, exist_ok=True)
 
 if args.list:
