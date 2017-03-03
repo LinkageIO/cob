@@ -56,9 +56,9 @@ opts = {
   'fdrCutoff':{'title':'FDR Filter (Term)',
     'default':dflt['fdrCutoff'],'min':0.0,'max':5.0,'int':False},
   'windowSize':{'title':'Window Size (Term)',
-    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True},
+    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True,'alt':'HPO'},
   'flankLimit':{'title':'Flank Limit (Term)',
-    'default':dflt['flankLimit'],'min':0,'max':20,'int':True},
+    'default':dflt['flankLimit'],'min':0,'max':20,'int':True,'alt':'HPO'},
   'visNeighbors':{'title':'Vis Neighbors (Custom)',
     'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
   'nodeSize':{'title':'Gene Size',
@@ -264,10 +264,10 @@ def term_network():
     cob = networks[str(request.form['network'])]
     ontology = onts[str(request.form['ontology'])]
     term = str(request.form['term'])
-    nodeCutoff = safeOpts('nodeCutoff',int(request.form['nodeCutoff']))
-    edgeCutoff = safeOpts('edgeCutoff',float(request.form['edgeCutoff']))
-    windowSize = safeOpts('windowSize',int(request.form['windowSize']))
-    flankLimit = safeOpts('flankLimit',int(request.form['flankLimit']))
+    nodeCutoff = safeOpts('nodeCutoff',request.form['nodeCutoff'])
+    edgeCutoff = safeOpts('edgeCutoff',request.form['edgeCutoff'])
+    windowSize = safeOpts('windowSize',request.form['windowSize'])
+    flankLimit = safeOpts('flankLimit',request.form['flankLimit'])
     
     # Detrmine if there is a FDR cutoff or not
     try:
@@ -279,23 +279,33 @@ def term_network():
     
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
-    genes = cob.refgen.candidate_genes(
-        #ontology[term].effective_loci(window_size=windowSize),
-        ontology[term].strongest_loci(window_size=windowSize,attr='numIterations',lowest=False),
-        flank_limit=flankLimit,
-        chain=True,
-        include_parent_locus=True,
-        #include_parent_attrs=['numIterations', 'avgEffectSize'],
-        include_num_intervening=True,
-        include_rank_intervening=True,
-        include_num_siblings=True
-    )
+    # Check to see if Genes are HPO
+    if 'HPO' == windowSize == flankLimit:
+        genes = cob.refgen[gwas_data_db[ontology.name].high_priority_candidates().query(
+            'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
+                cob.name, ontology.name, term
+            )
+        ).gene.unique()]
+    else:
+        genes = cob.refgen.candidate_genes(
+            #ontology[term].effective_loci(window_size=windowSize),
+            ontology[term].strongest_loci(window_size=windowSize,attr='numIterations',lowest=False),
+            #genes,
+            window_size=windowSize,
+            flank_limit=flankLimit,
+            chain=True,
+            include_parent_locus=True,
+            #include_parent_attrs=['numIterations', 'avgEffectSize'],
+            include_num_intervening=True,
+            include_rank_intervening=True,
+            include_num_siblings=True
+        )
     cob.log('Found {} candidate genes',len(genes))
     # Base of the result dict
     net = {}
     
     # If there are GWAS results, and a FDR Cutoff
-    if fdrCutoff and ontology.name in gwas_data_db:
+    if fdrCutoff and ontology.name in gwas_data_db and windowSize != 'HPO' and flankLimit != 'HPO':
         cob.log('Fetching genes with FDR < {}',fdrCutoff)
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
@@ -518,8 +528,12 @@ def go_enrichment():
 # --------------------------------------------
 def safeOpts(name,val):
     # Get the parameters into range
-    val = min(val,opts[name]['max'])
-    val = max(val,opts[name]['min'])
+    if 'alt' in opts[name] and val == opts[name]['alt']:
+        val = opts[name]['alt']
+    else:
+        val = int(val) if opts[name]['int'] else float(val)
+        val = min(val,opts[name]['max'])
+        val = max(val,opts[name]['min'])
     return val
 
 # --------------------------------------------
@@ -554,9 +568,13 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         # Catch for bug in camoco
         try:
             numInterv = str(gene.attr['num_intervening'])
+            rankIntervening = str(gene.attr['intervening_rank'])
+            numSiblings = str(gene.attr['num_siblings'])
         except KeyError as e:
             #print('Num Attr fail on gene: ' + str(gene.id))
-            numInterv = 'nan'
+            numInterv = '-'
+            rankIntervening = '-'
+            numSiblings = '-'
 
         # Pull any aliases from our database
         alias = ''
@@ -568,13 +586,15 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
         fdr = np.nan
         if gene.id in gwasData.index:
             fdr = gwasData.loc[gene.id]['fdr'].min()
-            if np.isnan(fdr): 
             
         # Pull any annotations from our databases
         anote = ''
         if gene.id in func_data:
             for a in func_data[gene.id]:
                 anote += a + ' '
+        # Fetch parent locus if we can
+        if 'parent_locus' not in gene.attr:
+            gene.attr['parent_locus'] = '[Unknown]{}:{}-{}'.format(gene.chrom,gene.start,gene.end)
         
         # Build the data object from our data
         node = {'group':'nodes', 'data':{
@@ -595,8 +615,8 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
             'windowSize': str(windowSize),
             'flankLimit': str(flankLimit),
             'numIntervening': numInterv,
-            'rankIntervening': str(gene.attr['intervening_rank']),
-            'numSiblings': str(gene.attr['num_siblings']),
+            'rankIntervening': rankIntervening,
+            'numSiblings': numSiblings,
             #'parentNumIterations': str(gene.attr['parent_numIterations']),
             #'parentAvgEffectSize': str(gene.attr['parent_avgEffectSize']),
             'annotations': anote,
