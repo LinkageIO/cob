@@ -127,6 +127,7 @@ print('Found gene names')
 print('Finding GWAS Data...')
 gwas_data_db = {}
 for gwas in co.available_datasets('Overlap')['Name']:
+    print("Loading {}".format(gwas))
     gwas_data_db[gwas] = co.Overlap(gwas)
 
 # Find the available window sizes and flank limits for each GWAS/COB combo

@@ -36,7 +36,7 @@
   <!-- Download Shortcut Function -->
   <script src="https://cdn.rawgit.com/rndme/download/v1.4.6/download.js"></script>
 
-  <!-- Loaf COB -->
+  <!-- Load COB -->
   <script type="text/javascript">
     var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
     $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')}).appendTo('head');
@@ -125,6 +125,11 @@
       transform: translateY(0%);
     }
     #logSpacingInfo, #visEnrichInfo {
+      position: relative;
+      vertical-align: middle;
+      transform: translateY(0%);
+    }
+    .button-glyph {
       position: relative;
       vertical-align: middle;
       transform: translateY(0%);
@@ -293,6 +298,20 @@
 
         <tr><td colspan="2"><h3>SNP2Gene Mapping Options</h3></td></tr>
 
+          <tr class='form-group' colspan='2'>
+            <td><label class='opt-label'>Overlapping SNPs</label></td>
+            <td class='btn-group'>
+              <div class='has-feedback'>
+               <button type='button' class='btn btn-default' data-toggle="button"><b>Effective SNP</b>
+                 <i id="EffectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+               </button>
+               <button type='button' class='btn btn-default active' data-toggle="button" aria-pressed="true"><b>Strongest SNP</b>
+                 <i id="StrongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+               </button>
+              </div>
+            </td>
+          </tr>
+
           <tr class="form-group">
             <td><label class="opt-label">Window Size (Term)</label></td>
             <td class="input-group">
@@ -307,7 +326,7 @@
               </div>
             </td>
           </tr>
-
+        
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="windowSizeError" role="alert"></div>
           </td></tr>
@@ -360,7 +379,7 @@
             <div class="alert alert-danger hidden" id="snpLevelsError" role="alert"></div>
           </td></tr>
           <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><span id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
+            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
           </td></tr>
         <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
           <tr class="form-group">
@@ -394,7 +413,7 @@
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
           <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><span id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></span></button>
+            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
           </td></tr>
         </table>
         <br>
@@ -420,7 +439,7 @@
       <h5 id="GeneTableWait">Please follow the instructions in the network tab to build a network. Information on the genes in that network will appear here.</h5>
       <table class="table table-hover" id="GeneTable">
       <tbody></tbody>
-      </table>
+        </table>
     </div>
     <!-- End Gene Table Tab -->
 
