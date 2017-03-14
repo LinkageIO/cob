@@ -75,7 +75,7 @@ else:
             'logSpacing':True,
             'visEnrich':True,
             'fdrFilter':True,
-            'nodeCutoff':1,
+            'nodeCutoff':0,
             'edgeCutoff':2.5,
             'fdrCutoff':0.35,
             'windowSize':'HPO',#50000,
