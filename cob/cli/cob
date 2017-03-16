@@ -30,7 +30,7 @@ def killServers(pids):
 camocoConf = yaml.load(open(os.path.expanduser('~/.camoco.conf'),'r'))
 
 # Location of scratch folder
-base = os.path.join(camocoConf['options']['basedir'],'web')
+base = os.path.join(os.path.expanduser(camocoConf['options']['basedir']),'web')
 os.makedirs(base, exist_ok=True)
 
 if args.list:
@@ -75,11 +75,11 @@ else:
             'logSpacing':True,
             'visEnrich':True,
             'fdrFilter':True,
-            'nodeCutoff':1,
-            'edgeCutoff':3.0,
+            'nodeCutoff':0,
+            'edgeCutoff':2.5,
             'fdrCutoff':0.35,
-            'windowSize':50000,
-            'flankLimit':2,
+            'windowSize':'HPO',#50000,
+            'flankLimit':'HPO',#2,
             'visNeighbors':25,
             'nodeSize':10,
             'snpLevels':3,

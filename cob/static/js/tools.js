@@ -183,8 +183,15 @@ function enableFDR(enable,msg){
 // Get specific opt value
 function getOpt(opt){
   // Get the numerical interpretation of the value
-  if(optVals[opt]['int']){var val = parseInt(document.forms["opts"][opt].value);}
-  else{var val = parseFloat(document.forms["opts"][opt].value);}
+  if(optVals[opt]['alt']==document.forms['opts'][opt].value){
+    var val = document.forms['opts'][opt].value;
+  }
+  else if(optVals[opt]['int']){
+    var val = parseInt(document.forms["opts"][opt].value);
+  }
+  else{
+    var val = parseFloat(document.forms["opts"][opt].value);
+  }
   return val;
 }
 
@@ -254,7 +261,9 @@ function checkOpts(){
       
       // Check and save name if out of bounds
       if(!((val >= optVals[cur]['min'])&&(val <= optVals[cur]['max']))){
-        badFields.push(cur);}
+        if(val != optVals[cur]['alt']){
+          badFields.push(cur);}
+        }
     });
     
     // Return the problemeatic ones
