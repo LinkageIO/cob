@@ -274,7 +274,7 @@ function makeChroms(cy, genes, logSpacing){
   
   // Sort the genes first by SNP, then by local degree
   genes = genes.sort(function(a,b){
-    var snpDiff = a.data('snp').localeCompare(b.data('snp'));
+    var snpDiff = a.data('snp').localeCompare(b.data('snp'),{},{numeric:true});
     if(snpDiff !== 0){return snpDiff;}
     else{return b.data('cur_ldegree') - a.data('cur_ldegree');}
   });
@@ -316,7 +316,7 @@ function makeChroms(cy, genes, logSpacing){
   
   // Sort the SNP data by chromosome and position
   snpData = snpData.sort(function(a,b){
-    var chromDiff = a['chrom'].localeCompare(b['chrom']);
+    var chromDiff = a['chrom'].localeCompare(b['chrom'],{},{numeric:true});
     if(chromDiff !== 0){return chromDiff;}
     else{return (a['pos'] - b['pos'])}
   });
