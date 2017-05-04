@@ -75,7 +75,7 @@ to be loaded in. To prevent this, one may specify the desired datasets. The
 following is an annotated version of the default settings, showing all the
 potential configuration options:
 
-###Server Options
+### Server Options
 ```
 name: cob                   # The name of this server instance, must be unique for 
                             #      each instance, can be overridden by '-n' flag
@@ -83,7 +83,7 @@ port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
 timeout: 500                # How long a thread maybe unresponsive before termination
 ```
-###Datasets
+### Datasets
 ```
 networks:                   # Camoco networks that are to be loaded in the server.
   - My_Network_1            #      If this is not included, all available Camoco
@@ -92,7 +92,7 @@ gwas:                       # GWAS datasets that will be loaded in the server. I
   - My_GWAS_1               #      this is not included, all GWAS datasets that 
                             #      correspond to loaded networks will be loaded.
 ```
-###Default Values
+### Default Values
 ```
 defaults:                   # This is the dictonary containing all of the defaults
                             #      for the options on the web site
