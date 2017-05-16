@@ -75,7 +75,7 @@ to be loaded in. To prevent this, one may specify the desired datasets. The
 following is an annotated version of the default settings, showing all the
 potential configuration options:
 
-###Server Options
+### Server Options
 This section sets the parameters pertaining to the functioning of the server. 
 ```
 name: cob                   # The name of this server instance, must be unique for 
@@ -84,7 +84,7 @@ port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
 timeout: 500                # How long a thread maybe unresponsive before termination
 ```
-###Datasets
+### Datasets
 This section allows for defining which datasets to load into the web interface. If
 none are defined, then all currently present in Camoco will be loaded.
 ```
@@ -95,7 +95,7 @@ gwas:                       # GWAS datasets that will be loaded in the server. I
   - My_GWAS_1               #      this is not included, all GWAS datasets that 
                             #      correspond to loaded networks will be loaded.
 ```
-###Default Values
+### Default Values
 This section allows for setting the default values that are seen in the options tab
 of the site. Values can be changed at any time in the site, but this is provided as
 a convinience when a certain set of parameters is used most.
@@ -117,7 +117,7 @@ defaults:                   # This is the dictonary containing all of the defaul
   minTerm: 5                # Minimum number of genes a GO term must have to be included
   maxTerm: 300              # Maximum number of genes a GO term must have to be included
 ```
-###Reference Links
+### Reference Links
 This section allows for linking directly from genes to an external website for more
 information. This can be configured for each different reference genome (RefGen) used 
 to build the included networks. If not included, the option won't appear. To configure
