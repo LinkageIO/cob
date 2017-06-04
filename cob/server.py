@@ -61,7 +61,7 @@ opts = {
     'default':dflt['flankLimit'],'min':0,'max':20,'int':True,'alt':'HPO'},
   'visNeighbors':{'title':'Vis Neighbors (Custom)',
     'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
-  'nodeSize':{'title':'Gene Size',
+  'nodeSize':{'title':'Node Size',
     'default':dflt['nodeSize'],'min':5,'max':50,'int':True},
   'snpLevels':{'title':'SNP Colors (Polywas)',
     'default':dflt['snpLevels'],'min':1,'max':10,'int':True},

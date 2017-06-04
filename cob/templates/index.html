@@ -170,12 +170,12 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header"><h4 class="modal-title">
-        <b>COB is growing!</b></h4>
+        <b>The graph is being built!</b></h4>
       </div>
       <div class="modal-body" id="geneStatus">
         <p>We are now getting the data (if needed) and running the layout algorithm.</p>
         <p>For bigger networks this can take upwards of 60 seconds so please
-        be patient... this page goes unresponsive while processing the layout.</p>
+        be patient, this page goes unresponsive while processing the layout.</p>
       </div>
     </div>
   </div>
@@ -214,7 +214,7 @@
 
       <!-- Section For Term Selection -->
       <br>
-      <h5 id="GeneSelectWait">Select a network above to continue.</h5>
+      <h5 id="GeneSelectWait">Please select a network above to continue.</h5>
       <div class="hidden" id="GeneSelect">
         <ul class="nav nav-tabs" role="tablist" id="GeneSelectTabs">
           <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
@@ -225,7 +225,7 @@
             <br><table class="table table-hover" id="OntologyTable">
                 <tbody></tbody>
               </table>
-            <br><h5 id="TermTableWait" class="">Select and "ontology" above to continue.</h5>
+            <br><h5 id="TermTableWait" class="">Please select an ontology above to continue.</h5>
             <table class="table table-hover" id="TermTable">
               <tbody></tbody>
             </table>
@@ -282,7 +282,7 @@
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
 
-          <tr id="fdrRow" title="Hey!" class="form-group">
+          <tr id="fdrRow" class="form-group">
             <td>
               <button id="fdrButton" type="button" class="opt-label btn btn-default active" data-toggle="button"><b>FDR Filter (Term)</b></button>
             </td>
@@ -291,7 +291,6 @@
               <i id="fdrCutoffInfo" title="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
-
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
@@ -359,10 +358,10 @@
           </td></tr>
         <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
           <tr class="form-group">
-            <td><label class="opt-label">Gene Size</label></td>
+            <td><label class="opt-label">Node Size</label></td>
             <td class="has-feedback">
               <input type="text" class="form-control" id="nodeSize">
-              <i id="nodeSizeInfo" title="How large the genes appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              <i id="nodeSizeInfo" title="How large the genes and SNPs appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
           <tr><td colspan="2">
