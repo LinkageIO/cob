@@ -96,7 +96,7 @@ gwas:                       # GWAS datasets that will be loaded in the server. I
 
 ### Default Values
 ```
-defaults:                   # This is the dictonary containing all of the defaults
+defaults:                   # This is the dictionary containing all of the defaults
                             #      for the options on the web site
   logSpacing: True          # Spacing of genes in Polywas layout, log or true distance
   visEnrich: True           # Only enrich genes visible on graph or all in table

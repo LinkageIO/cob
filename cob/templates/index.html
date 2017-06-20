@@ -25,7 +25,6 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.14/cytoscape.min.js" integrity="sha256-6BSV+486t1fI5kCmINCZfBHVcsED36v+3MzwiHncbvU=" crossorigin="anonymous"></script>-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.18/cytoscape.min.js" crossorigin="anonymous"></script>
   <script
     src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.5.2/cytoscape-qtip.js">
@@ -297,18 +296,17 @@
           </td></tr>
 
         <tr><td colspan="2"><h3>SNP2Gene Mapping Options</h3></td></tr>
-
           <tr class='form-group' colspan='2'>
             <td><label class='opt-label'>Overlapping SNPs</label></td>
-            <td class='btn-group'>
-              <div class='has-feedback'>
-               <button type='button' class='btn btn-default' data-toggle="button"><b>Effective SNP</b>
-                 <i id="EffectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
-               </button>
-               <button type='button' class='btn btn-default active' data-toggle="button" aria-pressed="true"><b>Strongest SNP</b>
-                 <i id="StrongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
-               </button>
-              </div>
+            <td class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default active">
+                <input type="radio" name="overlapping" id="effective" autocomplete="off" checked>Effective SNP
+                <i id="EffectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+              <label class="btn btn-default">
+                <input type="radio" name="overlapping" id="strongest" autocomplete="off"> Strongest SNP
+                <i id="StrongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
             </td>
           </tr>
 
@@ -349,7 +347,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Vis Neighbors (Custom)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="visNeighbors">
               <i id="visNeighborsInfo" title="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -360,7 +358,7 @@
         <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Node Size</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="nodeSize">
               <i id="nodeSizeInfo" title="How large the genes and SNPs appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -370,7 +368,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">SNP Colors (Polywas)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="snpLevels">
               <i id="snpLevelsInfo" title="How many different colors to use to differentiate SNPs within a stack, after which the colors will repeat." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -384,7 +382,7 @@
         <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Probability Cutoff</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="pCutoff">
               <i id="pCutoffInfo" title="The P value used to determine what enrichment results are significant." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -394,7 +392,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Min Genes (GO)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="minTerm">
               <i id="minTermInfo" title="How many genes a GO term must contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -404,7 +402,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Max Genes (GO)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="maxTerm">
               <i id="maxTermInfo" title="How many genes a GO term may contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>

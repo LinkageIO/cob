@@ -79,108 +79,114 @@ function initCyto(nodes,edges,poly){
     boxSelectionEnabled: true,
     layout: opts,
     style: [
-        {selector: '[type = "chrom"]',
-         css: {
-           'z-index': '2',
-           'background-color': 'DarkSlateGrey',
-           'content': 'data(id)',
-           'color': 'white',
-           'text-background-color': 'DarkSlateGrey',
-           'text-background-opacity': '1',
-           'text-background-shape': 'roundrectangle',
-           'text-valign': 'center',
-           'text-halign': 'center',
-           'font-size': '25',
-         }},
-       {selector: '[type = "snpG"]',
-        css: {
-          'z-index': '1',
-          'shape': 'diamond',
-          'background-color': 'SlateGrey',
-        }},
-      {selector: '[type = "gene"]',
+      {selector: '[type = "chrom"]',
        css: {
-         'z-index': '1',
-         'shape': 'circle',
-         'background-color': '#337ab7',
+         'z-index': '2',
+         'background-color': 'DarkSlateGrey',
          'content': 'data(id)',
-         'font-size': '11',
-         'min-zoomed-font-size':'50',
+         'color': 'white',
+         'text-background-color': 'DarkSlateGrey',
+         'text-background-opacity': '1',
+         'text-background-shape': 'roundrectangle',
+         'text-valign': 'center',
+         'text-halign': 'center',
+         'font-size': '18',
        }},
-      {selector: '[origin = "query"]',
+     {selector: '[type = "snpG"]',
+      css: {
+        'z-index': '1',
+        'shape': 'circle',
+        'background-color': 'SlateGrey',
+      }},
+    {selector: '[type = "gene"]',
+     css: {
+       'z-index': '1',
+       'shape': 'circle',
+       'background-color': '#337ab7',
+       'content': 'data(id)',
+       'font-size': '11',
+       'min-zoomed-font-size':'50',
+     }},
+    {selector: '[origin = "query"]',
+     css: {
+       'z-index': '3',
+         'background-color': 'DarkOrchid',
+     }},
+     {selector: '[origin = "neighbor"]',
+      css: {
+        'z-index': '2',
+        'background-color': 'MediumSeaGreen',
+      }},
+     {selector: 'edge',
        css: {
-         'z-index': '3',
-           //'background-color': 'DarkOrchid',
-           'background-color': '#ecec3c', //Yellow
+         'curve-style': 'haystack',
+         'line-color': 'grey',
        }},
-       {selector: '[origin = "neighbor"]',
-        css: {
-          'z-index': '2',
+     {selector: 'edge[weight]', //select edges with weight data
+       css :{
+         'width':function(e){
+           var weight = parseFloat(e.data('weight')) - 2
+           if(weight < 0){return 1}
+           else{return weight}
+         },
+         'opacity':function(e){
+           var weight = parseFloat(e.data('weight'))
+           return weight/10
+           
+         }
+      }},
+      {selector: '.snp0',
+        style: {
+          'background-color': 'DarkOrchid',
+        }},
+      {selector: '.snp1',
+        style: {
           'background-color': 'MediumSeaGreen',
         }},
-       {selector: '.snp0',
-         style: {
-           //'background-color': 'DarkOrchid',
-           'background-color': '#c91a3b',
-         }},
-       {selector: '.snp1',
-         style: {
-           'background-color': 'MediumSeaGreen',
-         }},
-       {selector: '.snp2',
-         style: {
-           'background-color': '#337ab7',
-         }},
-       {selector: '.snp3',
-         style: {
-           'background-color': 'LightCoral',
-         }},
-       {selector: '.snp4',
-         style: {
-           'background-color': 'DarkCyan',
-         }},
-       {selector: '.snp5',
-         style: {
-           'background-color': 'Tan',
-         }},
-       {selector: '.snp6',
-         style: {
-           'background-color': 'Maroon',
-         }},
-       {selector: '.snp7',
-         style: {
-           'background-color': 'OliveDrab',
-         }},
-       {selector: '.snp8',
-         style: {
-           'background-color': 'Turquoise',
-         }},
-       {selector: '.snp9',
-         style: {
-           'background-color': 'Sienna',
-         }},
-       {selector: 'edge',
-         css: {
-           'curve-style': 'haystack',
-           //'width': 'mapData(weight,1,10,1,10)',
-           //'opacity': '0.25',
-           'line-color': 'grey',
-         }},
+      {selector: '.snp2',
+        style: {
+          'background-color': '#7a0019',
+        }},
+      {selector: '.snp3',
+        style: {
+          'background-color': '#337ab7',
+        }},
+      {selector: '.snp4',
+        style: {
+          'background-color': 'LightCoral',
+        }},
+      {selector: '.snp5',
+        style: {
+          'background-color': 'DarkCyan',
+        }},
+      {selector: '.snp6',
+        style: {
+          'background-color': 'Tan',
+        }},
+      {selector: '.snp7',
+        style: {
+          'background-color': 'OliveDrab',
+        }},
+      {selector: '.snp8',
+        style: {
+          'background-color': 'Turquoise',
+        }},
+      {selector: '.snp9',
+        style: {
+          'background-color': 'Sienna',
+        }},
        {selector: '.neighbor',
          css: {
-           //'background-color': '#ff6400',
-           'background-color': '#c91a3b', //Dark Red
+           'background-color': '#ff6400',
        }},
        {selector: '.highlighted',
          css: {
-           //'background-color': 'Red',
-           'background-color': '#c91a3b', //Dark Red
+           'background-color': 'Red',
            'z-index': '3',
          }},
        {selector: ':selected',
          css: {
-           'border-color': 'black',
-           'background-color': '#c91a3b', //Dark Red
+           'border-color': 'Black',
            'border-width' : 1.5,
          }},
        {selector: ':selected[type = "gene"]',
@@ -200,31 +206,12 @@ function initCyto(nodes,edges,poly){
            'background-color': 'Yellow',
            'z-index': '4',
          }},
-
-       {selector: 'edge[weight]', //select edges with weight data
-         css :{
-           'width':function(e){
-             var weight = parseFloat(e.data('weight')) - 2
-             if(weight < 0){return 1}
-             else{return weight}
-           },
-           'opacity':function(e){
-             var weight = parseFloat(e.data('weight'))
-             return weight/10
-             //return 0
-           }
-        }},
-
        {selector: '.highlightedEdge',
          css: {
-           'line-color': '#ffc800',
+           'line-color': '#ffcc33',
            'opacity': '1',
            'width' : '3',
            'z-index': '3',
-           //'content': 'data(weight)',
-           //'font-size':'30',
-           //'text-opacity':1,
-           //'color': 'black',
          }},
 
      ],
