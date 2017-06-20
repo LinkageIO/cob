@@ -90,12 +90,12 @@ function initCyto(nodes,edges,poly){
            'text-background-shape': 'roundrectangle',
            'text-valign': 'center',
            'text-halign': 'center',
-           'font-size': '14',
+           'font-size': '25',
          }},
        {selector: '[type = "snpG"]',
         css: {
           'z-index': '1',
-          'shape': 'circle',
+          'shape': 'diamond',
           'background-color': 'SlateGrey',
         }},
       {selector: '[type = "gene"]',
@@ -103,11 +103,15 @@ function initCyto(nodes,edges,poly){
          'z-index': '1',
          'shape': 'circle',
          'background-color': '#337ab7',
+         'content': 'data(id)',
+         'font-size': '11',
+         'min-zoomed-font-size':'50',
        }},
       {selector: '[origin = "query"]',
        css: {
          'z-index': '3',
-         'background-color': 'DarkOrchid',
+           //'background-color': 'DarkOrchid',
+           'background-color': '#ecec3c', //Yellow
        }},
        {selector: '[origin = "neighbor"]',
         css: {
@@ -116,7 +120,8 @@ function initCyto(nodes,edges,poly){
         }},
        {selector: '.snp0',
          style: {
-           'background-color': 'DarkOrchid',
+           //'background-color': 'DarkOrchid',
+           'background-color': '#c91a3b',
          }},
        {selector: '.snp1',
          style: {
@@ -157,41 +162,71 @@ function initCyto(nodes,edges,poly){
        {selector: 'edge',
          css: {
            'curve-style': 'haystack',
-           'width': '1',
-           'opacity': '0.5',
-           'line-color': 'grey'
+           //'width': 'mapData(weight,1,10,1,10)',
+           //'opacity': '0.25',
+           'line-color': 'grey',
          }},
        {selector: '.neighbor',
          css: {
-           'background-color': '#ff6400',
+           //'background-color': '#ff6400',
+           'background-color': '#c91a3b', //Dark Red
        }},
        {selector: '.highlighted',
          css: {
-           'background-color': 'Red',
+           //'background-color': 'Red',
+           'background-color': '#c91a3b', //Dark Red
+           'z-index': '3',
          }},
        {selector: ':selected',
          css: {
            'border-color': 'black',
+           'background-color': '#c91a3b', //Dark Red
            'border-width' : 1.5,
          }},
        {selector: ':selected[type = "gene"]',
          css: {
-           'content': 'data(id)',
+           'z-index': '3',
            'font-size': '11',
+           'min-zoomed-font-size':'1',
+        }},
+       {selector: '.highlighted[type = "gene"]',
+         css: {
+           'min-zoomed-font-size':'1',
            'z-index': '3',
         }},
-       {selector: '.highlightedEdge',
-         css: {
-           'line-color': '#ffc800',
-           'width': '2',
-           'opacity': '1',
-           'z-index': '3',
-         }},
+
        {selector: '.pop',
          css: {
            'background-color': 'Yellow',
            'z-index': '4',
          }},
+
+       {selector: 'edge[weight]', //select edges with weight data
+         css :{
+           'width':function(e){
+             var weight = parseFloat(e.data('weight')) - 2
+             if(weight < 0){return 1}
+             else{return weight}
+           },
+           'opacity':function(e){
+             var weight = parseFloat(e.data('weight'))
+             return weight/10
+             //return 0
+           }
+        }},
+
+       {selector: '.highlightedEdge',
+         css: {
+           'line-color': '#ffc800',
+           'opacity': '1',
+           'width' : '3',
+           'z-index': '3',
+           //'content': 'data(weight)',
+           //'font-size':'30',
+           //'text-opacity':1,
+           //'color': 'black',
+         }},
+
      ],
    elements: {
      nodes: nodes,
