@@ -300,6 +300,19 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
+          <tr class='form-group'>
+            <td><label class='opt-label'>Overlap Analysis</label></td>
+            <td class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default active">
+                <input type="radio" name="overlap" id="density" autocomplete="off" checked><b>Density</b>
+                <i id="densityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+              <label class="btn btn-default">
+                <input type="radio" name="overlap" id="locality" autocomplete="off"><b>Locality</b>
+                <i id="localityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+            </td>
+          </tr>
           <tr class="form-group">
             <td><b>Graph Options</b></td>
             <td class="form-inline" style="text-align:right">
@@ -320,11 +333,11 @@
             <td class="btn-group  btn-group-justified" data-toggle="buttons">
               <label class="btn btn-default active">
                 <input type="radio" name="overlapping" id="effective" autocomplete="off" checked><b>Effective SNP</b>
-                <i id="EffectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+                <i id="effectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
               <label class="btn btn-default">
                 <input type="radio" name="overlapping" id="strongest" autocomplete="off"><b>Strongest SNP</b>
-                <i id="StrongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+                <i id="strongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
             </td>
           </tr>
