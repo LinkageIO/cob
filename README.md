@@ -108,7 +108,6 @@ defaults:                   # This is the dictionary containing all of the defau
   flankLimit: 2             # Flank limit used in the query
   visNeighbors: 25          # Default number of neighbors visible in custom network
   nodeSize: 10              # Size of the nodes on the graph
-  snpLevels: 3              # Number of colors to use for differentiating SNPs in Polywas
   pCutoff: 0.05             # P value cutoff for enrichment queries
   minTerm: 5                # Minimum number of genes a GO term must have to be included
   maxTerm: 300              # Maximum number of genes a GO term must have to be included

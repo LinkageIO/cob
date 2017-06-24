@@ -82,7 +82,6 @@ else:
             'flankLimit':'HPO',#2,
             'visNeighbors':25,
             'nodeSize':10,
-            'snpLevels':3,
             'pCutoff':0.05,
             'minTerm':5,
             'maxTerm':300

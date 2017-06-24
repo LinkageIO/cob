@@ -45,7 +45,7 @@ function getPolyLayoutOpts(){
     name: 'polywas',
     nodeDiameter: getOpt('nodeSize'),
     logSpacing: logSpacing,
-    snpLevels: getOpt('snpLevels'),
+    snpLevels: 5,
   };
 }
 // Function to return an object for the layout options
@@ -154,26 +154,6 @@ function initCyto(nodes,edges,poly){
       {selector: '.snp4',
         style: {
           'background-color': 'LightCoral',
-        }},
-      {selector: '.snp5',
-        style: {
-          'background-color': 'DarkCyan',
-        }},
-      {selector: '.snp6',
-        style: {
-          'background-color': 'Tan',
-        }},
-      {selector: '.snp7',
-        style: {
-          'background-color': 'OliveDrab',
-        }},
-      {selector: '.snp8',
-        style: {
-          'background-color': 'Turquoise',
-        }},
-      {selector: '.snp9',
-        style: {
-          'background-color': 'Sienna',
         }},
        {selector: '.neighbor',
          css: {

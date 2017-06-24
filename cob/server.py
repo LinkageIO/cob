@@ -63,8 +63,6 @@ opts = {
     'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
   'nodeSize':{'title':'Node Size',
     'default':dflt['nodeSize'],'min':5,'max':50,'int':True},
-  'snpLevels':{'title':'SNP Colors (Polywas)',
-    'default':dflt['snpLevels'],'min':1,'max':10,'int':True},
   'pCutoff':{'title':'Probability Cutoff',
     'default':dflt['pCutoff'],'min':0.0,'max':1.0,'int':False},
   'minTerm':{'title':'Min Genes (GO)',

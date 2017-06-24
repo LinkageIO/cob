@@ -111,7 +111,7 @@ function buildGeneTables(){
     scrollCollapse: true,
     scroller: {displayBuffer: 1500},
     scrollX: '100%',
-    scrollY: $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 100,
+    scrollY: $(window).height() - $('#cobHead').height() - $('#navTabs').height() - 120,
     searching: true,
     select: {
       style: 'multi+shift',
