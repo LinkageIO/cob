@@ -7,18 +7,29 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.1.1.min.js"
-  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.0/jquery.textcomplete.js" integrity="sha256-XwraNCveDAoWmMMV5oXZ/IrhghbYUNk+bx0blB3W6Q8=" crossorigin="anonymous"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.1/jquery.textcomplete.min.js" integrity="sha256-gwqfh5V+q+2Y6rTn6kG0UwpvaYaB7oVkSyFH2RSUug0=" crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
   <!-- DataTables, found using their package builder -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.css"/>
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.3.1/css/buttons.bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/scroller/1.4.2/css/scroller.bootstrap.min.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/1.2.0/css/select.bootstrap.min.css"/>
+ 
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/buttons.bootstrap.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.3.1/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/scroller/1.4.2/js/dataTables.scroller.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/select/1.2.0/js/dataTables.select.min.js"></script>
+
 
   <!-- qTip2 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous" />
@@ -27,14 +38,14 @@
   <!-- Cytoscape and extensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.18/cytoscape.min.js" crossorigin="anonymous"></script>
   <script
-    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.5.2/cytoscape-qtip.js">
+    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.1/cytoscape-qtip.js">
   </script>
   <script
     src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.5/cytoscape-graphml.js">
   </script>
   
   <!-- Download Shortcut Function -->
-  <script src="https://cdn.rawgit.com/rndme/download/v1.4.6/download.js"></script>
+  <script src="https://cdn.rawgit.com/rndme/download/v1.4.7/download.min.js"></script>
 
   <!-- Load COB -->
   <script type="text/javascript">
@@ -257,7 +268,6 @@
           </div>
         </div>
       </div>
-
     </div>
     <!-- End Network Selection Tab -->
 
@@ -302,12 +312,12 @@
           </td></tr>
           <tr class='form-group'>
             <td><label class='opt-label'>Overlap Analysis</label></td>
-            <td class="btn-group  btn-group-justified" data-toggle="buttons">
-              <label class="btn btn-default active">
+            <td id="overlapType" class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default fdr-toggle active">
                 <input type="radio" name="overlap" id="density" autocomplete="off" checked><b>Density</b>
                 <i id="densityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
-              <label class="btn btn-default">
+              <label class="btn btn-default fdr-toggle">
                 <input type="radio" name="overlap" id="locality" autocomplete="off"><b>Locality</b>
                 <i id="localityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
@@ -346,10 +356,10 @@
             <td><label class="opt-label">Window Size (Term)</label></td>
             <td class="input-group">
               <div class="input-group-btn">
-                <button class="btn btn-default" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+                <button id="hpo1" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
               </div>
               <div class="has-feedback">
-                <input type="text" class="form-control" id="windowSize">
+                <input type="text" class="form-control hpo-toggle" id="windowSize">
                 <i id="windowSizeInfo" title="The window size is the number of base pairs up/down stream of a SNP used in SNP2Gene mapping. If HPO is specified, genes that exhibit significant co-expression across 2+ SNP2Gene mappings during overlap analysis are automatically included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="windowSizeSel" class="input-group-btn">
@@ -367,10 +377,10 @@
             <td><label class="opt-label">Flank Limit (Term)</label></td>
             <td class="input-group">
               <div class="input-group-btn">
-                <button class="btn btn-default" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+                <button id="hpo2" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
               </div>
               <div class="has-feedback">
-                <input type="text" class="form-control" id="flankLimit">
+                <input type="text" class="form-control hpo-toggle" id="flankLimit">
                 <i id="flankLimitInfo" title="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="flankLimitSel" class="input-group-btn">

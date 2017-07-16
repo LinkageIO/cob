@@ -227,7 +227,7 @@ function buildGeneTables(){
   });
   
   // Handling a click on the two tables
-  $('#GeneTable tbody').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
+  $('#GeneTable').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#GeneTable').DataTable().row('#'+this['id']).deselect();
@@ -238,7 +238,7 @@ function buildGeneTables(){
     geneSelect();
   });
 
-  $('#SubnetTable tbody').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
+  $('#SubnetTable').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
       $('#SubnetTable').DataTable().row('#'+this['id']).deselect();

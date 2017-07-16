@@ -183,10 +183,7 @@ function enableFDR(enable,msg){
 // Get specific opt value
 function getOpt(opt){
   // Get the numerical interpretation of the value
-  if(optVals[opt]['alt']==document.forms['opts'][opt].value){
-    var val = document.forms['opts'][opt].value;
-  }
-  else if(optVals[opt]['int']){
+  if(optVals[opt]['int']){
     var val = parseInt(document.forms["opts"][opt].value);
   }
   else{
@@ -212,6 +209,7 @@ function restoreDefaults(){
   updateFDR();
   
   // Log Spacing and Vis Enrich
+  hpo = hpoDefault;
   logSpacing = logSpacingDefault;
   visEnrich = visEnrichDefault;
   $('#logSpacingButton').toggleClass('active',logSpacing);
@@ -261,9 +259,7 @@ function checkOpts(){
       
       // Check and save name if out of bounds
       if(!((val >= optVals[cur]['min'])&&(val <= optVals[cur]['max']))){
-        if(val != optVals[cur]['alt']){
           badFields.push(cur);}
-        }
     });
     
     // Return the problemeatic ones

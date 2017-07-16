@@ -68,6 +68,11 @@ var fdrFilterDefault = true;
 var fdrFilter = fdrFilterDefault;
 var fdrFlag = false;
 
+// HPO state variables, flag is to indicate need to reload
+var hpoDefault = false;
+var hpo = hpoDefault;
+var hpoFlag = false;
+
 // Dictionary to contain metadata for all of the parameters
 var optVals = {};
 
@@ -104,6 +109,10 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
       // Reset FDR state variables
       fdrFilterDefault = data.fdrFilter;
       fdrFilter = fdrFilterDefault;
+      
+      // Reset HPO state variables
+      hpoDefault = data.hpo;
+      hpo = hpoDefault;
       
       // Set the refLinks
       refLinks = data.refLinks;
@@ -170,6 +179,16 @@ $('#fdrButton').click(function(){
   fdrFlag = true;
   if(fdrFilter){$('.fdr-toggle').removeAttr('disabled');}
   else{$('.fdr-toggle').attr('disabled','disabled');}
+});
+
+// Do things when HPO is enabled or disabled
+$('.hpoButton').click(function(evt){
+  hpo = !(hpo);
+  hpoFlag = true;
+  var other = (evt.target.id === 'hpo1') ? 'hpo2' : 'hpo1';
+  $('#'+other).button('toggle');
+  if(!(hpo)){$('.hpo-toggle').removeAttr('disabled');}
+  else{$('.hpo-toggle').attr('disabled','disabled');}
 });
 
 // Toggle for Log Spacing in Polywas is pressed

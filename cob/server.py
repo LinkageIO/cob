@@ -56,9 +56,9 @@ opts = {
   'fdrCutoff':{'title':'FDR Filter (Term)',
     'default':dflt['fdrCutoff'],'min':0.0,'max':5.0,'int':False},
   'windowSize':{'title':'Window Size (Term)',
-    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True,'alt':'HPO'},
+    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True},
   'flankLimit':{'title':'Flank Limit (Term)',
-    'default':dflt['flankLimit'],'min':0,'max':20,'int':True,'alt':'HPO'},
+    'default':dflt['flankLimit'],'min':0,'max':20,'int':True},
   'visNeighbors':{'title':'Vis Neighbors (Custom)',
     'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
   'nodeSize':{'title':'Node Size',
@@ -199,6 +199,7 @@ def defaults():
     return jsonify({
         'opts':opts,
         'fdrFilter':conf['defaults']['fdrFilter'],
+        'hpo':conf['defaults']['hpo'],
         'logSpacing':conf['defaults']['logSpacing'],
         'visEnrich':conf['defaults']['visEnrich'],
         'refLinks':refLinks
@@ -267,6 +268,7 @@ def term_network():
     edgeCutoff = safeOpts('edgeCutoff',request.form['edgeCutoff'])
     windowSize = safeOpts('windowSize',request.form['windowSize'])
     flankLimit = safeOpts('flankLimit',request.form['flankLimit'])
+    hpo = bool(request.form['hpo'])
     
     # Detrmine if there is a FDR cutoff or not
     try:
@@ -279,7 +281,7 @@ def term_network():
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
     # Check to see if Genes are HPO
-    if 'HPO' == windowSize == flankLimit:
+    if hpo:
         genes = cob.refgen[gwas_data_db[ontology.name].high_priority_candidates().query(
             'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
                 cob.name, ontology.name, term
@@ -304,7 +306,7 @@ def term_network():
     net = {}
     
     # If there are GWAS results, and a FDR Cutoff
-    if fdrCutoff and ontology.name in gwas_data_db and windowSize != 'HPO' and flankLimit != 'HPO':
+    if fdrCutoff and ontology.name in gwas_data_db and not(hpo):
         cob.log('Fetching genes with FDR < {}',fdrCutoff)
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
             term=term,windowSize=windowSize,flankLimit=flankLimit)
@@ -527,12 +529,9 @@ def go_enrichment():
 # --------------------------------------------
 def safeOpts(name,val):
     # Get the parameters into range
-    if 'alt' in opts[name] and val == opts[name]['alt']:
-        val = opts[name]['alt']
-    else:
-        val = int(val) if opts[name]['int'] else float(val)
-        val = min(val,opts[name]['max'])
-        val = max(val,opts[name]['min'])
+    val = int(val) if opts[name]['int'] else float(val)
+    val = min(val,opts[name]['max'])
+    val = max(val,opts[name]['min'])
     return val
 
 # --------------------------------------------

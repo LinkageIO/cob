@@ -25,6 +25,7 @@ function loadGraph(newGraph,poly,term,nodes,edges){
         
         // Reset the FDR flag
         fdrFlag = false;
+        hpoFlag = false;
         
         // Make a promise to do the graph
         var pinkySwear = new Promise(function(resolve,reject){
@@ -91,7 +92,7 @@ function updateGraph(){
   
   // If there is one see how full of a reload is necessary
   else{
-    newGraph = fdrFlag || optsChange(['nodeCutoff','edgeCutoff',
+    newGraph = fdrFlag || hpoFlag || optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit','fdrCutoff']);
     poly = isPoly(); term = isTerm;
   }
