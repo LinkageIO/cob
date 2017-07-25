@@ -72,10 +72,12 @@ else:
         'gwas':[],
         'refLinks':{},
         'defaults':{
+            'overlapMetric':'density',
+            'overlapSNPs':'effective',
             'logSpacing':True,
+            'hpo':False,
             'visEnrich':True,
             'fdrFilter':True,
-            'hpo':False,
             'nodeCutoff':0,
             'edgeCutoff':2.5,
             'fdrCutoff':0.35,

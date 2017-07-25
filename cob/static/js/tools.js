@@ -183,47 +183,87 @@ function enableFDR(enable,msg){
 // Get specific opt value
 function getOpt(opt){
   // Get the numerical interpretation of the value
-  if(optVals[opt]['int']){
-    var val = parseInt(document.forms["opts"][opt].value);
+  if(opt in optVals){
+    if(optVals[opt]['int']){
+      var val = parseInt(document.forms["opts"][opt].value);
+    }
+    else{
+      var val = parseFloat(document.forms["opts"][opt].value);
+    }
   }
   else{
-    var val = parseFloat(document.forms["opts"][opt].value);
+    ele = $('#'+cur)
+    if(binOptVals[cur]['isBool']){
+      var val = ele.hasClass('active');
+    }
+    else{
+      var val = ele.children('.active').children().attr('id');
+    }
   }
   return val;
 }
 
 // Set specific opt value
 function setOpt(opt,val){
-  // If no value provided, just use the default
-  if(val === undefined){val = optVals[opt]['default'];}
-  // Set it
-  $('#'+opt).val(val);
+  if(opt in optVals){
+    // If no value provided, just use the default
+    if(val === undefined){val = optVals[opt]['default'];}
+    // Set it
+    $('#'+opt).val(val);
+  }
+  else{
+    if(val === undefined){val = binOptVals[opt]['default'];}
+    if(binOptVals[opt]['isBool']){
+      $('#'+opt).toggleClass('active',val);
+    }
+    else{
+      var eles = $('#'+opt).children('.active').removeClass('active').children().prop('checked',false);
+      $('#'+val).prop('checked',true).parent().addClass('active');
+    }
+    if(opt === 'hpo'){
+      if(val){$('.hpo-toggle').attr('disabled','disabled');}
+      else{$('.hpo-toggle').removeAttr('disabled');}
+    }
+  }
 }
 
 // Restore all options to default value
 function restoreDefaults(){
   Object.keys(optVals).forEach(function(cur){setOpt(cur);});
+  Object.keys(binOptVals).forEach(function(cur){setOpt(cur);});
   
   // FDR Special Case
   fdrFilter = fdrFilterDefault;
   updateFDR();
-  
-  // Log Spacing and Vis Enrich
-  hpo = hpoDefault;
-  logSpacing = logSpacingDefault;
-  visEnrich = visEnrichDefault;
-  $('#logSpacingButton').toggleClass('active',logSpacing);
-  $('#visEnrichButton').toggleClass('active',visEnrich);
 }
 
 // Update the values in the lastOps dict
-function updateOpts(){curOpts = getCurOpts();}
+function updateOpts(){
+  curOpts = getCurOpts();
+  curBinOpts = getCurBinOpts();
+}
 
 // Returns dictionary containing current option values
 function getCurOpts(){
   var vals = {};
-  Object.keys(optVals).forEach(function(cur,idx,arr){
+  Object.keys(optVals).forEach(function(cur){
     vals[cur] = document.forms["opts"][cur].value;
+  });
+  return vals;
+}
+
+// Returns dictionary containing current binary option values
+function getCurBinOpts(){
+  var vals = {};
+  var ele = null;
+  Object.keys(binOptVals).forEach(function(cur){
+    ele = $('#'+cur)
+    if(binOptVals[cur]['isBool']){
+        vals[cur] = ele.hasClass('active');
+    }
+    else{
+      vals[cur] = ele.children('.active').children().attr('id');
+    }
   });
   return vals;
 }
@@ -232,8 +272,16 @@ function getCurOpts(){
 function optsChange(opts){
   var res = false;
   var curOp = getCurOpts();
-  opts.forEach(function(cur,idx,arr){
-    if(curOp[cur] !== curOpts[cur]){res = true;}
+  opts.forEach(function(cur){
+    if(cur in curOp){
+      if(curOp[cur] !== curOpts[cur]){res = true;}
+    }
+  });
+  curOp = getCurBinOpts();
+  opts.forEach(function(cur){
+    if(cur in curOp){
+      if(curOp[cur] !== curBinOpts[cur]){res = true;}
+    }
   });
   return res;
 }

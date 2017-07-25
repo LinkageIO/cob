@@ -71,6 +71,29 @@ opts = {
     'default':dflt['maxTerm'],'min':100,'max':1000,'int':True},
 }
 
+binOpts = {
+    'overlapMetric':{
+        'default':dflt['overlapMetric'],
+        'state':dflt['overlapMetric'],
+        'isBool':False},
+    'overlapSNPs':{
+        'default':dflt['overlapSNPs'],
+        'state':dflt['overlapSNPs'],
+        'isBool':False},
+    'logSpacing':{
+        'default':dflt['logSpacing'],
+        'state':dflt['logSpacing'],
+        'isBool':True},
+    'hpo':{
+        'default':dflt['hpo'],
+        'state':dflt['hpo'],
+        'isBool':True},
+    'visEnrich':{
+        'default':dflt['visEnrich'],
+        'state':dflt['visEnrich'],
+        'isBool':True},
+    }
+
 # ----------------------------------------
 #    Load things to memeory to prepare
 # ----------------------------------------
@@ -202,7 +225,8 @@ def defaults():
         'hpo':conf['defaults']['hpo'],
         'logSpacing':conf['defaults']['logSpacing'],
         'visEnrich':conf['defaults']['visEnrich'],
-        'refLinks':refLinks
+        'refLinks':refLinks,
+        'binOpts':binOpts,
     })
 
 # Sends off the js and such when needed

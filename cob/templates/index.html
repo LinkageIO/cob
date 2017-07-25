@@ -312,13 +312,13 @@
           </td></tr>
           <tr class='form-group'>
             <td><label class='opt-label'>Overlap Analysis</label></td>
-            <td id="overlapType" class="btn-group  btn-group-justified" data-toggle="buttons">
-              <label class="btn btn-default fdr-toggle active">
-                <input type="radio" name="overlap" id="density" autocomplete="off" checked><b>Density</b>
+            <td id="overlapMetric" class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default fdr-toggle">
+                <input type="radio" name="overlap" id="density" autocomplete="off"><b>Density</b>
                 <i id="densityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
-              <label class="btn btn-default fdr-toggle">
-                <input type="radio" name="overlap" id="locality" autocomplete="off"><b>Locality</b>
+              <label class="btn btn-default fdr-toggle active">
+                <input type="radio" name="overlap" id="locality" autocomplete="off" checked><b>Locality</b>
                 <i id="localityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
             </td>
@@ -326,7 +326,7 @@
           <tr class="form-group">
             <td><b>Graph Options</b></td>
             <td class="form-inline" style="text-align:right">
-                <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
+                <button id="logSpacing" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
               <div id="nodeSizeGroup" class="input-group">
                 <div class="input-group-addon"><b>Node Size</b></div>
                 <input type="text" class="form-control" id="nodeSize">
@@ -340,13 +340,13 @@
         <tr><td colspan="2"><h3>SNP2Gene Mapping Options</h3></td></tr>
           <tr class='form-group' colspan='2'>
             <td><label class='opt-label'>Overlapping SNPs</label></td>
-            <td class="btn-group  btn-group-justified" data-toggle="buttons">
-              <label class="btn btn-default active">
-                <input type="radio" name="overlapping" id="effective" autocomplete="off" checked><b>Effective SNP</b>
+            <td id="overlapSNPs" class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="radio" id="effective" autocomplete="off"><b>Effective SNP</b>
                 <i id="effectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
-              <label class="btn btn-default">
-                <input type="radio" name="overlapping" id="strongest" autocomplete="off"><b>Strongest SNP</b>
+              <label class="btn btn-default active">
+                <input type="radio" name="overlapSNPs" id="strongest" autocomplete="off" checked><b>Strongest SNP</b>
                 <i id="strongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
             </td>
@@ -356,7 +356,7 @@
             <td><label class="opt-label">Window Size (Term)</label></td>
             <td class="input-group">
               <div class="input-group-btn">
-                <button id="hpo1" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+                <button id="hpo" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
               </div>
               <div class="has-feedback">
                 <input type="text" class="form-control hpo-toggle" id="windowSize">
@@ -377,7 +377,7 @@
             <td><label class="opt-label">Flank Limit (Term)</label></td>
             <td class="input-group">
               <div class="input-group-btn">
-                <button id="hpo2" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+                <button id="hpo1" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
               </div>
               <div class="has-feedback">
                 <input type="text" class="form-control hpo-toggle" id="flankLimit">
@@ -435,7 +435,7 @@
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
           <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
+            <button id="visEnrich" type="button" class="btn btn-default" data-toggle="button" aria-pressed="false"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
           </td></tr>
         </table>
         <br>

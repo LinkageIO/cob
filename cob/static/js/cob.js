@@ -6,6 +6,7 @@ var curNetwork = '';
 var curOntology = '';
 var curTerm = '';
 var curOpts = {};
+var curBinOpts = {};
 
 // Shortcut to current cytoscape object
 var cy = null;
@@ -55,26 +56,14 @@ var isGO = true;
 /* ----------------------------
       Option Variables
 ---------------------------- */
-// Store state of logSpacingButton
-var logSpacingDefault = true;
-var logSpacing = logSpacingDefault;
-
-// Store state of visEnrichButton
-var visEnrichDefault = true;
-var visEnrich = visEnrichDefault;
-
 // FDR state variables, flag is to indicate need to reload
 var fdrFilterDefault = true;
 var fdrFilter = fdrFilterDefault;
 var fdrFlag = false;
 
-// HPO state variables, flag is to indicate need to reload
-var hpoDefault = false;
-var hpo = hpoDefault;
-var hpoFlag = false;
-
 // Dictionary to contain metadata for all of the parameters
 var optVals = {};
+var binOptVals = {};
 
 // Dictionary to contain any gene reference links
 var refLinks = {};
@@ -97,22 +86,11 @@ $.getScript(($SCRIPT_ROOT + 'static/js/tools.js'), function(){
     success: function(data){
       // Set the options
       optVals = data.opts;
-      
-      // Reset state of logSpacingButton
-      logSpacingDefault = data.logSpacing;
-      logSpacing = logSpacingDefault;
-      
-      // Reset state of visEnrichButton
-      visEnrichDefault = data.visEnrich;
-      visEnrich = visEnrichDefault;
+      binOptVals = data.binOpts;
       
       // Reset FDR state variables
       fdrFilterDefault = data.fdrFilter;
       fdrFilter = fdrFilterDefault;
-      
-      // Reset HPO state variables
-      hpoDefault = data.hpo;
-      hpo = hpoDefault;
       
       // Set the refLinks
       refLinks = data.refLinks;
@@ -182,24 +160,32 @@ $('#fdrButton').click(function(){
 });
 
 // Do things when HPO is enabled or disabled
-$('.hpoButton').click(function(evt){
-  hpo = !(hpo);
-  hpoFlag = true;
-  var other = (evt.target.id === 'hpo1') ? 'hpo2' : 'hpo1';
-  $('#'+other).button('toggle');
-  if(!(hpo)){$('.hpo-toggle').removeAttr('disabled');}
-  else{$('.hpo-toggle').attr('disabled','disabled');}
+var hpoObv = new MutationObserver(function(mutations) {
+  var check = null
+  mutations.forEach(function(mutation) {
+    check = $(mutation.target).hasClass('active')
+    if(check !== $('#hpo1').hasClass('active')){
+      $('#hpo1').button('toggle');
+    }
+    if(!check){$('.hpo-toggle').removeAttr('disabled');}
+    else{$('.hpo-toggle').attr('disabled','disabled');}
+  });    
+});
+var hpo1Obv = new MutationObserver(function(mutations) {
+  var check = null
+  mutations.forEach(function(mutation) {
+    check = $(mutation.target).hasClass('active')
+    if(check !== $('#hpo').hasClass('active')){
+      $('#hpo').button('toggle');
+    }
+    if(!check){$('.hpo-toggle').removeAttr('disabled');}
+    else{$('.hpo-toggle').attr('disabled','disabled');}
+  });    
 });
 
-// Toggle for Log Spacing in Polywas is pressed
-$('#logSpacingButton').click(function(){
-  logSpacing = !(logSpacing);
-});
-
-// Toggle for visEnrich is pressed
-$('#visEnrichButton').click(function(){
-  visEnrich = !(visEnrich);
-});
+var obvConfig = { attributes: true, childList: true, characterData: true, attributeFilter: ['class'] };
+hpoObv.observe(document.getElementById('hpo'),obvConfig);
+hpo1Obv.observe(document.getElementById('hpo1'),obvConfig);
 
 // Reset all the options on the options tab
 $('#resetOptsButton').click(function(){
