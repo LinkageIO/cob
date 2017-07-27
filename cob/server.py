@@ -292,7 +292,7 @@ def term_network():
     edgeCutoff = safeOpts('edgeCutoff',request.form['edgeCutoff'])
     windowSize = safeOpts('windowSize',request.form['windowSize'])
     flankLimit = safeOpts('flankLimit',request.form['flankLimit'])
-    hpo = bool(request.form['hpo'])
+    hpo = (request.form['hpo'].lower().strip() == 'true')
     
     # Detrmine if there is a FDR cutoff or not
     try:
@@ -340,7 +340,7 @@ def term_network():
         )
     else:
         # Otherwise just run it without GWAS Data
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, hpo=hpo)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
@@ -562,7 +562,7 @@ def safeOpts(name,val):
 #     Functions to get the nodes and edges
 # --------------------------------------------
 def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
-    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None):
+    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None, hpo=False):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -633,7 +633,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
             'cur_ldegree': str(0),
             'ldegree': str(ldegree),
             'gdegree': str(gdegree),
-            'fdr': str(fdr),
+            'fdr': 'HPO' if hpo else str(fdr),
             'windowSize': str(windowSize),
             'flankLimit': str(flankLimit),
             'numIntervening': numInterv,

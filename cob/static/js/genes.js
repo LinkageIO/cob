@@ -14,7 +14,7 @@ function termNet(resolve, reject, poly){
       windowSize: curOpts['windowSize'],
       flankLimit: curOpts['flankLimit'],
       fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
-      hpo: hpo,
+      hpo: getOpt('hpo'),
     },
     type: 'POST',
     statusCode: {

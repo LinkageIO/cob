@@ -192,8 +192,8 @@ function getOpt(opt){
     }
   }
   else{
-    ele = $('#'+cur)
-    if(binOptVals[cur]['isBool']){
+    ele = $('#'+opt)
+    if(binOptVals[opt]['isBool']){
       var val = ele.hasClass('active');
     }
     else{
@@ -259,7 +259,7 @@ function getCurBinOpts(){
   Object.keys(binOptVals).forEach(function(cur){
     ele = $('#'+cur)
     if(binOptVals[cur]['isBool']){
-        vals[cur] = ele.hasClass('active');
+      vals[cur] = ele.hasClass('active');
     }
     else{
       vals[cur] = ele.children('.active').children().attr('id');

@@ -72,7 +72,7 @@ function enrich(geneList,GOnt){
   }
   
   // Format the gene list as needed
-  if(visEnrich){
+  if(getOpt('visEnrich')){
     geneList = geneList.filter(function(gene){
       return geneDict[gene].data.render;
     });

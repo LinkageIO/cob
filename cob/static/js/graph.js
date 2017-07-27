@@ -8,6 +8,7 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
     
     // Get a list of the nodes to render
     var renNodes = [];
+    
     Object.keys(nodes).forEach(function(cur,idx,arr){
       if(nodes[cur]['data']['render']){renNodes.push(nodes[cur]);}
     });
@@ -44,7 +45,7 @@ function getPolyLayoutOpts(){
   return {
     name: 'polywas',
     nodeDiameter: getOpt('nodeSize'),
-    logSpacing: logSpacing,
+    logSpacing: getOpt('logSpacing'),
     snpLevels: 5,
   };
 }
