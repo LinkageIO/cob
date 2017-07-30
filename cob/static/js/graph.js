@@ -21,8 +21,10 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   }
   else{
     // Run the proper layout
-    if(poly){cy.layout(getPolyLayoutOpts());}
-    else{cy.layout(getForceLayoutOpts());}
+    var layout = null;
+    if(poly){layout = cy.layout(getPolyLayoutOpts());}
+    else{layout = cy.layout(getForceLayoutOpts());}
+    layout.run();
   }
   
   // Update the styles of the nodes for the new sizes
@@ -96,13 +98,11 @@ function initCyto(nodes,edges,poly){
      {selector: '[type = "snpG"]',
       css: {
         'z-index': '1',
-        'shape': 'circle',
         'background-color': 'SlateGrey',
       }},
     {selector: '[type = "gene"]',
      css: {
        'z-index': '1',
-       'shape': 'circle',
        'background-color': '#337ab7',
        'content': 'data(id)',
        'font-size': '11',
