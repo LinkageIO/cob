@@ -135,16 +135,26 @@
     #windowSizeInfo, #flankLimitInfo {
       transform: translateY(0%);
     }
+    #visEnrich {
+      width: 100%;
+    }
     #logSpacingInfo, #visEnrichInfo {
       position: relative;
       vertical-align: middle;
       transform: translateY(0%);
     }
     #nodeSizeGroup {
-      width:50%;
+      width: 49.5%;
     }
     #nodeSize {
-      min-width:55px;
+      min-width: 55px;
+    }
+    #logSpacing{
+      width: 49.5%;
+    }
+    .graphOptsRow{
+      display: flex;
+      justify-content: space-between;
     }
     .button-glyph {
       position: relative;
@@ -170,12 +180,6 @@
       float: right;
       margin: 3px;
       right: 0;
-    }
-    .hasFDR{
-      font-style: italic;
-    }
-    .noFDR{
-      font-style: oblique;
     }
     table {
       background-color: white;
@@ -333,8 +337,8 @@
           </tr>
           <tr class="form-group">
             <td><b>Graph Options</b></td>
-            <td class="form-inline" style="text-align:right">
-                <button id="logSpacing" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
+            <td class="form-inline graphOptsRow">
+              <button id="logSpacing" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
               <div id="nodeSizeGroup" class="input-group">
                 <div class="input-group-addon"><b>Node Size</b></div>
                 <input type="text" class="form-control" id="nodeSize">
@@ -442,7 +446,7 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
-          <tr class="form-group"><td colspan="2" style="text-align:right">
+          <tr class="form-group"><td></td><td style="text-align:right">
             <button id="visEnrich" type="button" class="btn btn-default" data-toggle="button" aria-pressed="false"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
           </td></tr>
         </table>
