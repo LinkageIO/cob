@@ -93,7 +93,7 @@ function updateGraph(){
   else{
     newGraph = fdrFlag || optsChange(['nodeCutoff','edgeCutoff',
       'visNeighbors','windowSize','flankLimit','fdrCutoff','hpo',
-      'overlapSNPs','overlapMetric']);
+      'overlapSNPs','overlapMethod']);
     poly = isPoly(); term = isTerm;
   }
   loadGraph(newGraph,poly,term);

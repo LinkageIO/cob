@@ -72,8 +72,8 @@ else:
         'gwas':[],
         'refLinks':{},
         'defaults':{
-            'overlapMetric':'density',
-            'overlapSNPs':'effective',
+            'overlapMethod':'density',
+            'overlapSNPs':'strongest',
             'logSpacing':True,
             'hpo':False,
             'visEnrich':True,

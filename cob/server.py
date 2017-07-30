@@ -72,9 +72,9 @@ opts = {
 }
 
 binOpts = {
-    'overlapMetric':{
-        'default':dflt['overlapMetric'],
-        'state':dflt['overlapMetric'],
+    'overlapMethod':{
+        'default':dflt['overlapMethod'],
+        'state':dflt['overlapMethod'],
         'isBool':False},
     'overlapSNPs':{
         'default':dflt['overlapSNPs'],
@@ -161,10 +161,16 @@ for ont in gwas_data_db.keys():
         gwas = gwas_data_db[ont].get_data(cob=net)
         gwas_meta_db[ont][net]['windowSize'] = []
         gwas_meta_db[ont][net]['flankLimit'] = []
+        gwas_meta_db[ont][net]['overlapSNPs'] = []
+        gwas_meta_db[ont][net]['overlapMethod'] = []
         for x in gwas['WindowSize'].unique():
             gwas_meta_db[ont][net]['windowSize'].append(int(x))
         for x in gwas['FlankLimit'].unique():
             gwas_meta_db[ont][net]['flankLimit'].append(int(x))
+        for x in gwas['SNP2Gene'].unique():
+            gwas_meta_db[ont][net]['overlapSNPs'].append(str(x).strip().lower())
+        for x in gwas['Method'].unique():
+            gwas_meta_db[ont][net]['overlapMethod'].append(str(x).strip().lower())
 
 # Find any functional annotations we have 
 print('Finding functional annotations...')
@@ -271,7 +277,7 @@ def available_genes(network):
 @app.route("/fdr_options/<path:network>/<path:ontology>")
 def fdr_options(network,ontology):
     # Default to empty list
-    ans = {'windowSize': [], 'flankLimit':[]}
+    ans = {'windowSize': [], 'flankLimit':[], 'overlapSNPs':[], 'overlapMethod':[]}
     
     # If the combo is in the db, use that as answer
     if ontology in gwas_meta_db:
@@ -293,6 +299,8 @@ def term_network():
     windowSize = safeOpts('windowSize',request.form['windowSize'])
     flankLimit = safeOpts('flankLimit',request.form['flankLimit'])
     hpo = (request.form['hpo'].lower().strip() == 'true')
+    strongestSNPs = (request.form['overlapSNPs'].lower().strip() == 'strongest')
+    overlapDensity = (request.form['overlapMethod'].lower().strip() == 'density')
     
     # Detrmine if there is a FDR cutoff or not
     try:
@@ -312,10 +320,18 @@ def term_network():
             )
         ).gene.unique()]
     else:
+        # Get candidates based on options
+        if(strongestSNPs):
+            try:
+                loci = ontology[term].strongest_loci(window_size=windowSize, attr=ontology.get_strongest_attr(), lowest=ontology.get_strongest_higher())
+            except KeyError:
+                loci = ontology[term].effective_loci(window_size=windowSize)
+        else:
+            loci = ontology[term].effective_loci(window_size=windowSize)
+        
+        # Find the genes
         genes = cob.refgen.candidate_genes(
-            #ontology[term].effective_loci(window_size=windowSize),
-            ontology[term].strongest_loci(window_size=windowSize,attr='numIterations',lowest=False),
-            #genes,
+            loci,
             window_size=windowSize,
             flank_limit=flankLimit,
             chain=True,
@@ -333,7 +349,9 @@ def term_network():
     if fdrCutoff and ontology.name in gwas_data_db and not(hpo):
         cob.log('Fetching genes with FDR < {}',fdrCutoff)
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
-            term=term,windowSize=windowSize,flankLimit=flankLimit)
+            term=term,windowSize=windowSize,flankLimit=flankLimit,
+            snp2gene=('strongest' if strongestSNPs else 'effective'),
+            method=('density' if overlapDensity else 'locality'))
         net['nodes'] = getNodes(
                 genes, cob, term, gwasData=gwasData, nodeCutoff=nodeCutoff, 
                 windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff

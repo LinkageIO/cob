@@ -171,6 +171,12 @@
       margin: 3px;
       right: 0;
     }
+    .hasFDR{
+      font-style: italic;
+    }
+    .noFDR{
+      font-style: oblique;
+    }
     table {
       background-color: white;
     }
@@ -312,15 +318,17 @@
           </td></tr>
           <tr class='form-group'>
             <td><label class='opt-label'>Overlap Analysis</label></td>
-            <td id="overlapMetric" class="btn-group  btn-group-justified" data-toggle="buttons">
-              <label class="btn btn-default fdr-toggle">
-                <input type="radio" name="overlap" id="density" autocomplete="off"><b>Density</b>
+            <td  class="">
+              <fieldset id="overlapMethod" class="fdr-toggle btn-group btn-group-justified" data-toggle="buttons"> 
+              <label class="btn btn-default">
+                <input type="radio" name="overlap" id="density" autocomplete="off" ><b>Density</b>
                 <i id="densityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
-              <label class="btn btn-default fdr-toggle active">
-                <input type="radio" name="overlap" id="locality" autocomplete="off" checked><b>Locality</b>
+              <label class="btn btn-default">
+                <input type="radio" name="overlap" id="locality" autocomplete="off"  ><b>Locality</b>
                 <i id="localityInfo" title='Style of overlap analysis to use' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
+            </fieldset>
             </td>
           </tr>
           <tr class="form-group">
@@ -342,12 +350,12 @@
             <td><label class='opt-label'>Overlapping SNPs</label></td>
             <td id="overlapSNPs" class="btn-group  btn-group-justified" data-toggle="buttons">
               <label class="btn btn-default">
-                <input type="radio" id="effective" autocomplete="off"><b>Effective SNP</b>
-                <i id="effectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+                <input type="radio" id="strongest" autocomplete="off"><b>Strongest SNP</b>
+                <i id="strongestInfo" title='Selects SNP-to-gene mapping resolution, green indicated FDR availibility for this option, yellow indicates that FDR analysis is unavailable.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
               <label class="btn btn-default active">
-                <input type="radio" name="overlapSNPs" id="strongest" autocomplete="off" checked><b>Strongest SNP</b>
-                <i id="strongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+                <input type="radio" name="overlapSNPs" id="effective" autocomplete="off" checked><b>Effective SNP</b>
+                <i id="effectiveInfo" title='Selects SNP-to-gene mapping resolution, green indicated FDR availibility for this option, yellow indicates that FDR analysis is unavailable.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
               </label>
             </td>
           </tr>

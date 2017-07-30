@@ -104,7 +104,7 @@ function buildGeneTables(){
   // Settings for the tables!
   var tableOpts = {
     deferRender: false,
-    order: [[5,'dec'],[6,'dec']],
+    order: [[4,'asc'],[5,'asc']],
     paging: true,
     paginate: false,
     rowId: 'id',

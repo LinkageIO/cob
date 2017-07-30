@@ -155,8 +155,16 @@ $("#wNeighborsButton,#woNeighborsButton").click(function(evt){
 $('#fdrButton').click(function(){
   fdrFilter = !(fdrFilter);
   fdrFlag = true;
-  if(fdrFilter){$('.fdr-toggle').removeAttr('disabled');}
-  else{$('.fdr-toggle').attr('disabled','disabled');}
+  if(fdrFilter){
+    $('.fdr-toggle').removeAttr('disabled');
+    $('[hasfdr]').removeClass('btn-default').addClass('btn-success');
+    $('[nofdr]').removeClass('btn-default').addClass('btn-warning');
+  }
+  else{
+    $('.fdr-toggle').attr('disabled','disabled');
+    $('[hasfdr]').removeClass('btn-success').addClass('btn-default');
+    $('[nofdr]').removeClass('btn-warning').addClass('btn-default');
+  }
 });
 
 // Do things when HPO is enabled or disabled

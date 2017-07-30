@@ -128,7 +128,16 @@ function updateFDR(){
     url: ($SCRIPT_ROOT + 'fdr_options/'+curNetwork+'/'+curOntology),
     success: function(data){
       // Do the thing if there are any results
-      if((data.windowSize.length) > 0 && (data.flankLimit.length > 0)){
+      if((data.windowSize.length) > 0 && (data.flankLimit.length > 0) && (data.overlapMethod.length > 0)){
+        // Add attribute to indicate FDR availability
+        var strong = $('#strongest').parent();
+        var effect = $('#effective').parent();
+        if(data.overlapSNPs.indexOf('strongest')>=0){strong.attr('hasFDR','hasFDR');}
+        else{strong.attr('noFDR','noFDR');}
+        if(data.overlapSNPs.indexOf('effective')>=0){effect.attr('hasFDR','hasFDR');}
+        else{effect.attr('noFDR','noFDR');}
+        
+        // Enable it all
         enableFDR(true);
         
         // Add each window size to the list
@@ -141,13 +150,26 @@ function updateFDR(){
           $('#flankLimitList').append('<li class="flankLimitOpt"><a>'+cur+'</a></li>');
         });
         
+        // Set the method selector according to what is availible
+        var den = $('#density').parent().removeAttr('disabled');
+        var loc = $('#locality').parent().removeAttr('disabled');
+        if(data.overlapMethod.length === 1){
+          setOpt('overlapMethod',data.overlapMethod[0]);
+          if(data.overlapMethod[0] === 'density'){loc.attr('disabled','disabled');}
+          else{den.attr('disabled','disabled');}
+        }
+        
         // Listeners to change value of windowSize and flankLimit when option selected
         $('.windowSizeOpt > a').click(function(){$('#windowSize').val($(this).html());});
         $('.flankLimitOpt > a').click(function(){$('#flankLimit').val($(this).html());});
       }
       
       // If there are none available, say so! 
-      else{enableFDR(false,'No FDR available for this term');}
+      else{
+        enableFDR(false,'No FDR available for this term');
+        $('[hasfdr]').removeAttr('hasFDR');
+        $('[nofdr]').removeAttr('noFDR');
+      }
     }
   });
 }
@@ -163,6 +185,10 @@ function enableFDR(enable,msg){
     if(fdrFilter){$('#fdrButton,.fdr-toggle').removeAttr('disabled');}
     else{$('#fdrButton').removeAttr('disabled');}
     
+    // Set some colors
+    $('[hasfdr]').removeClass('btn-default').addClass('btn-success');
+    $('[nofdr]').removeClass('btn-default').addClass('btn-warning');
+    
     // Make the button look right
     $('#fdrButton').toggleClass('active',fdrFilter);
   }
@@ -170,6 +196,10 @@ function enableFDR(enable,msg){
   else{
     // Disable all elements associated with FDR selction
     $('#fdrButton,.fdr-toggle').attr('disabled','disabled');
+    
+    // Remove some colors
+    $('[hasfdr]').removeClass('btn-success').addClass('btn-default');
+    $('[nofdr]').removeClass('btn-warning').addClass('btn-default');
     
     // Put the help message up
     $('#fdrRow').prop('title',msg);

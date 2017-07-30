@@ -15,6 +15,8 @@ function termNet(resolve, reject, poly){
       flankLimit: curOpts['flankLimit'],
       fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
       hpo: getOpt('hpo'),
+      overlapSNPs: getOpt('overlapSNPs'),
+      overlapMethod: getOpt('overlapMethod'),
     },
     type: 'POST',
     statusCode: {
