@@ -5,17 +5,17 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
   if(newGraph){
     // Destroy the old graph if there is one
     if(cy !== null){cy.destroy();cy = null;}
-    
+
     // Get a list of the nodes to render
     var renNodes = [];
-    
+
     Object.keys(nodes).forEach(function(cur,idx,arr){
       if(nodes[cur]['data']['render']){renNodes.push(nodes[cur]);}
     });
-    
+
     // Check for any rendered nodes
     if(renNodes.length < 1){reject('There are no genes in this term that meet the rendering requrements defined in the options tab.');return;}
-    
+
     // Init the graph
     initCyto(renNodes, edges, poly);
   }
@@ -26,14 +26,14 @@ function modCyto(resolve, reject, newGraph, poly, nodes, edges){
     else{layout = cy.layout(getForceLayoutOpts());}
     layout.run();
   }
-  
+
   // Update the styles of the nodes for the new sizes
   updateNodeSize(getOpt('nodeSize'));
-  
+
   // Set up the graph event listeners
   setGeneListeners();
   if(poly){setSNPGqtips();}
-  
+
   // Check for a graph and resolve
   if(cy !== null){resolve();}
   else{reject('Graph modification failed failed');}
@@ -67,7 +67,7 @@ function initCyto(nodes,edges,poly){
   // Get the proper layout options
   if(poly){var opts = getPolyLayoutOpts();}
   else{var opts = getForceLayoutOpts();}
-  
+
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -133,7 +133,7 @@ function initCyto(nodes,edges,poly){
          'opacity':function(e){
            var weight = parseFloat(e.data('weight'))
            return weight/10
-           
+
          }
       }},
       {selector: '.snp0',
@@ -230,12 +230,12 @@ function updateNodeSize(diameter){
 function setGeneListeners(genes){
   // Get all the genes
   if(genes === undefined){genes = cy.nodes('[type = "gene"]');}
-  
+
   // Remove all event listeners
   genes.off('tap');
   try{genes.qtip('destroy');}
   catch(err){}
-  
+
   // Set listener for clicking
   genes.on('tap', function(evt){
     if(evt.originalEvent.ctrlKey || evt.originalEvent.metaKey){
@@ -244,21 +244,21 @@ function setGeneListeners(genes){
     else{
       // If we are in the process of adding a gene, kill this request
       if(noAdd){
-        window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.'); 
+        window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
         return;
       }
-      
+
       // Otherwise go ahead and update everything
-      if(evt.cyTarget.hasClass('highlighted')){
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).deselect();
+      if(evt.target.hasClass('highlighted')){
+        $('#GeneTable').DataTable().row('#'+evt.target.id()).deselect();
       }
       else{
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).scrollTo().select();
+        $('#GeneTable').DataTable().row('#'+evt.target.id()).scrollTo().select();
       }
       geneSelect();
     }
   });
-  
+
   // Setup qtips
   genes.qtip({
     content: function(){
