@@ -5,7 +5,7 @@ function geneRef(id){
   var link = refLinks[curNetwork];
   link = link.replace('{id}',id);
   link = link.replace('.WM82.A2.V1','');
-  window.open(link);
+  window.open(link)
 }
 
 /*--------------------------------
@@ -185,7 +185,7 @@ function enableFDR(enable,msg){
     if(fdrFilter){$('#fdrButton,.fdr-toggle').removeAttr('disabled');}
     else{$('#fdrButton').removeAttr('disabled');}
     
-    // Set some colors
+    // Set the overlapping SNP colors
     $('[hasfdr]').removeClass('btn-default').addClass('btn-success');
     $('[nofdr]').removeClass('btn-default').addClass('btn-warning');
     
@@ -197,7 +197,7 @@ function enableFDR(enable,msg){
     // Disable all elements associated with FDR selction
     $('#fdrButton,.fdr-toggle').attr('disabled','disabled');
     
-    // Remove some colors
+    // Remove the overlapping SNP colors
     $('[hasfdr]').removeClass('btn-success').addClass('btn-default');
     $('[nofdr]').removeClass('btn-warning').addClass('btn-default');
     
@@ -212,23 +212,16 @@ function enableFDR(enable,msg){
 ------------------------------------*/
 // Get specific opt value
 function getOpt(opt){
+  var val = null;
   // Get the numerical interpretation of the value
   if(opt in optVals){
-    if(optVals[opt]['int']){
-      var val = parseInt(document.forms["opts"][opt].value);
-    }
-    else{
-      var val = parseFloat(document.forms["opts"][opt].value);
-    }
+    if(optVals[opt]['int']){val = parseInt(document.forms["opts"][opt].value);}
+    else{val = parseFloat(document.forms["opts"][opt].value);}
   }
   else{
     ele = $('#'+opt)
-    if(binOptVals[opt]['isBool']){
-      var val = ele.hasClass('active');
-    }
-    else{
-      var val = ele.children('.active').children().attr('id');
-    }
+    if(binOptVals[opt]['isBool']){val = ele.hasClass('active');}
+    else{val = ele.children('.active').children().attr('id');}
   }
   return val;
 }
@@ -247,7 +240,8 @@ function setOpt(opt,val){
       $('#'+opt).toggleClass('active',val);
     }
     else{
-      var eles = $('#'+opt).children('.active').removeClass('active').children().prop('checked',false);
+      var eles = $('#'+opt).children('.active').removeClass('active')
+        .children().prop('checked',false);
       $('#'+val).prop('checked',true).parent().addClass('active');
     }
     if(opt === 'hpo'){
