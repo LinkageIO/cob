@@ -100,7 +100,7 @@ function buildGeneTables(){
   // Derive Export Filename
   var name = curNetwork + '.'
   if(isTerm){name += curTerm;}else{name += 'Custom';}
-  
+
   // Settings for the tables!
   var tableOpts = {
     deferRender: false,
@@ -154,43 +154,43 @@ function buildGeneTables(){
       //{data: 'parentNumIterations', name:'parentNumIterations', title: 'Num Parent Interactions'},
       //{data: 'parentAvgEffectSize', name:'parentAvgEffectSize', title: 'Avg Parent Effect Size'},
   ]};
-  
+
   // Deep copy the options to prevent interference
   var geneOpts = $.extend(true,{},tableOpts);
   var subOpts = $.extend(true,{},tableOpts);
-  
+
   /*--------------------------------
               Prep Work
   ---------------------------------*/
   // Destroy the old tables if present
   destroyTable('Gene',false);
   destroyTable('Subnet',false);
-  
+
   // Set button information messages
   var csvTitle = 'Export all genes in this table to a CSV file';
   var gsTitle = 'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph';
   var gwsTitle = 'Run a GeneWordSearch enrichment analysis on the genes in this table';
   if(hasGO){var goTitle = 'Run a GO term enrichment analysis on the genes in this table';}
   else{var goTitle = 'GO enrichment not available for this organism, please contact site admin if needed.';}
-  
+
   /*--------------------------------
        Setup The Gene Table
   ---------------------------------*/
   // Get gene data
   var geneData = [];
   Object.keys(geneDict).forEach(function(cur,idx,arr){geneData.push(geneDict[cur]['data']);});
-  
+
   // Build the table
   geneOpts.data = geneData;
   geneOpts.dom = '<"GeneTitle">frtpB';
   var gene_table = $('#GeneTable').DataTable(geneOpts);
-  
+
     // Make certain columns invisible if there will be no useful data
   gene_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
-  
+
   // Set the inline titles on the tables
   $("div.GeneTitle").html('Gene Data <span id="GeneTableInfo" title="This table contains information for all of the genes matched by your query. The ones that are rendered in the graph are denoted by an \'X\' in the first column. The remaining are genes that matched the query, but were discluded due to the parameters set in the options tab. They can be added to the graph by simply clicking them. To see just the genes that are selected and their neighbors, go to the \'Subnetwork\' tab." class="table-glyph glyphicon glyphicon-info-sign"></span>');
-  
+
   /*--------------------------------
        Setup The Subnet Table
   ---------------------------------*/
@@ -198,24 +198,24 @@ function buildGeneTables(){
   subOpts.data = [];
   subOpts.dom = '<"SubnetTitle">frtpB';
   var sub_table = $('#SubnetTable').DataTable(subOpts);
-  
+
   // Set the inline titles on the tables
   $("div.SubnetTitle").html('Subnet Data <span id="SubnetTableInfo" title="This table contains information  for all of the selected genes and their first neighbors. This is the same data that is contained in the main gene table, forpurposes of making navigating an interesting subnetwork easier." class="table-glyph glyphicon glyphicon-info-sign"></span>');
-  
+
   // Make certain columns invisible if there will be no useful data
   sub_table.columns(['rendered:name']).visible(false);
   sub_table.columns(['snp:name', 'fdr:name', 'numIntervening:name', 'rankIntervening:name', 'numSiblings:name']).visible(isTerm);
-  
+
   /*----------------------------------
        Setup The Table Listeners
   -----------------------------------*/
   // Set the info in the titles
   infoTips('#GeneTableInfo, #SubnetTableInfo');
-  
+
   // Set up qtips on table buttons
   infoTips(gene_table.buttons(0,null).nodes(),'bottom center','top center');
   infoTips(sub_table.buttons(0,null).nodes(),'bottom center','top center');
-  
+
   // Set listener for pop effect of subnetwork table
   $('#SubnetTable tbody').on('mouseover','tr', function(evt){
     if(this['id'].length > 0){
@@ -225,32 +225,42 @@ function buildGeneTables(){
       }, 10, this['id']);
     }
   });
-  
-  // Handling a click on the two tables
-  $('#GeneTable').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
+
+  // Prevent selection on gene table if noAdd flag
+  $('#GeneTable').DataTable()
+    .on('user-select', function(evt){
     // If we are in the process of adding a gene, kill this request
     if(noAdd){
-      $('#GeneTable').DataTable().row('#'+this['id']).deselect();
+      evt.preventDefault();
       window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
-      return;
     }
-    // Run the actual selection algorithm
-    geneSelect();
   });
 
-  $('#SubnetTable').on('click', 'tr td:not(td:nth-child(1), td:nth-child(2))', function(evt){
-    // If we are in the process of adding a gene, kill this request
-    if(noAdd){
-      $('#SubnetTable').DataTable().row('#'+this['id']).deselect();
-      window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
-      return;
-    }
-    // Select the genes on the main table
-    $('#GeneTable').DataTable().rows().deselect();
-    $('#GeneTable').DataTable().rows($('#SubnetTable').DataTable().rows('.selected').ids(true)).select();
-    // Run the actual selection algorithm
-    geneSelect();
-  });
+  // Handling a select on the gene table
+  $('#GeneTable').DataTable()
+    .on('select deselect', function(evt){geneSelect();});
+
+  // Mirroring a select on the gene table
+  $('#SubnetTable').DataTable()
+    .on('user-select', function(evt,dt,type,cell,ogEvent){
+      // Prevent changes on this table
+      evt.preventDefault();
+
+      // If already adding something kill it
+      if(noAdd){
+        window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.');
+        return;
+      }
+
+      // Select the genes on the main table
+      var tbl = $('#SubnetTable').DataTable();
+      if($(tbl.row(cell.index().row).node()).hasClass('selected')){
+        $('#GeneTable').DataTable().row('#'+tbl.row(cell.index().row).id()).deselect();
+      }
+      else{
+        $('#GeneTable').DataTable().row('#'+tbl.row(cell.index().row).id()).select();
+      }
+    });
 }
 
 /*---------------------------------------
@@ -291,11 +301,11 @@ function destroyTable(table,hide){
     $(tableID).DataTable().destroy();
     $(tableID).off().empty();
   }
-  
+
   // Show the wait messages
   if(table === 'Ontology'){tableID = '#GeneSelect';}
   var waitID = tableID + 'Wait';
-  
+
   $(tableID).toggleClass('hidden',hide);
   $(waitID).toggleClass('hidden',!(hide));
 }
@@ -306,36 +316,36 @@ function destroyTable(table,hide){
 function updateSubnetTable(newGenes, newGenesSel){
   // Get the table api ref
   var tbl = $('#SubnetTable').DataTable();
-  
+
   // Find the genes we must add and remove
   var oldGenes = new Set();
   tbl.rows().ids().each(function(cur){oldGenes.add(cur)});
   var toAdd = [...newGenes].filter(cur => !oldGenes.has(cur));
   var toSub = [...oldGenes].filter(cur => !newGenes.has(cur));
-  
+
   // Get the data in the proper formats for adding and removing
   toAdd.forEach(function(cur,idx,arr){arr[idx] = geneDict[cur]['data'];});
   toSub.forEach(function(cur,idx,arr){arr[idx] = '#'+cur;});
-  
+
   // Clear old data and add new
   if(toSub.length > 0){tbl.rows(toSub).remove();}
   tbl.rows.add(toAdd).draw();
-  
+
   // Update the selections
   tbl.rows('.selected').deselect();
   tbl.rows(newGenesSel).select();
 }
 
 /*--------------------------------
-  Listeners for Selection Tables 
+  Listeners for Selection Tables
 ---------------------------------*/
 function networkListner(){
   // Save the selected row
   curNetwork = $('td', this).eq(0).text();
-  
+
   // Clear obsolete graph
   clearResults();
-  
+
   // Clean up tables
   curOntology = '';
   curTerm = '';
@@ -343,23 +353,23 @@ function networkListner(){
 
   // Fetch and build the next table
   buildOntologyTable(curNetwork);
-  
+
   // Set up the text completion engine for the gene list
   setupTextComplete(curNetwork, '#geneList');
 }
 
 function ontologyListener(){
   if($('#OntologyTable').DataTable().rows().count() < 1){return;}
-  
+
   // Highlight the relevant row
   curOntology = $('td',this).eq(0).text();
-  
+
   // Clear obsolete graph
   clearResults();
 
   // Prep the Term Table
   curTerm = '';
-  
+
   // Fetch and build the network table
   buildTermTable(curNetwork,curOntology);
 }
