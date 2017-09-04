@@ -25,7 +25,10 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.1.4/cytoscape.min.js" integrity="sha256-j3gF/jWVW36Y45OocaTinmpLUIc8VhO31YlQE43AeRM=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.2/cytoscape.min.js"
+    integrity="sha256-FTN23DVw/cGCd05VaKVgk9mhRW1cHT7tth8MbCltWz0="
+    crossorigin="anonymous">
+  </script>
   <script
     src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.1/cytoscape-qtip.js">
   </script>
@@ -38,14 +41,17 @@
 
   <!-- Load COB -->
   <script type="text/javascript">
-    var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
-    $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')}).appendTo('head');
+  var $SCRIPT_ROOT = window.location.href.replace(/\/?$/, '/');
+$('<link/>', {
+  rel: 'shortcut icon',
+  href: $SCRIPT_ROOT + 'static/favicon.ico'
+}).appendTo('head');
 
-    $(document).ready(function(){
-      // Load the main script to setup everything
-      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'));
-    });
-  </script>
+$(document).ready(function() {
+  // Load the main script to setup everything
+  $.getScript($SCRIPT_ROOT + 'static/js/cob.js');
+});
+</script>
 
   <style>
     #cobHead{
