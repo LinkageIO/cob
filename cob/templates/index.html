@@ -7,46 +7,51 @@
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 
   <!-- jQuery -->
-  <script src="https://code.jquery.com/jquery-3.1.1.min.js"
-  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.0/jquery.textcomplete.js" integrity="sha256-XwraNCveDAoWmMMV5oXZ/IrhghbYUNk+bx0blB3W6Q8=" crossorigin="anonymous"></script> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.textcomplete/1.8.1/jquery.textcomplete.min.js" integrity="sha256-gwqfh5V+q+2Y6rTn6kG0UwpvaYaB7oVkSyFH2RSUug0=" crossorigin="anonymous"></script>
 
   <!-- Bootstrap-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
   <!-- DataTables, found using their package builder -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.css"/>
-  <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.13/b-1.2.4/b-html5-1.2.4/sc-1.4.2/se-1.2.0/datatables.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs/dt-1.10.15/b-1.3.1/b-html5-1.3.1/sc-1.4.2/se-1.2.2/datatables.min.css"/>
+  <script type="text/javascript" src="https://cdn.datatables.net/v/bs/dt-1.10.15/b-1.3.1/b-html5-1.3.1/sc-1.4.2/se-1.2.2/datatables.min.js"></script>
 
   <!-- qTip2 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.css" integrity="sha256-JvdVmxv7Q0LsN1EJo2zc1rACwzatOzkyx11YI4aP9PY=" crossorigin="anonymous" />
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/qtip2/3.0.3/jquery.qtip.min.js" integrity="sha256-a+PRq3NbyK3G08Boio9X6+yFiHpTSIrbE7uzZvqmDac=" crossorigin="anonymous"></script>
 
   <!-- Cytoscape and extensions -->
-  <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.14/cytoscape.min.js" integrity="sha256-6BSV+486t1fI5kCmINCZfBHVcsED36v+3MzwiHncbvU=" crossorigin="anonymous"></script>-->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/2.7.18/cytoscape.min.js" crossorigin="anonymous"></script>
-  <script
-    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.5.2/cytoscape-qtip.js">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.2/cytoscape.min.js"
+    integrity="sha256-FTN23DVw/cGCd05VaKVgk9mhRW1cHT7tth8MbCltWz0="
+    crossorigin="anonymous">
   </script>
   <script
-    src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/v1.0.1/cytoscape-graphml.js">
+    src="https://cdn.rawgit.com/cytoscape/cytoscape.js-qtip/2.7.1/cytoscape-qtip.js">
   </script>
-  
+  <script
+    src="https://cdn.rawgit.com/iVis-at-Bilkent/cytoscape.js-graphml/1.0.5/cytoscape-graphml.js">
+  </script>
+
   <!-- Download Shortcut Function -->
-  <script src="https://cdn.rawgit.com/rndme/download/v1.4.6/download.js"></script>
+  <script src="https://cdn.rawgit.com/rndme/download/v1.4.7/download.min.js"></script>
 
   <!-- Load COB -->
   <script type="text/javascript">
-    var $SCRIPT_ROOT = (window.location.href).replace(/\/?$/, '/');
-    $('<link/>', {rel:'shortcut icon',href:($SCRIPT_ROOT + 'static/favicon.ico')}).appendTo('head');
-    
-    $(document).ready(function(){
-      // Load the main script to setup everything
-      $.getScript(($SCRIPT_ROOT + 'static/js/cob.js'));
-    });
-  </script>
+  var $SCRIPT_ROOT = window.location.href.replace(/\/?$/, '/');
+$('<link/>', {
+  rel: 'shortcut icon',
+  href: $SCRIPT_ROOT + 'static/favicon.ico'
+}).appendTo('head');
+
+$(document).ready(function() {
+  // Load the main script to setup everything
+  $.getScript($SCRIPT_ROOT + 'static/js/cob.js');
+});
+</script>
 
   <style>
     #cobHead{
@@ -102,7 +107,7 @@
     .opt-label {
       vertical-align: middle;
     }
-    .opt-glyph { 
+    .opt-glyph {
       opacity: 0.3;
       pointer-events: auto;
       position: absolute;
@@ -113,6 +118,7 @@
     #cob {
       z-index: 5;
       height: 100vh;
+      min-width: 475px;
     }
     #colBreak{
       height: 0;
@@ -120,15 +126,36 @@
     }
     #geneList {
       max-width: 100%;
-      max-height: 55vh;
+      max-height: 10vh;
     }
     #windowSizeInfo, #flankLimitInfo {
       transform: translateY(0%);
     }
-    #logSpacingInfo, #visEnrichInfo {
+    #visEnrich {
+      width: 100%;
+    }
+    #logSpacingInfo {
+      position: relative;
+      vertical-align: middle;
+      transform: translateY(-75%);
+    }
+    #visEnrichInfo {
       position: relative;
       vertical-align: middle;
       transform: translateY(0%);
+    }
+    #nodeSizeGroup {
+      width: 49.5%;
+    }
+    #nodeSize {
+      min-width: 55px;
+    }
+    #logSpacing{
+      width: 49.5%;
+    }
+    .graphOptsRow{
+      display: flex;
+      justify-content: space-between;
     }
     .button-glyph {
       position: relative;
@@ -171,12 +198,12 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header"><h4 class="modal-title">
-        <b>COB is growing!</b></h4>
+        <b>The graph is being built!</b></h4>
       </div>
       <div class="modal-body" id="geneStatus">
         <p>We are now getting the data (if needed) and running the layout algorithm.</p>
         <p>For bigger networks this can take upwards of 60 seconds so please
-        be patient... this page goes unresponsive while processing the layout.</p>
+        be patient, this page goes unresponsive while processing the layout.</p>
       </div>
     </div>
   </div>
@@ -186,7 +213,7 @@
 <div class="container-fluid">
 <div id='theRow' class="row">
 <div id='cob' class='col-md-4'>
-  <div id='cobHead' class='container'>COB - The CoExpression Browser</div>
+  <div id='cobHead' class='container'>CoExpression Browser</div>
 
 <div>
   <!-- Tab List -->
@@ -215,7 +242,7 @@
 
       <!-- Section For Term Selection -->
       <br>
-      <h5 id="GeneSelectWait">Select a network above to continue.</h5>
+      <h5 id="GeneSelectWait">Please select a network above to continue.</h5>
       <div class="hidden" id="GeneSelect">
         <ul class="nav nav-tabs" role="tablist" id="GeneSelectTabs">
           <li role="presentation" class="active"><a aria-controls="TermTableTab" href="#TermTableTab" role="tab" data-toggle="tab">Predefined Terms</a></li>
@@ -226,7 +253,7 @@
             <br><table class="table table-hover" id="OntologyTable">
                 <tbody></tbody>
               </table>
-            <br><h5 id="TermTableWait" class="">Select and "ontology" above to continue.</h5>
+            <br><h5 id="TermTableWait" class="">Please select an ontology above to continue.</h5>
             <table class="table table-hover" id="TermTable">
               <tbody></tbody>
             </table>
@@ -252,7 +279,6 @@
           </div>
         </div>
       </div>
-
     </div>
     <!-- End Network Selection Tab -->
 
@@ -283,7 +309,7 @@
             <div class="alert alert-danger hidden" id="edgeCutoffError" role="alert"></div>
           </td></tr>
 
-          <tr id="fdrRow" title="Hey!" class="form-group">
+          <tr id="fdrRow" class="form-group">
             <td>
               <button id="fdrButton" type="button" class="opt-label btn btn-default active" data-toggle="button"><b>FDR Filter (Term)</b></button>
             </td>
@@ -292,32 +318,61 @@
               <i id="fdrCutoffInfo" title="The maximum FDR required for a gene to be visible in the network initially." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
           </tr>
-
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="fdrCutoffError" role="alert"></div>
           </td></tr>
-
+          <tr class='form-group'>
+            <td><label class='opt-label'>Overlap Method</label></td>
+            <td  class="">
+              <fieldset id="overlapMethod" class="fdr-toggle btn-group btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="radio" name="overlap" id="density" autocomplete="off" ><b>Density</b>
+                <i id="densityInfo" title='Style of overlap analysis to use. If disabled, this option is not availible for FDR analysis.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+              <label class="btn btn-default">
+                <input type="radio" name="overlap" id="locality" autocomplete="off"  ><b>Locality</b>
+                <i id="localityInfo" title='Style of overlap analysis to use. If disabled, this option is not availible for FDR analysis.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+            </fieldset>
+            </td>
+          </tr>
+          <tr class="form-group">
+            <td><b>Graph Options</b></td>
+            <td class="form-inline graphOptsRow">
+              <button id="logSpacing" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
+              <div id="nodeSizeGroup" class="input-group">
+                <div class="input-group-addon"><b>Node Size</b></div>
+                <input type="text" class="form-control" id="nodeSize">
+                <i id="nodeSizeInfo" title="How large the genes and SNPs appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
+              </div>
+            </td>
+          </tr>
+          <tr><td colspan="2">
+            <div class="alert alert-danger hidden" id="nodeSizeError" role="alert"></div>
+          </td></tr>
         <tr><td colspan="2"><h3>SNP2Gene Mapping Options</h3></td></tr>
-
           <tr class='form-group' colspan='2'>
             <td><label class='opt-label'>Overlapping SNPs</label></td>
-            <td class='btn-group'>
-              <div class='has-feedback'>
-               <button type='button' class='btn btn-default' data-toggle="button"><b>Effective SNP</b>
-                 <i id="EffectiveInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
-               </button>
-               <button type='button' class='btn btn-default active' data-toggle="button" aria-pressed="true"><b>Strongest SNP</b>
-                 <i id="StrongestInfo" title='Selects SNP-to-gene mapping resolution' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
-               </button>
-              </div>
+            <td id="overlapSNPs" class="btn-group  btn-group-justified" data-toggle="buttons">
+              <label class="btn btn-default">
+                <input type="radio" id="strongest" autocomplete="off"><b>Strongest SNP</b>
+                <i id="strongestInfo" title='Selects SNP-to-gene mapping resolution, green indicates FDR availibility for this option, yellow indicates that FDR analysis is unavailable.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
+              <label class="btn btn-default active">
+                <input type="radio" name="overlapSNPs" id="effective" autocomplete="off" checked><b>Effective SNP</b>
+                <i id="effectiveInfo" title='Selects SNP-to-gene mapping resolution, green indicates FDR availibility for this option, yellow indicates that FDR analysis is unavailable.' class='opt-glyph glyphicon glyphicon-info-sign button-glyph'></i>
+              </label>
             </td>
           </tr>
 
           <tr class="form-group">
             <td><label class="opt-label">Window Size (Term)</label></td>
             <td class="input-group">
+              <div class="input-group-btn">
+                <button id="hpo" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+              </div>
               <div class="has-feedback">
-                <input type="text" class="form-control" id="windowSize">
+                <input type="text" class="form-control hpo-toggle" id="windowSize">
                 <i id="windowSizeInfo" title="The window size is the number of base pairs up/down stream of a SNP used in SNP2Gene mapping. If HPO is specified, genes that exhibit significant co-expression across 2+ SNP2Gene mappings during overlap analysis are automatically included." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="windowSizeSel" class="input-group-btn">
@@ -327,15 +382,18 @@
               </div>
             </td>
           </tr>
-        
+
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="windowSizeError" role="alert"></div>
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Flank Limit (Term)</label></td>
             <td class="input-group">
+              <div class="input-group-btn">
+                <button id="hpo1" class="btn btn-default hpoButton" type="button" data-toggle="button" aria-pressed="false">HPO</button>
+              </div>
               <div class="has-feedback">
-                <input type="text" class="form-control" id="flankLimit">
+                <input type="text" class="form-control hpo-toggle" id="flankLimit">
                 <i id="flankLimitInfo" title="The flank limit that is used in determining what genes are included in a term." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
               </div>
               <div id="flankLimitSel" class="input-group-btn">
@@ -350,7 +408,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Vis Neighbors (Custom)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="visNeighbors">
               <i id="visNeighborsInfo" title="The maximum number of neighbors to show initially when declaring a custom gene list." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -358,34 +416,10 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="visNeighborsError" role="alert"></div>
           </td></tr>
-        <tr><td colspan="2"><h3>Graph Options</h3></td></tr>
-          <tr class="form-group">
-            <td><label class="opt-label">Gene Size</label></td>
-            <td class="has-feedback">
-              <input type="text" class="form-control" id="nodeSize">
-              <i id="nodeSizeInfo" title="How large the genes appear on the graph." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
-            </td>
-          </tr>
-          <tr><td colspan="2">
-            <div class="alert alert-danger hidden" id="nodeSizeError" role="alert"></div>
-          </td></tr>
-          <tr class="form-group">
-            <td><label class="opt-label">SNP Colors (Polywas)</label></td>
-            <td class="has-feedback">
-              <input type="text" class="form-control" id="snpLevels">
-              <i id="snpLevelsInfo" title="How many different colors to use to differentiate SNPs within a stack, after which the colors will repeat." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
-            </td>
-          </tr>
-          <tr><td colspan="2">
-            <div class="alert alert-danger hidden" id="snpLevelsError" role="alert"></div>
-          </td></tr>
-          <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="logSpacingButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Log Spacing (Polywas) </b><i id="logSpacingInfo" title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
-          </td></tr>
         <tr><td colspan="2"><h3>Enrichment Options</h3></td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Probability Cutoff</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="pCutoff">
               <i id="pCutoffInfo" title="The P value used to determine what enrichment results are significant." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -395,7 +429,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Min Genes (GO)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="minTerm">
               <i id="minTermInfo" title="How many genes a GO term must contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -405,7 +439,7 @@
           </td></tr>
           <tr class="form-group">
             <td><label class="opt-label">Max Genes (GO)</label></td>
-            <td class="has-feedback">
+            <td>
               <input type="text" class="form-control" id="maxTerm">
               <i id="maxTermInfo" title="How many genes a GO term may contain before being considered in the analysis." class="opt-glyph glyphicon glyphicon-info-sign form-control-feedback"></i>
             </td>
@@ -413,8 +447,8 @@
           <tr><td colspan="2">
             <div class="alert alert-danger hidden" id="maxTermError" role="alert"></div>
           </td></tr>
-          <tr class="form-group"><td colspan="2" style="text-align:right">
-            <button id="visEnrichButton" type="button" class="btn btn-default active" data-toggle="button" aria-pressed="true"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
+          <tr class="form-group"><td></td><td style="text-align:right">
+            <button id="visEnrich" type="button" class="btn btn-default" data-toggle="button" aria-pressed="false"><b>Visible Genes Only </b><i id="visEnrichInfo" title="When running an enrichment analysis, only include genes visible on the graph." class="opt-glyph glyphicon glyphicon-info-sign"></i></button>
           </td></tr>
         </table>
         <br>
@@ -452,7 +486,7 @@
       </table>
     </div>
     <!-- End Subnetwork Table Tab -->
-    
+
     <!-- Enrichment Table Tab -->
     <div role="tabpanel" class="tab-pane" id="EnrichmentTab"><br>
       <h5 id="EnrichmentTableWait">Please follow the directions in the network tab, then at the bottom of either the main Gene table or the Subnet table, you can run either a GO Term or GeneWordSearch analysis on those gene, whose results will appear here.</h5>
@@ -464,7 +498,7 @@
       </div>
     </div>
     <!-- End Enrichment Table Tab -->
-    
+
     <!-- About Tab -->
     <div role="tabpanel" class="tab-pane" id="AboutTab"><br>
       This website was built under the auspices of the <a href="http://csbio.cs.umn.edu/">Myers Lab</a>.<br><br>
@@ -479,15 +513,15 @@
 <!-- Box for Cytoscape Graph -->
 <div class="col-md-8">
   <hr id="colBreak" class="">
-  
+
   <!-- Back button for graph -->
   <button id="backButton" type="button" class="hidden btn btn-default" aria-label="Restore Graph">
     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
   </button>
-  
+
   <!-- Box for cytoscape.js -->
   <div id='cy'></div>
-  
+
   <!-- Box for title indicating current network -->
   <div id='cyTitle'></div>
   <div id='graphButtons'>

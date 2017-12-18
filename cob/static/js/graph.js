@@ -1,70 +1,93 @@
 /*-------------------------------------
      General Modify Graph Function
 -------------------------------------*/
-function modCyto(resolve, reject, newGraph, poly, nodes, edges){
-  if(newGraph){
+function modCyto(resolve, reject, newGraph, poly, nodes, edges) {
+  if (newGraph) {
     // Destroy the old graph if there is one
-    if(cy !== null){cy.destroy();cy = null;}
-    
+    if (cy !== null) {
+      cy.destroy();
+      cy = null;
+    }
+
     // Get a list of the nodes to render
     var renNodes = [];
-    Object.keys(nodes).forEach(function(cur,idx,arr){
-      if(nodes[cur]['data']['render']){renNodes.push(nodes[cur]);}
+
+    Object.keys(nodes).forEach(function(cur, idx, arr) {
+      if (nodes[cur]['data']['render']) {
+        renNodes.push(nodes[cur]);
+      }
     });
-    
+
     // Check for any rendered nodes
-    if(renNodes.length < 1){reject('There are no genes in this term that meet the rendering requrements defined in the options tab.');return;}
-    
+    if (renNodes.length < 1) {
+      reject(
+        'There are no genes in this term that meet the rendering requrements defined in the options tab.'
+      );
+      return;
+    }
+
     // Init the graph
     initCyto(renNodes, edges, poly);
-  }
-  else{
+  } else {
     // Run the proper layout
-    if(poly){cy.layout(getPolyLayoutOpts());}
-    else{cy.layout(getForceLayoutOpts());}
+    var layout = null;
+    if (poly) {
+      layout = cy.layout(getPolyLayoutOpts());
+    } else {
+      layout = cy.layout(getForceLayoutOpts());
+    }
+    layout.run();
   }
-  
+
   // Update the styles of the nodes for the new sizes
   updateNodeSize(getOpt('nodeSize'));
-  
+
   // Set up the graph event listeners
   setGeneListeners();
-  if(poly){setSNPGqtips();}
-  
+  if (poly) {
+    setSNPGqtips();
+  }
+
   // Check for a graph and resolve
-  if(cy !== null){resolve();}
-  else{reject('Graph modification failed failed');}
+  if (cy !== null) {
+    resolve();
+  } else {
+    reject('Graph modification failed failed');
+  }
 }
 
 /*------------------------------------------
           Options for Each Layout
 ------------------------------------------*/
 // Function to return an object for the layout options
-function getPolyLayoutOpts(){
+function getPolyLayoutOpts() {
   return {
     name: 'polywas',
     nodeDiameter: getOpt('nodeSize'),
-    logSpacing: logSpacing,
-    snpLevels: getOpt('snpLevels'),
+    logSpacing: getOpt('logSpacing'),
+    snpLevels: 5
   };
 }
 // Function to return an object for the layout options
-function getForceLayoutOpts(){
+function getForceLayoutOpts() {
   return {
     name: 'cose',
     animate: false,
-    randomize: true,
+    randomize: true
   };
 }
 
 /*------------------------------------------
           Init Cytoscape.js Fresh
 ------------------------------------------*/
-function initCyto(nodes,edges,poly){
+function initCyto(nodes, edges, poly) {
   // Get the proper layout options
-  if(poly){var opts = getPolyLayoutOpts();}
-  else{var opts = getForceLayoutOpts();}
-  
+  if (poly) {
+    var opts = getPolyLayoutOpts();
+  } else {
+    var opts = getForceLayoutOpts();
+  }
+
   // Initialize Cytoscape
   cy = window.cy = cytoscape({
     container: $('#cy'),
@@ -79,177 +102,187 @@ function initCyto(nodes,edges,poly){
     boxSelectionEnabled: true,
     layout: opts,
     style: [
-        {selector: '[type = "chrom"]',
-         css: {
-           'z-index': '2',
-           'background-color': 'DarkSlateGrey',
-           'content': 'data(id)',
-           'color': 'white',
-           'text-background-color': 'DarkSlateGrey',
-           'text-background-opacity': '1',
-           'text-background-shape': 'roundrectangle',
-           'text-valign': 'center',
-           'text-halign': 'center',
-           'font-size': '25',
-         }},
-       {selector: '[type = "snpG"]',
-        css: {
-          'z-index': '1',
-          'shape': 'diamond',
-          'background-color': 'SlateGrey',
-        }},
-      {selector: '[type = "gene"]',
-       css: {
-         'z-index': '1',
-         'shape': 'circle',
-         'background-color': '#337ab7',
-         'content': 'data(id)',
-         'font-size': '11',
-         'min-zoomed-font-size':'50',
-       }},
-      {selector: '[origin = "query"]',
-       css: {
-         'z-index': '3',
-           //'background-color': 'DarkOrchid',
-           'background-color': '#ecec3c', //Yellow
-       }},
-       {selector: '[origin = "neighbor"]',
+      {
+        selector: '[type = "chrom"]',
         css: {
           'z-index': '2',
-          'background-color': 'MediumSeaGreen',
-        }},
-       {selector: '.snp0',
-         style: {
-           //'background-color': 'DarkOrchid',
-           'background-color': '#c91a3b',
-         }},
-       {selector: '.snp1',
-         style: {
-           'background-color': 'MediumSeaGreen',
-         }},
-       {selector: '.snp2',
-         style: {
-           'background-color': '#337ab7',
-         }},
-       {selector: '.snp3',
-         style: {
-           'background-color': 'LightCoral',
-         }},
-       {selector: '.snp4',
-         style: {
-           'background-color': 'DarkCyan',
-         }},
-       {selector: '.snp5',
-         style: {
-           'background-color': 'Tan',
-         }},
-       {selector: '.snp6',
-         style: {
-           'background-color': 'Maroon',
-         }},
-       {selector: '.snp7',
-         style: {
-           'background-color': 'OliveDrab',
-         }},
-       {selector: '.snp8',
-         style: {
-           'background-color': 'Turquoise',
-         }},
-       {selector: '.snp9',
-         style: {
-           'background-color': 'Sienna',
-         }},
-       {selector: 'edge',
-         css: {
-           'curve-style': 'haystack',
-           //'width': 'mapData(weight,1,10,1,10)',
-           //'opacity': '0.25',
-           'line-color': 'grey',
-         }},
-       {selector: '.neighbor',
-         css: {
-           //'background-color': '#ff6400',
-           'background-color': '#c91a3b', //Dark Red
-       }},
-       {selector: '.highlighted',
-         css: {
-           //'background-color': 'Red',
-           'background-color': '#c91a3b', //Dark Red
-           'z-index': '3',
-         }},
-       {selector: ':selected',
-         css: {
-           'border-color': 'black',
-           'background-color': '#c91a3b', //Dark Red
-           'border-width' : 1.5,
-         }},
-       {selector: ':selected[type = "gene"]',
-         css: {
-           'z-index': '3',
-           'font-size': '11',
-           'min-zoomed-font-size':'1',
-        }},
-       {selector: '.highlighted[type = "gene"]',
-         css: {
-           'min-zoomed-font-size':'1',
-           'z-index': '3',
-        }},
+          'background-color': 'DarkSlateGrey',
+          content: 'data(id)',
+          color: 'white',
+          'text-background-color': 'DarkSlateGrey',
+          'text-background-opacity': '1',
+          'text-background-shape': 'roundrectangle',
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'font-size': '18'
+        }
+      },
+      {
+        selector: '[type = "snpG"]',
+        css: {
+          'z-index': '1',
+          'background-color': 'SlateGrey'
+        }
+      },
+      {
+        selector: '[type = "gene"]',
+        css: {
+          'z-index': '1',
+          'background-color': '#337ab7',
+          content: 'data(id)',
+          'font-size': '11',
+          'min-zoomed-font-size': '50'
+        }
+      },
+      {
+        selector: '[origin = "query"]',
+        css: {
+          'z-index': '3',
+          'background-color': 'DarkOrchid'
+        }
+      },
+      {
+        selector: '[origin = "neighbor"]',
+        css: {
+          'z-index': '2',
+          'background-color': 'MediumSeaGreen'
+        }
+      },
+      {
+        selector: 'edge',
+        css: {
+          'curve-style': 'haystack',
+          'line-color': 'grey'
+        }
+      },
+      {
+        selector: 'edge[weight]', //select edges with weight data
+        css: {
+          width: function(e) {
+            var weight = parseFloat(e.data('weight')) - 2;
+            if (weight < 0) {
+              return 1;
+            } else {
+              return weight;
+            }
+          },
+          opacity: function(e) {
+            var weight = parseFloat(e.data('weight'));
+            return weight / 10;
+          }
+        }
+      },
+      {
+        selector: '.snp0',
+        style: {
+          'background-color': 'DarkOrchid'
+        }
+      },
+      {
+        selector: '.snp1',
+        style: {
+          'background-color': 'MediumSeaGreen'
+        }
+      },
+      {
+        selector: '.snp2',
+        style: {
+          'background-color': '#7a0019'
+        }
+      },
+      {
+        selector: '.snp3',
+        style: {
+          'background-color': '#337ab7'
+        }
+      },
+      {
+        selector: '.snp4',
+        style: {
+          'background-color': 'LightCoral'
+        }
+      },
+      {
+        selector: '.neighbor',
+        css: {
+          'background-color': '#ff6400'
+        }
+      },
+      {
+        selector: '.highlighted',
+        css: {
+          'background-color': 'Red',
+          'z-index': '3'
+        }
+      },
+      {
+        selector: ':selected',
+        css: {
+          'border-color': 'Black',
+          'border-width': 1.5
+        }
+      },
+      {
+        selector: ':selected[type = "gene"]',
+        css: {
+          'z-index': '3',
+          'font-size': '11',
+          'min-zoomed-font-size': '1'
+        }
+      },
+      {
+        selector: '.highlighted[type = "gene"]',
+        css: {
+          'min-zoomed-font-size': '1',
+          'z-index': '3'
+        }
+      },
 
-       {selector: '.pop',
-         css: {
-           'background-color': 'Yellow',
-           'z-index': '4',
-         }},
-
-       {selector: 'edge[weight]', //select edges with weight data
-         css :{
-           'width':function(e){
-             var weight = parseFloat(e.data('weight')) - 2
-             if(weight < 0){return 1}
-             else{return weight}
-           },
-           'opacity':function(e){
-             var weight = parseFloat(e.data('weight'))
-             return weight/10
-             //return 0
-           }
-        }},
-
-       {selector: '.highlightedEdge',
-         css: {
-           'line-color': '#ffc800',
-           'opacity': '1',
-           'width' : '3',
-           'z-index': '3',
-           //'content': 'data(weight)',
-           //'font-size':'30',
-           //'text-opacity':1,
-           //'color': 'black',
-         }},
-
-     ],
-   elements: {
-     nodes: nodes,
-     edges: edges,
-  }});
+      {
+        selector: '.pop',
+        css: {
+          'background-color': 'Yellow',
+          'z-index': '4'
+        }
+      },
+      {
+        selector: '.highlightedEdge',
+        css: {
+          'line-color': '#ffcc33',
+          opacity: '1',
+          width: '3',
+          'z-index': '3'
+        }
+      }
+    ],
+    elements: {
+      nodes: nodes,
+      edges: edges
+    }
+  });
 }
 
 /*--------------------------------
      Node Size Update Function
 ---------------------------------*/
-function updateNodeSize(diameter){
+function updateNodeSize(diameter) {
   cy.startBatch();
-  cy.style().selector('[type = "snpG"], [type = "gene"]').style({
-    'width': (diameter).toString(),
-    'height': (diameter).toString(),
-  }).selector('.pop').style({
-    'width': (diameter*2).toString(),
-    'height': (diameter*2).toString(),
-  });
-  if(!(isPoly())){
+  cy
+    .style()
+    .selector('[type = "snpG"], [type = "gene"]')
+    .style({
+      width: diameter.toString(),
+      height: diameter.toString()
+    })
+    .selector('.pop')
+    .style({
+      width: (diameter * 2).toString(),
+      height: (diameter * 2).toString()
+    });
+  if (!isPoly()) {
     cy.style().selector('[origin = "query"]').style({
-      'width': (diameter*1.5).toString(),
-      'height': (diameter*1.5).toString(),
+      width: (diameter * 1.5).toString(),
+      height: (diameter * 1.5).toString()
     });
   }
   cy.style().update();
@@ -259,73 +292,90 @@ function updateNodeSize(diameter){
 /*------------------------------------------
            Graph Listeners Setup
 ------------------------------------------*/
-function setGeneListeners(genes){
+function setGeneListeners(genes) {
   // Get all the genes
-  if(genes === undefined){genes = cy.nodes('[type = "gene"]');}
-  
+  if (genes === undefined) {
+    genes = cy.nodes('[type = "gene"]');
+  }
+
   // Remove all event listeners
   genes.off('tap');
-  try{genes.qtip('destroy');}
-  catch(err){}
-  
+  try {
+    genes.qtip('destroy');
+  } catch (err) {}
+
   // Set listener for clicking
-  genes.on('tap', function(evt){
-    if(evt.originalEvent.ctrlKey || evt.originalEvent.metaKey){
-      window.open('http://www.maizegdb.org/gene_center/gene/'+evt.cyTarget.id());
-    }
-    else{
+  genes.on('tap', function(evt) {
+    if (evt.originalEvent.ctrlKey || evt.originalEvent.metaKey) {
+      window.open(
+        'http://www.maizegdb.org/gene_center/gene/' + evt.cyTarget.id()
+      );
+    } else {
       // If we are in the process of adding a gene, kill this request
-      if(noAdd){
-        window.alert('We\'re currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method.'); 
+      if (noAdd) {
+        window.alert(
+          "We're currently processing a previous add gene request, if you would like to add more than one at a time, please use the shift select method."
+        );
         return;
       }
-      
+
       // Otherwise go ahead and update everything
-      if(evt.cyTarget.hasClass('highlighted')){
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).deselect();
-      }
-      else{
-        $('#GeneTable').DataTable().row('#'+evt.cyTarget.id()).scrollTo().select();
+      if (evt.target.hasClass('highlighted')) {
+        $('#GeneTable').DataTable().row('#' + evt.target.id()).deselect();
+      } else {
+        $('#GeneTable')
+          .DataTable()
+          .row('#' + evt.target.id())
+          .scrollTo()
+          .select();
       }
       geneSelect();
     }
   });
-  
+
   // Setup qtips
   genes.qtip({
-    content: function(){
+    content: function() {
       var data = this.data();
-      res = 'ID: '+data['id'].toString()+'<br>';
-      if(data['alias'].length > 0){res += 'Alias(es): '+data['alias'].toString()+'<br>';}
-      res += 'Local Degree: '+data['cur_ldegree'].toString()+'<br>';
-      if(isTerm){res += 'SNP: '+data['snp'].toString()+'<br>';}
-      res += 'Position: '+data['start'].toString()+'-'+data['end'].toString();
+      res = 'ID: ' + data['id'].toString() + '<br>';
+      if (data['alias'].length > 0) {
+        res += 'Alias(es): ' + data['alias'].toString() + '<br>';
+      }
+      res += 'Local Degree: ' + data['cur_ldegree'].toString() + '<br>';
+      if (isTerm) {
+        res += 'SNP: ' + data['snp'].toString() + '<br>';
+      }
+      res +=
+        'Position: ' + data['start'].toString() + '-' + data['end'].toString();
       return res;
     },
     position: {my: 'bottom center', at: 'top center'},
     style: {
       classes: 'qtip-dark qtip-rounded qtip-shadow',
-      tip: {width: 10, height: 5},
+      tip: {width: 10, height: 5}
     },
     show: {event: 'mouseover', solo: true},
-    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
+    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000}
   });
 }
 
-function setSNPGqtips(){
+function setSNPGqtips() {
   // Set the SNP Group qTip listner
   cy.nodes('[type = "snpG"]').qtip({
-    content: function(){
-      var res = 'SNPs in Group:<br>'; var snps = this.data('snps');
-      $(snps).each(function(i){res += (this.toString() + '<br>');});
+    content: function() {
+      var res = 'SNPs in Group:<br>';
+      var snps = this.data('snps');
+      $(snps).each(function(i) {
+        res += this.toString() + '<br>';
+      });
       return res;
     },
     position: {my: 'bottom center', at: 'top center'},
     style: {
       classes: 'qtip-light qtip-rounded qtip-shadow',
-      tip: {width: 10, height: 5},
+      tip: {width: 10, height: 5}
     },
     show: {event: 'mouseover', solo: true},
-    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000},
+    hide: {event: 'mouseout unfocus', distance: 15, inactive: 2000}
   });
 }

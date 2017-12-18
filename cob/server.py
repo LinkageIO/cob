@@ -56,15 +56,13 @@ opts = {
   'fdrCutoff':{'title':'FDR Filter (Term)',
     'default':dflt['fdrCutoff'],'min':0.0,'max':5.0,'int':False},
   'windowSize':{'title':'Window Size (Term)',
-    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True,'alt':'HPO'},
+    'default':dflt['windowSize'],'min':0,'max':1000000,'int':True},
   'flankLimit':{'title':'Flank Limit (Term)',
-    'default':dflt['flankLimit'],'min':0,'max':20,'int':True,'alt':'HPO'},
+    'default':dflt['flankLimit'],'min':0,'max':20,'int':True},
   'visNeighbors':{'title':'Vis Neighbors (Custom)',
     'default':dflt['visNeighbors'],'min':0,'max':150,'int':True},
-  'nodeSize':{'title':'Gene Size',
+  'nodeSize':{'title':'Node Size',
     'default':dflt['nodeSize'],'min':5,'max':50,'int':True},
-  'snpLevels':{'title':'SNP Colors (Polywas)',
-    'default':dflt['snpLevels'],'min':1,'max':10,'int':True},
   'pCutoff':{'title':'Probability Cutoff',
     'default':dflt['pCutoff'],'min':0.0,'max':1.0,'int':False},
   'minTerm':{'title':'Min Genes (GO)',
@@ -72,6 +70,29 @@ opts = {
   'maxTerm':{'title':'Max Genes (GO)',
     'default':dflt['maxTerm'],'min':100,'max':1000,'int':True},
 }
+
+binOpts = {
+    'overlapMethod':{
+        'default':dflt['overlapMethod'],
+        'state':dflt['overlapMethod'],
+        'isBool':False},
+    'overlapSNPs':{
+        'default':dflt['overlapSNPs'],
+        'state':dflt['overlapSNPs'],
+        'isBool':False},
+    'logSpacing':{
+        'default':dflt['logSpacing'],
+        'state':dflt['logSpacing'],
+        'isBool':True},
+    'hpo':{
+        'default':dflt['hpo'],
+        'state':dflt['hpo'],
+        'isBool':True},
+    'visEnrich':{
+        'default':dflt['visEnrich'],
+        'state':dflt['visEnrich'],
+        'isBool':True},
+    }
 
 # ----------------------------------------
 #    Load things to memeory to prepare
@@ -140,10 +161,16 @@ for ont in gwas_data_db.keys():
         gwas = gwas_data_db[ont].get_data(cob=net)
         gwas_meta_db[ont][net]['windowSize'] = []
         gwas_meta_db[ont][net]['flankLimit'] = []
+        gwas_meta_db[ont][net]['overlapSNPs'] = []
+        gwas_meta_db[ont][net]['overlapMethod'] = []
         for x in gwas['WindowSize'].unique():
             gwas_meta_db[ont][net]['windowSize'].append(int(x))
         for x in gwas['FlankLimit'].unique():
             gwas_meta_db[ont][net]['flankLimit'].append(int(x))
+        for x in gwas['SNP2Gene'].unique():
+            gwas_meta_db[ont][net]['overlapSNPs'].append(str(x).strip().lower())
+        for x in gwas['Method'].unique():
+            gwas_meta_db[ont][net]['overlapMethod'].append(str(x).strip().lower())
 
 # Find any functional annotations we have 
 print('Finding functional annotations...')
@@ -201,9 +228,11 @@ def defaults():
     return jsonify({
         'opts':opts,
         'fdrFilter':conf['defaults']['fdrFilter'],
+        'hpo':conf['defaults']['hpo'],
         'logSpacing':conf['defaults']['logSpacing'],
         'visEnrich':conf['defaults']['visEnrich'],
-        'refLinks':refLinks
+        'refLinks':refLinks,
+        'binOpts':binOpts,
     })
 
 # Sends off the js and such when needed
@@ -248,7 +277,7 @@ def available_genes(network):
 @app.route("/fdr_options/<path:network>/<path:ontology>")
 def fdr_options(network,ontology):
     # Default to empty list
-    ans = {'windowSize': [], 'flankLimit':[]}
+    ans = {'windowSize': [], 'flankLimit':[], 'overlapSNPs':[], 'overlapMethod':[]}
     
     # If the combo is in the db, use that as answer
     if ontology in gwas_meta_db:
@@ -269,6 +298,9 @@ def term_network():
     edgeCutoff = safeOpts('edgeCutoff',request.form['edgeCutoff'])
     windowSize = safeOpts('windowSize',request.form['windowSize'])
     flankLimit = safeOpts('flankLimit',request.form['flankLimit'])
+    hpo = (request.form['hpo'].lower().strip() == 'true')
+    strongestSNPs = (request.form['overlapSNPs'].lower().strip() == 'strongest')
+    overlapDensity = (request.form['overlapMethod'].lower().strip() == 'density')
     
     # Detrmine if there is a FDR cutoff or not
     try:
@@ -281,17 +313,25 @@ def term_network():
     # Get the candidates
     cob.set_sig_edge_zscore(edgeCutoff)
     # Check to see if Genes are HPO
-    if 'HPO' == windowSize == flankLimit:
+    if hpo:
         genes = cob.refgen[gwas_data_db[ontology.name].high_priority_candidates().query(
             'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
                 cob.name, ontology.name, term
             )
         ).gene.unique()]
     else:
+        # Get candidates based on options
+        if(strongestSNPs):
+            try:
+                loci = ontology[term].strongest_loci(window_size=windowSize, attr=ontology.get_strongest_attr(), lowest=ontology.get_strongest_higher())
+            except KeyError:
+                loci = ontology[term].effective_loci(window_size=windowSize)
+        else:
+            loci = ontology[term].effective_loci(window_size=windowSize)
+        
+        # Find the genes
         genes = cob.refgen.candidate_genes(
-            #ontology[term].effective_loci(window_size=windowSize),
-            ontology[term].strongest_loci(window_size=windowSize,attr='numIterations',lowest=False),
-            #genes,
+            loci,
             window_size=windowSize,
             flank_limit=flankLimit,
             chain=True,
@@ -306,17 +346,19 @@ def term_network():
     net = {}
     
     # If there are GWAS results, and a FDR Cutoff
-    if fdrCutoff and ontology.name in gwas_data_db and windowSize != 'HPO' and flankLimit != 'HPO':
+    if fdrCutoff and ontology.name in gwas_data_db and not(hpo):
         cob.log('Fetching genes with FDR < {}',fdrCutoff)
         gwasData = gwas_data_db[ontology.name].get_data(cob=cob.name,
-            term=term,windowSize=windowSize,flankLimit=flankLimit)
+            term=term,windowSize=windowSize,flankLimit=flankLimit,
+            snp2gene=('strongest' if strongestSNPs else 'effective'),
+            method=('density' if overlapDensity else 'locality'))
         net['nodes'] = getNodes(
                 genes, cob, term, gwasData=gwasData, nodeCutoff=nodeCutoff, 
                 windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff
         )
     else:
         # Otherwise just run it without GWAS Data
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit)
+        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff, windowSize=windowSize, flankLimit=flankLimit, hpo=hpo)
     
     # Get the edges of the nodes that will be rendered
     render_list = []
@@ -529,19 +571,16 @@ def go_enrichment():
 # --------------------------------------------
 def safeOpts(name,val):
     # Get the parameters into range
-    if 'alt' in opts[name] and val == opts[name]['alt']:
-        val = opts[name]['alt']
-    else:
-        val = int(val) if opts[name]['int'] else float(val)
-        val = min(val,opts[name]['max'])
-        val = max(val,opts[name]['min'])
+    val = int(val) if opts[name]['int'] else float(val)
+    val = min(val,opts[name]['max'])
+    val = max(val,opts[name]['min'])
     return val
 
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
 def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
-    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None):
+    nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None, hpo=False):
     # Cache the locality
     locality = cob.locality(genes)
     
@@ -612,7 +651,7 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
             'cur_ldegree': str(0),
             'ldegree': str(ldegree),
             'gdegree': str(gdegree),
-            'fdr': str(fdr),
+            'fdr': 'HPO' if hpo else str(fdr),
             'windowSize': str(windowSize),
             'flankLimit': str(flankLimit),
             'numIntervening': numInterv,

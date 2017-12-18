@@ -83,6 +83,7 @@ port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
 timeout: 500                # How long a thread maybe unresponsive before termination
 ```
+
 ### Datasets
 ```
 networks:                   # Camoco networks that are to be loaded in the server.
@@ -92,9 +93,10 @@ gwas:                       # GWAS datasets that will be loaded in the server. I
   - My_GWAS_1               #      this is not included, all GWAS datasets that 
                             #      correspond to loaded networks will be loaded.
 ```
+
 ### Default Values
 ```
-defaults:                   # This is the dictonary containing all of the defaults
+defaults:                   # This is the dictionary containing all of the defaults
                             #      for the options on the web site
   logSpacing: True          # Spacing of genes in Polywas layout, log or true distance
   visEnrich: True           # Only enrich genes visible on graph or all in table
@@ -106,10 +108,27 @@ defaults:                   # This is the dictonary containing all of the defaul
   flankLimit: 2             # Flank limit used in the query
   visNeighbors: 25          # Default number of neighbors visible in custom network
   nodeSize: 10              # Size of the nodes on the graph
-  snpLevels: 3              # Number of colors to use for differentiating SNPs in Polywas
   pCutoff: 0.05             # P value cutoff for enrichment queries
   minTerm: 5                # Minimum number of genes a GO term must have to be included
   maxTerm: 300              # Maximum number of genes a GO term must have to be included
+```
+
+### Reference Links
+This section allows for linking directly from genes to an external website for more
+information. This can be configured for each different reference genome (RefGen) used 
+to build the included networks. If not included, the option won't appear. To configure
+this,start by writing the name of the RefGen under the `refLinks` option, followed by
+a colon and a space as seen below. Then you must go to the database you wish to use 
+for that RefGen, and search any gene. After finding this, copy the URL onto the line
+after the name of the RefGen. Finally replace the name of the gene in the URL with 
+the string `{id}`. This allows the website to find where in the URL the gene name 
+goes, and replace it with any gene for that organism. The following example works for
+maize, soybean, and medicago. Add or subtract species at will.
+```
+refLinks:
+  Zm5bFGS: http://www.maizegdb.org/gene_center/gene/{id}
+  Gmax_a2_V1: https://www.soybase.org/sbt/search/search_results.php?category=FeatureName&version=Glyma2.0&search_term={id}
+  Mt_4.0: http://medicago.jcvi.org/cgi-bin/medicago/manatee/shared/ORF_infopage.cgi?db=mta4&user=access&password=access&identifier=locus&orf={id}
 ```
 
 Notes
