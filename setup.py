@@ -9,6 +9,7 @@ import io
 import re
 import numpy
 
+
 def read(*names, **kwargs):
     with io.open(
         os.path.join(os.path.dirname(__file__), *names),
@@ -24,10 +25,14 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
+root = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(root, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 install_reqs = parse_requirements('requirements.txt',session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 setup(
-    name = 'cob',
+    name = 'camoco-cob',
     version = find_version('cob','__init__.py'),
     packages = find_packages(),
     scripts = [
@@ -44,7 +49,8 @@ setup(
     python_requires='>=3',
     author = 'Rob Schaefer, Joe Jeffers',
     author_email = 'schae234@gmail.com',
-    description = 'The Co-expression network browser',
+    description = 'The Co-Expression Network Browser',
+    long_description = long_description,
     license = "MIT",
-    url = 'https://github.com/monprin/cob'
+    url = 'https://github.com/LinkageIO/cob'
 )
