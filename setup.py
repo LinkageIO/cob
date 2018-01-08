@@ -37,14 +37,14 @@ setup(
     cmdclass = {'build_ext': build_ext},
 
     package_data = {
-        '':['*.cyx']    
+        '':['*.cyx']
     },
-    install_requires = reqs,	
+    install_requires = reqs,
     include_package_data=True,
-
+    python_requires='>=3',
     author = 'Rob Schaefer, Joe Jeffers',
     author_email = 'schae234@gmail.com',
     description = 'The Co-expression network browser',
     license = "MIT",
-    url = 'https://github.com/schae234/camoco'
+    url = 'https://github.com/monprin/cob'
 )
