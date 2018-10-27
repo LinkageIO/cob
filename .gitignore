@@ -5,3 +5,7 @@ cob/__pycache__
 *.swo
 build/*
 dist/*
+
+docs/_build/
+docs/_static/
+docs/_templates/
