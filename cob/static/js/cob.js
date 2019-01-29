@@ -100,7 +100,7 @@ $.getScript($SCRIPT_ROOT + 'static/js/tools.js', function() {
       // Set the options
       restoreDefaults();
       updateOpts();
-    }
+    },
   });
   // Setup the info tips
   infoTips($('.opt-glyph'));
@@ -165,12 +165,20 @@ $('#fdrButton').click(function() {
   fdrFlag = true;
   if (fdrFilter) {
     $('.fdr-toggle').removeAttr('disabled');
-    $('[hasfdr]').removeClass('btn-default').addClass('btn-success');
-    $('[nofdr]').removeClass('btn-default').addClass('btn-warning');
+    $('[hasfdr]')
+      .removeClass('btn-default')
+      .addClass('btn-success');
+    $('[nofdr]')
+      .removeClass('btn-default')
+      .addClass('btn-warning');
   } else {
     $('.fdr-toggle').attr('disabled', 'disabled');
-    $('[hasfdr]').removeClass('btn-success').addClass('btn-default');
-    $('[nofdr]').removeClass('btn-warning').addClass('btn-default');
+    $('[hasfdr]')
+      .removeClass('btn-success')
+      .addClass('btn-default');
+    $('[nofdr]')
+      .removeClass('btn-warning')
+      .addClass('btn-default');
   }
 });
 
@@ -179,7 +187,7 @@ var obvConfig = {
   attributes: true,
   childList: true,
   characterData: true,
-  attributeFilter: ['class']
+  attributeFilter: ['class'],
 };
 
 // Function to handle syncing HPO buttons and toggling the fields
@@ -249,7 +257,9 @@ $('#opts').keypress(function(evt) {
 // Redraw the Subnet Table when shown
 $('#navTabs a[href="#SubnetTab"]').on('shown.bs.tab', function() {
   if ($.fn.DataTable.isDataTable('#SubnetTable')) {
-    $('#SubnetTable').DataTable().draw();
+    $('#SubnetTable')
+      .DataTable()
+      .draw();
   }
 });
 
@@ -268,9 +278,13 @@ $('#toggleLayoutButton').click(function() {
   }
 
   // Save the selected genes
-  $('#GeneTable').DataTable().rows('.selected').ids(true).each(function(cur) {
-    curSel.push(cur);
-  });
+  $('#GeneTable')
+    .DataTable()
+    .rows('.selected')
+    .ids(true)
+    .each(function(cur) {
+      curSel.push(cur);
+    });
 
   // Find the edge data objects from the current graph
   var edgeList = [];
@@ -295,10 +309,16 @@ $('#clearSelectionButton').click(function() {
   cy.edges('.highlightedEdge').toggleClass('highlightedEdge', false);
 
   // Unhighlight the gene table
-  $('#GeneTable').DataTable().rows().deselect();
+  $('#GeneTable')
+    .DataTable()
+    .rows()
+    .deselect();
 
   // Clear the subnetwork table
-  $('#SubnetTable').DataTable().clear().draw();
+  $('#SubnetTable')
+    .DataTable()
+    .clear()
+    .draw();
 });
 
 /*--------------------------------------
@@ -336,24 +356,35 @@ $('#graphMLButton').click(function() {
   doc = $.parseXML(txt);
 
   // Remove uncessary elements and attributes
-  $(doc).find('[id^="SNPG"], node:contains("chrom")').remove();
-  $(doc).find('data').removeAttr('type');
+  $(doc)
+    .find('[id^="SNPG"], node:contains("chrom")')
+    .remove();
+  $(doc)
+    .find('data')
+    .removeAttr('type');
 
   // Find the attribute types for nodes and edges
   var nodeAttrs = new Set();
   var edgeAttrs = new Set();
-  $(doc).find('node>data').each(function(idx, cur) {
-    nodeAttrs.add($(cur).attr('key'));
-  });
-  $(doc).find('edge>data').each(function(idx, cur) {
-    edgeAttrs.add($(cur).attr('key'));
-  });
+  $(doc)
+    .find('node>data')
+    .each(function(idx, cur) {
+      nodeAttrs.add($(cur).attr('key'));
+    });
+  $(doc)
+    .find('edge>data')
+    .each(function(idx, cur) {
+      edgeAttrs.add($(cur).attr('key'));
+    });
 
   // Function to find the key string
   function setKey(key, parent) {
     // Figure out the type of the key
     var type = 'string';
-    var val = $(doc).find('data[key="' + key + '"]').first().text();
+    var val = $(doc)
+      .find('data[key="' + key + '"]')
+      .first()
+      .text();
     if (!isNaN(val) && val.length > 0) {
       if (Number.isInteger(+val)) {
         type = 'int';
@@ -375,7 +406,9 @@ $('#graphMLButton').click(function() {
       '"/>';
 
     // Add it to the graph
-    $(doc).find('graph').before(line);
+    $(doc)
+      .find('graph')
+      .before(line);
   }
 
   // Add eaach of the keys to the header

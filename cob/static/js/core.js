@@ -13,7 +13,10 @@ function loadGraph(newGraph, poly, term, nodes, edges) {
 
   // If we are only updating the graph, save the selected genes
   if (!newGraph) {
-    curSel = $('#GeneTable').DataTable().rows('.selected').ids(true);
+    curSel = $('#GeneTable')
+      .DataTable()
+      .rows('.selected')
+      .ids(true);
   }
 
   // After the wait dialog is open, load the graph
@@ -68,7 +71,10 @@ function loadGraph(newGraph, poly, term, nodes, edges) {
         // If there were any genes saved to select reselect them
         if (curSel.length > 0) {
           // Selecthem in the table and trigger the gene select function
-          $('#GeneTable').DataTable().rows(curSel).select();
+          $('#GeneTable')
+            .DataTable()
+            .rows(curSel)
+            .select();
         }
       },
       function(err) {
@@ -77,7 +83,7 @@ function loadGraph(newGraph, poly, term, nodes, edges) {
         setTimeout(function() {
           window.alert(err);
         }, 200);
-      }
+      },
     );
   });
   $('#cyWait').modal('show');
@@ -119,7 +125,7 @@ function updateGraph() {
         'fdrCutoff',
         'hpo',
         'overlapSNPs',
-        'overlapMethod'
+        'overlapMethod',
       ]);
     poly = isPoly();
     term = isTerm;
@@ -138,14 +144,17 @@ function geneSelect() {
   // Find all the genes that should be highlighted, and should be added
   var genes = [];
   var toAdd = [];
-  geneTbl.rows('.selected').ids().each(function(cur) {
-    var ele = cy.getElementById(cur);
-    if (ele.length < 1) {
-      toAdd.push(cur);
-    } else {
-      genes.push(cy.getElementById(cur));
-    }
-  });
+  geneTbl
+    .rows('.selected')
+    .ids()
+    .each(function(cur) {
+      var ele = cy.getElementById(cur);
+      if (ele.length < 1) {
+        toAdd.push(cur);
+      } else {
+        genes.push(cy.getElementById(cur));
+      }
+    });
 
   // If there are any genes to add, trigger that now
   if (toAdd.length > 0) {
@@ -162,7 +171,10 @@ function geneSelect() {
     // Highlight all the things that need it
     genes = cy.collection(genes).addClass('highlighted');
     var edges = genes.connectedEdges(':visible').addClass('highlightedEdge');
-    edges.connectedNodes().not('.highlighted').addClass('neighbor');
+    edges
+      .connectedNodes()
+      .not('.highlighted')
+      .addClass('neighbor');
 
     // Find genes need to build the subnetwork table
     var geneSet = new Set();
@@ -246,7 +258,7 @@ function restoreGraph() {
 
   // Save the current queries to highlight in old graph
   curSel = Object.keys(geneDict).filter(
-    cur => geneDict[cur]['data']['origin'] === 'query'
+    (cur) => geneDict[cur]['data']['origin'] === 'query',
   );
 
   // Restore the most recent set of gene nodes, find graph style
@@ -255,7 +267,7 @@ function restoreGraph() {
 
   // Make a list of all the genes for the purposes of the query
   var allGenes = Object.keys(geneDict).filter(
-    cur => geneDict[cur]['data']['render']
+    (cur) => geneDict[cur]['data']['render'],
   );
 
   // Run the server query to get the edges for this set
@@ -265,11 +277,11 @@ function restoreGraph() {
       newGenes: '',
       allGenes: allGenes.toString(),
       network: curNetwork,
-      edgeCutoff: curOpts['edgeCutoff']
+      edgeCutoff: curOpts['edgeCutoff'],
     },
     type: 'POST',
     success: function(data) {
       loadGraph(true, pastPoly.pop(), undefined, geneDict, data.edges);
-    }
+    },
   });
 }

@@ -42,7 +42,7 @@ function infoTips(nodes, my, at) {
     position: {my: my, at: at},
     style: {classes: 'qtip-bootstrap'},
     show: {event: 'mouseover', solo: true},
-    hide: {event: 'mouseout unfocus'}
+    hide: {event: 'mouseout unfocus'},
   });
 }
 
@@ -78,23 +78,23 @@ function setupTextComplete(network, selector) {
                   return word.toLowerCase().indexOf(term.toLowerCase()) === 0
                     ? word
                     : null;
-                })
+                }),
               );
             },
 
             // When selected, add the gene, plus a comma to separate
             replace: function(word) {
               return word + ', ';
-            }
-          }
+            },
+          },
         ],
         {
           // Set some options
           maxCount: 15,
-          noResultsMessage: 'No gene IDs or aliases found.'
-        }
+          noResultsMessage: 'No gene IDs or aliases found.',
+        },
       );
-    }
+    },
   });
   return;
 }
@@ -175,7 +175,7 @@ function updateFDR() {
           })
           .forEach(function(cur, idx, arr) {
             $('#windowSizeList').append(
-              '<li class="windowSizeOpt"><a>' + cur + '</a></li>'
+              '<li class="windowSizeOpt"><a>' + cur + '</a></li>',
             );
           });
 
@@ -186,13 +186,17 @@ function updateFDR() {
           })
           .forEach(function(cur, idx, arr) {
             $('#flankLimitList').append(
-              '<li class="flankLimitOpt"><a>' + cur + '</a></li>'
+              '<li class="flankLimitOpt"><a>' + cur + '</a></li>',
             );
           });
 
         // Set the method selector according to what is availible
-        var den = $('#density').parent().removeAttr('disabled');
-        var loc = $('#locality').parent().removeAttr('disabled');
+        var den = $('#density')
+          .parent()
+          .removeAttr('disabled');
+        var loc = $('#locality')
+          .parent()
+          .removeAttr('disabled');
         if (data.overlapMethod.length === 1) {
           setOpt('overlapMethod', data.overlapMethod[0]);
           if (data.overlapMethod[0] === 'density') {
@@ -215,7 +219,7 @@ function updateFDR() {
         $('[hasfdr]').removeAttr('hasFDR');
         $('[nofdr]').removeAttr('noFDR');
       }
-    }
+    },
   });
 }
 
@@ -234,8 +238,12 @@ function enableFDR(enable, msg) {
     }
 
     // Set the overlapping SNP colors
-    $('[hasfdr]').removeClass('btn-default').addClass('btn-success');
-    $('[nofdr]').removeClass('btn-default').addClass('btn-warning');
+    $('[hasfdr]')
+      .removeClass('btn-default')
+      .addClass('btn-success');
+    $('[nofdr]')
+      .removeClass('btn-default')
+      .addClass('btn-warning');
 
     // Make the button look right
     $('#fdrButton').toggleClass('active', fdrFilter);
@@ -245,8 +253,12 @@ function enableFDR(enable, msg) {
     $('#fdrButton,.fdr-toggle').attr('disabled', 'disabled');
 
     // Remove the overlapping SNP colors
-    $('[hasfdr]').removeClass('btn-success').addClass('btn-default');
-    $('[nofdr]').removeClass('btn-warning').addClass('btn-default');
+    $('[hasfdr]')
+      .removeClass('btn-success')
+      .addClass('btn-default');
+    $('[nofdr]')
+      .removeClass('btn-warning')
+      .addClass('btn-default');
 
     // Put the help message up
     $('#fdrRow').prop('title', msg);
@@ -272,7 +284,10 @@ function getOpt(opt) {
     if (binOptVals[opt]['isBool']) {
       val = ele.hasClass('active');
     } else {
-      val = ele.children('.active').children().attr('id');
+      val = ele
+        .children('.active')
+        .children()
+        .attr('id');
     }
   }
   return val;
@@ -299,7 +314,10 @@ function setOpt(opt, val) {
         .removeClass('active')
         .children()
         .prop('checked', false);
-      $('#' + val).prop('checked', true).parent().addClass('active');
+      $('#' + val)
+        .prop('checked', true)
+        .parent()
+        .addClass('active');
     }
     if (opt === 'hpo') {
       if (val) {
@@ -349,7 +367,10 @@ function getCurBinOpts() {
     if (binOptVals[cur]['isBool']) {
       vals[cur] = ele.hasClass('active');
     } else {
-      vals[cur] = ele.children('.active').children().attr('id');
+      vals[cur] = ele
+        .children('.active')
+        .children()
+        .attr('id');
     }
   });
   return vals;
@@ -386,7 +407,7 @@ function errorOpts(opts) {
         ' must be between ' +
         optVals[cur]['min'] +
         ' and ' +
-        optVals[cur]['max']
+        optVals[cur]['max'],
     );
   });
   $('#navTabs a[href="#OptsTab"]').tab('show');

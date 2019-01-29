@@ -35,7 +35,7 @@
 
       // Optional Callbacks
       ready: function() {}, // on layoutready
-      stop: function() {} // on layoutstop
+      stop: function() {}, // on layoutstop
     };
 
     // Constructor
@@ -115,8 +115,8 @@
 
       // Find circle information
       var radius = Math.min(bb.h, bb.w) / 2 - options.padding;
-      var chromPad = options.chromPadding * Math.PI / 180; // Padding in radians
-      var dtheta = 2 * Math.PI / chrom.length;
+      var chromPad = (options.chromPadding * Math.PI) / 180; // Padding in radians
+      var dtheta = (2 * Math.PI) / chrom.length;
 
       // Find and set the position of the chromosomes
       var chromData = {};
@@ -139,14 +139,14 @@
         ele.data({
           len: pxLen,
           theta: (radA + radB) / 2,
-          radWidth: options.radWidth
+          radWidth: options.radWidth,
         });
 
         // Some data for future computations
         chromData[ele.data('id')] = {
           pxStart: {x: ax, y: ay},
           delta: {x: (bx - ax) / chromLen, y: (by - ay) / chromLen},
-          BPperPX: chromLen / pxLen
+          BPperPX: chromLen / pxLen,
         };
         return {x: Math.round((ax + bx) / 2), y: Math.round((ay + by) / 2)};
       });
@@ -163,7 +163,7 @@
           },
           'shape-polygon-points': function(ele) {
             return getLinePolygon(ele);
-          }
+          },
         })
         .lock()
         .unselectify();
@@ -187,10 +187,10 @@
 
           // Find the position of the snps based on all the data
           var x = Math.round(
-            eleData['pos'] * chrom['delta']['x'] + chrom['pxStart']['x']
+            eleData['pos'] * chrom['delta']['x'] + chrom['pxStart']['x'],
           );
           var y = Math.round(
-            eleData['pos'] * chrom['delta']['y'] + chrom['pxStart']['y']
+            eleData['pos'] * chrom['delta']['y'] + chrom['pxStart']['y'],
           );
 
           // Find theta from the center
@@ -204,12 +204,12 @@
             // Save the coefficients for gene position calculations
             coef: {
               x: Math.cos(theta) * options.nodeDiameter,
-              y: Math.sin(theta) * options.nodeDiameter
+              y: Math.sin(theta) * options.nodeDiameter,
             },
 
             // Increment variales used for gene placement
             nextOffset: 0,
-            numSNPs: 0
+            numSNPs: 0,
           };
           return {x: x, y: y};
         })
@@ -241,17 +241,17 @@
           // Keep track of metadata
           snpG['nextOffset'] += 1;
           ele.addClass(
-            'snp' + (snpG['numSNPs'] % options.snpLevels).toString()
+            'snp' + (snpG['numSNPs'] % options.snpLevels).toString(),
           );
 
           // Return the position based on some math
           return {
             x: Math.round(
-              snpG['nextOffset'] * snpG['coef']['x'] + snpG['pos']['x']
+              snpG['nextOffset'] * snpG['coef']['x'] + snpG['pos']['x'],
             ),
             y: Math.round(
-              snpG['nextOffset'] * snpG['coef']['y'] + snpG['pos']['y']
-            )
+              snpG['nextOffset'] * snpG['coef']['y'] + snpG['pos']['y'],
+            ),
           };
         });
 
@@ -396,7 +396,7 @@ function makeChroms(cy, genes, logSpacing) {
         chrom: curData['chrom'],
         start: parseInt(curData['start']),
         end: parseInt(curData['end']),
-        genes: [cur]
+        genes: [cur],
       };
     } else {
       // Update some parameters with another gene
@@ -445,8 +445,8 @@ function makeChroms(cy, genes, logSpacing) {
           id: cur['chrom'],
           type: 'chrom',
           start: 0,
-          end: curVPos
-        }
+          end: curVPos,
+        },
       };
     } else {
       // Find the virtual position along the chrom
@@ -509,8 +509,8 @@ function makeSNPGs(snpData, chromData, nodeDiameter) {
           chrom: curChrom,
           start: lastPos,
           end: lastPos,
-          snps: []
-        }
+          snps: [],
+        },
       };
     } else {
       // Otherwise just update the end position

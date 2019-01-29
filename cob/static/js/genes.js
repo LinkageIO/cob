@@ -16,20 +16,20 @@ function termNet(resolve, reject, poly) {
       fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
       hpo: getOpt('hpo'),
       overlapSNPs: getOpt('overlapSNPs'),
-      overlapMethod: getOpt('overlapMethod')
+      overlapMethod: getOpt('overlapMethod'),
     },
     type: 'POST',
     statusCode: {
       400: function() {
         reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.'
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
         );
       },
       500: function() {
         reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.'
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
         );
-      }
+      },
     },
     success: function(data) {
       geneDict = data.nodes;
@@ -46,7 +46,7 @@ function termNet(resolve, reject, poly) {
 
       // Send back the nodes and edges
       modCyto(resolve, reject, true, poly, data.nodes, data.edges);
-    }
+    },
   });
 }
 
@@ -66,20 +66,20 @@ function customNet(resolve, reject, poly) {
       nodeCutoff: curOpts['nodeCutoff'],
       edgeCutoff: curOpts['edgeCutoff'],
       visNeighbors: hasNeighbors ? curOpts['visNeighbors'] : 'None',
-      geneList: $('#geneList').val()
+      geneList: $('#geneList').val(),
     },
     type: 'POST',
     statusCode: {
       400: function() {
         reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.'
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
         );
       },
       500: function() {
         reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.'
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
         );
-      }
+      },
     },
     success: function(data) {
       geneDict = data.nodes;
@@ -94,7 +94,7 @@ function customNet(resolve, reject, poly) {
         window.alert(
           'The following gene(s) were not found in the designated network:\n\n\n' +
             data.rejected.toString() +
-            '\n\n'
+            '\n\n',
         );
       }
 
@@ -105,7 +105,7 @@ function customNet(resolve, reject, poly) {
 
       // Send back the nodes and edges
       modCyto(resolve, reject, true, poly, data.nodes, data.edges);
-    }
+    },
   });
 }
 
@@ -127,7 +127,7 @@ function addGenes(newGenes) {
 
   // Make a list of all the genes for the purposes of the query
   var allGenes = Object.keys(geneDict).filter(
-    cur => geneDict[cur]['data']['render']
+    (cur) => geneDict[cur]['data']['render'],
   );
 
   // Run the server query to get the new edges
@@ -137,7 +137,7 @@ function addGenes(newGenes) {
       network: curNetwork,
       edgeCutoff: curOpts['edgeCutoff'],
       allGenes: allGenes.toString(),
-      newGenes: newGenes.toString()
+      newGenes: newGenes.toString(),
     },
     type: 'POST',
     success: function(data) {
@@ -145,7 +145,7 @@ function addGenes(newGenes) {
       cy.add(data.edges);
       noAdd = false;
       updateGraph();
-    }
+    },
   });
 }
 

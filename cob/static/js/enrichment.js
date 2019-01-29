@@ -57,7 +57,7 @@ function enrich(geneList, GOnt) {
       {data: 'id', name: 'id', title: 'ID'},
       {data: 'pval', name: 'pval', title: 'P Val'},
       {data: 'name', name: 'name', title: 'Name'},
-      {data: 'desc', name: 'desc', title: 'Description'}
+      {data: 'desc', name: 'desc', title: 'Description'},
     ];
   } else {
     // Set the variables for Gene Word Search
@@ -72,7 +72,7 @@ function enrich(geneList, GOnt) {
       {data: 'corpval', name: 'corpval', title: 'Corr P'},
       {data: 'length', name: 'length', title: 'Length'},
       {data: 'totwords', name: 'totwords', title: 'Total Words'},
-      {data: 'overlap', name: 'overlap', title: 'Overlap'}
+      {data: 'overlap', name: 'overlap', title: 'Overlap'},
     ];
   }
 
@@ -94,7 +94,7 @@ function enrich(geneList, GOnt) {
       geneList: geneList,
       pCutoff: curOpts['pCutoff'],
       minTerm: curOpts['minTerm'],
-      maxTerm: curOpts['maxTerm']
+      maxTerm: curOpts['maxTerm'],
     },
     type: 'POST',
     statusCode: {
@@ -102,7 +102,7 @@ function enrich(geneList, GOnt) {
         $('#EnrichmentTableProg').addClass('hidden');
         noGO = false;
         window.alert(
-          'This function is not availible with this organism, if needed, please contact the site admin.'
+          'This function is not availible with this organism, if needed, please contact the site admin.',
         );
         return;
       },
@@ -110,10 +110,10 @@ function enrich(geneList, GOnt) {
         $('#EnrichmentTableProg').addClass('hidden');
         noGO = false;
         window.alert(
-          'There were no significant enrichment results for this query.'
+          'There were no significant enrichment results for this query.',
         );
         return;
-      }
+      },
     },
     success: function(data) {
       destroyTable('Enrichment', false);
@@ -154,20 +154,20 @@ function enrich(geneList, GOnt) {
           {
             extend: 'csv',
             filename: name,
-            titleAttr: 'Export the results in this table to a CSV file'
-          }
+            titleAttr: 'Export the results in this table to a CSV file',
+          },
         ],
-        columns: cols
+        columns: cols,
       });
       $('div.EnrichmentTitle').html(
         title +
           ' ' +
           '<span id="EnrichmentTableInfo" title="' +
           desc +
-          '" class="table-glyph glyphicon glyphicon-info-sign"></span>'
+          '" class="table-glyph glyphicon glyphicon-info-sign"></span>',
       );
 
       infoTips('#EnrichmentTableInfo');
-    }
+    },
   });
 }
