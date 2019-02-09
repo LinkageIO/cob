@@ -39,7 +39,11 @@ function infoTips(nodes, my, at) {
   // Build the qTips!
   $(nodes).qtip({
     content: {attr: 'title'},
-    position: {my: my, at: at},
+    position: {
+      my: my,
+      at: at,
+      viewport: true,
+    },
     style: {classes: 'qtip-bootstrap'},
     show: {event: 'mouseover', solo: true},
     hide: {event: 'mouseout unfocus'},
@@ -117,7 +121,13 @@ function updateHUD() {
     // If it's a polywas graph, add term details
     if (isTerm) {
       msg += curOntology + ' > ' + curTerm + ' > ';
-      msg += curOpts['windowSize'] + '/' + curOpts['flankLimit'];
+
+      // Label it appropriately depending on whether HPO is selected or not
+      if (getOpt('hpo')) {
+        msg += 'HPO Genes';
+      } else {
+        msg += curOpts['windowSize'] + '/' + curOpts['flankLimit'];
+      }
     } else {
       // Otherwise just call it a custom network
       msg += 'Custom Network';

@@ -134,6 +134,7 @@
       }
       .opt-label {
         vertical-align: middle;
+        min-width: 165px;
       }
       .opt-glyph {
         opacity: 0.3;
@@ -181,6 +182,12 @@
       }
       #logSpacing {
         width: 49.5%;
+      }
+      #nodeSize {
+        border-radius: 0px 4px 4px 0px;
+      }
+      #windowSize, #flankLimit {
+        border-radius: 0px 0px 0px 0px;
       }
       .graphOptsRow {
         display: flex;
@@ -551,7 +558,7 @@
                     <tr class="form-group">
                       <td><b>Graph Options</b></td>
                       <td class="form-inline graphOptsRow">
-                        <button
+                        <div
                           id="logSpacing"
                           type="button"
                           class="btn btn-default active"
@@ -564,7 +571,7 @@
                             title="Show the genes spread out across the chromosomes, maintaining their topographic order, but taking the log of the distance between them."
                             class="opt-glyph glyphicon glyphicon-info-sign button-glyph"
                           ></i>
-                        </button>
+                      </div>
                         <div id="nodeSizeGroup" class="input-group">
                           <div class="input-group-addon"><b>Node Size</b></div>
                           <input
@@ -831,7 +838,7 @@
                     <tr class="form-group">
                       <td></td>
                       <td style="text-align:right">
-                        <button
+                        <div
                           id="visEnrich"
                           type="button"
                           class="btn btn-default"
@@ -844,7 +851,7 @@
                             title="When running an enrichment analysis, only include genes visible on the graph."
                             class="opt-glyph glyphicon glyphicon-info-sign button-glyph"
                           ></i>
-                        </button>
+                          </div>
                       </td>
                     </tr>
                   </table>

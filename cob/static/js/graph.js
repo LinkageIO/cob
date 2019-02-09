@@ -250,7 +250,6 @@ function initCyto(nodes, edges, poly) {
         css: {
           'line-color': '#ffcc33',
           opacity: '1',
-          width: '3',
           'z-index': '3',
         },
       },
