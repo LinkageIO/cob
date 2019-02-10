@@ -50,50 +50,132 @@ geneLimit = {'min': 1, 'max': 150}
 
 # Option Limits
 opts = {
-    'nodeCutoff': {'title': 'Min Node Degree',
-                   'default': dflt['nodeCutoff'], 'min': 0, 'max': 20, 'int': True},
-    'edgeCutoff': {'title': 'Min Edge Score',
-                   'default': dflt['edgeCutoff'], 'min': 1.0, 'max': 20.0, 'int': False},
-    'fdrCutoff': {'title': 'FDR Filter (Term)',
-                  'default': dflt['fdrCutoff'], 'min': 0.0, 'max': 5.0, 'int': False},
-    'windowSize': {'title': 'Window Size (Term)',
-                   'default': dflt['windowSize'], 'min': 0, 'max': 1000000, 'int': True},
-    'flankLimit': {'title': 'Flank Limit (Term)',
-                   'default': dflt['flankLimit'], 'min': 0, 'max': 20, 'int': True},
-    'visNeighbors': {'title': 'Vis Neighbors (Custom)',
-                     'default': dflt['visNeighbors'], 'min': 0, 'max': 150, 'int': True},
-    'nodeSize': {'title': 'Node Size',
-                 'default': dflt['nodeSize'], 'min': 5, 'max': 50, 'int': True},
-    'pCutoff': {'title': 'Probability Cutoff',
-                'default': dflt['pCutoff'], 'min': 0.0, 'max': 1.0, 'int': False},
-    'minTerm': {'title': 'Min Genes (GO)',
-                'default': dflt['minTerm'], 'min': 1, 'max': 99, 'int': True},
-    'maxTerm': {'title': 'Max Genes (GO)',
-                'default': dflt['maxTerm'], 'min': 100, 'max': 1000, 'int': True},
+    'nodeCutoff': {
+        'title': 'Min Node Degree',
+        'default': dflt['nodeCutoff'],
+        'min': 0,
+        'max': 20,
+        'int': True
+    },
+    'edgeCutoff': {
+        'title': 'Min Edge Score',
+        'default': dflt['edgeCutoff'],
+        'min': 1.0,
+        'max': 20.0,
+        'int': False
+    },
+    'fdrCutoff': {
+        'title': 'FDR Filter (Term)',
+        'default': dflt['fdrCutoff'],
+        'min': 0.0,
+        'max': 5.0,
+        'int': False
+    },
+    'windowSize': {
+        'title': 'Window Size (Term)',
+        'default': dflt['windowSize'],
+        'min': 0,
+        'max': 1000000,
+        'int': True
+    },
+    'flankLimit': {
+        'title': 'Flank Limit (Term)',
+        'default': dflt['flankLimit'],
+        'min': 0,
+        'max': 20,
+        'int': True
+    },
+    'visNeighbors': {
+        'title': 'Vis Neighbors (Custom)',
+        'default': dflt['visNeighbors'],
+        'min': 0,
+        'max': 150,
+        'int': True
+    },
+    'nodeSize': {
+        'title': 'Node Size',
+        'default': dflt['nodeSize'],
+        'min': 5,
+        'max': 50,
+        'int': True
+    },
+    'pCutoff': {
+        'title': 'Probability Cutoff',
+        'default': dflt['pCutoff'],
+        'min': 0.0,
+        'max': 1.0,
+        'int': False
+    },
+    'minTerm': {
+        'title': 'Min Genes (GO)',
+        'default': dflt['minTerm'],
+        'min': 1,
+        'max': 99,
+        'int': True
+    },
+    'maxTerm': {
+        'title': 'Max Genes (GO)',
+        'default': dflt['maxTerm'],
+        'min': 100,
+        'max': 1000,
+        'int': True
+    },
 }
 
 binOpts = {
     'overlapMethod': {
         'default': dflt['overlapMethod'],
         'state': dflt['overlapMethod'],
-        'isBool': False},
+        'isBool': False
+    },
     'overlapSNPs': {
         'default': dflt['overlapSNPs'],
         'state': dflt['overlapSNPs'],
-        'isBool': False},
+        'isBool': False
+    },
     'logSpacing': {
         'default': dflt['logSpacing'],
         'state': dflt['logSpacing'],
-        'isBool': True},
+        'isBool': True
+    },
     'hpo': {
         'default': dflt['hpo'],
         'state': dflt['hpo'],
-        'isBool': True},
+        'isBool': True
+    },
     'visEnrich': {
         'default': dflt['visEnrich'],
         'state': dflt['visEnrich'],
-        'isBool': True},
+        'isBool': True
+    },
 }
+
+# Enumerate the JS files
+js_files = [
+    'lib/jquery-3.2.1.min.js', 'lib/jquery.textcomplete-1.8.1.min.js',
+    'lib/bootstrap-3.3.7.min.js', 'lib/datatables-1.10.15.min.js',
+    'lib/qtip-3.0.3.min.js', 'lib/download-1.4.5.min.js',
+    'lib/cytoscape-3.2.2.min.js', 'lib/cytoscape-qtip-2.7.1.js',
+    'lib/cytoscape-graphml-1.0.5.js', 'core.js', 'genes.js', 'graph.js',
+    'polywas-layout.js','enrichment.js','tools.js', 'tables.js', 'cob.js'
+]
+
+# Enumerate the CSS files
+css_files = [
+    'lib/bootstrap-3.3.7.min.css', 'lib/datatables-1.10.15.min.css',
+    'lib/qtip-3.0.3.min.css', 'cob.css'
+]
+
+# Function to handle bundling the files
+def bundle_files(files,type):
+    with open(os.path.join(app.root_path, 'static',type,'bundle.'+type), 'w') as bundle:
+        for fn in files:
+            with open(os.path.join(app.root_path, 'static', type, fn)) as fd:
+                bundle.write(fd.read())
+                bundle.write('\n')
+
+bundle_files(js_files,'js')
+bundle_files(css_files,'css')
 
 # ----------------------------------------
 #    Load things to memeory to prepare
@@ -159,7 +241,8 @@ for ont in gwas_data_db.keys():
     gwas_meta_db[ont] = {}
     for net in gwas_data_db[ont].results['COB'].unique():
         gwas_meta_db[ont][net] = {}
-        gwas = gwas_data_db[ont].results[gwas_data_db[ont].results['COB'] == net]
+        gwas = gwas_data_db[ont].results[gwas_data_db[ont].results['COB'] ==
+                                         net]
         gwas_meta_db[ont][net]['windowSize'] = []
         gwas_meta_db[ont][net]['flankLimit'] = []
         gwas_meta_db[ont][net]['overlapSNPs'] = []
@@ -184,10 +267,11 @@ for ref in co.Tools.available_datasets('RefGen')['Name']:
         print('Processing annotations for {}...'.format(ref))
         func_data_db[ref] = refgen
         func_data_db[ref].export_annotations(
-            os.path.join(conf['scratch'], (ref+'.tsv')))
+            os.path.join(conf['scratch'], (ref + '.tsv')))
         if hasGWS:
-            geneWordBuilder(ref, [os.path.join(
-                conf['scratch'], (ref+'.tsv'))], [1], ['2 end'], ['tab'], [True])
+            geneWordBuilder(ref,
+                            [os.path.join(conf['scratch'], (ref + '.tsv'))],
+                            [1], ['2 end'], ['tab'], [True])
 
 # Find any GO ontologies we have for the networks we have
 print('Finding applicable GO Ontologies...')
@@ -204,11 +288,19 @@ for name, ont in onts.items():
     terms[name] = []
     for term in ont.iter_terms():
         terms[name].append({
-            'name': term.id,
-            'desc': term.desc,
-            'snps': len(term.loci),
-            'genes': len(ont.refgen.candidate_genes(term.effective_loci(window_size=50000)))
+            'name':
+            term.id,
+            'desc':
+            term.desc,
+            'snps':
+            len(term.loci),
+            'genes':
+            len(
+                ont.refgen.candidate_genes(
+                    term.effective_loci(window_size=50000)))
         })
+
+
 
 # ---------------------------------------------
 #              Final Setup
@@ -247,6 +339,14 @@ def defaults():
 @app.route('/static/<path:path>')
 # Sends off the js and such when needed
 def send_js(path):
+    # TODO: Figure out dev mode for this
+    if ('dev' in conf) and conf['dev']:
+        extension = path.split('.')[-1]
+        print(extension)
+        if(extension == 'js'):
+            bundle_files(js_files,'js')
+        if(extension == 'css'):
+            bundle_files(css_files,'css')
     return send_from_directory('static', path)
 
 
@@ -254,14 +354,16 @@ def send_js(path):
 # Route for sending the avalible datasets in a general fashion
 def available_datasets(type=None, *args):
     # Find the datasets
-    if(type == None):
+    if (type == None):
         datasets = co.Tools.available_datasets()
     else:
         datasets = co.Tools.available_datasets(type)
 
     # Return the results in a table friendly format
-    return jsonify({"data": list(datasets[
-        ['Name', 'Description']].itertuples(index=False))})
+    return jsonify({
+        "data":
+        list(datasets[['Name', 'Description']].itertuples(index=False))
+    })
 
 
 @app.route("/available_networks")
@@ -292,8 +394,12 @@ def available_genes(network):
 # Route for getting FDR availablity data
 def fdr_options(network, ontology):
     # Default to empty list
-    ans = {'windowSize': [], 'flankLimit': [],
-           'overlapSNPs': [], 'overlapMethod': []}
+    ans = {
+        'windowSize': [],
+        'flankLimit': [],
+        'overlapSNPs': [],
+        'overlapMethod': []
+    }
 
     # If the combo is in the db, use that as answer
     if ontology in gwas_meta_db:
@@ -333,17 +439,18 @@ def term_network():
     cob.set_sig_edge_zscore(edgeCutoff)
     # Check to see if Genes are HPO
     if hpo:
-        genes = cob.refgen[gwas_data_db[ontology.name].high_priority_candidates().query(
-            'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
-                cob.name, ontology.name, term
-            )
-        ).gene.unique()]
+        genes = cob.refgen[gwas_data_db[
+            ontology.name].high_priority_candidates().query(
+                'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
+                    cob.name, ontology.name, term)).gene.unique()]
     else:
         # Get candidates based on options
-        if(strongestSNPs):
+        if (strongestSNPs):
             try:
                 loci = ontology[term].strongest_loci(
-                    window_size=windowSize, attr=ontology.get_strongest_attr(), lowest=ontology.get_strongest_higher())
+                    window_size=windowSize,
+                    attr=ontology.get_strongest_attr(),
+                    lowest=ontology.get_strongest_higher())
             except KeyError:
                 loci = ontology[term].effective_loci(window_size=windowSize)
         else:
@@ -359,14 +466,13 @@ def term_network():
             #include_parent_attrs=['numIterations', 'avgEffectSize'],
             include_num_intervening=True,
             include_rank_intervening=True,
-            include_num_siblings=True
-        )
+            include_num_siblings=True)
     cob.log('Found {} candidate genes', len(genes))
     # Base of the result dict
     net = {}
 
     # If there are GWAS results, and a FDR Cutoff
-    if fdrCutoff and ontology.name in gwas_data_db and not(hpo):
+    if fdrCutoff and ontology.name in gwas_data_db and not (hpo):
         cob.log('Fetching genes with FDR < {}', fdrCutoff)
         gwas_data = gwas_data_db[ontology.name].results
         gwas_data = gwas_data[gwas_data['COB'] == cob.name]
@@ -378,12 +484,24 @@ def term_network():
         gwas_data = gwas_data[gwas_data['Method'] == (
             'density' if overlapDensity else 'locality')]
         net['nodes'] = getNodes(
-            genes, cob, term, gwasData=gwas_data, nodeCutoff=nodeCutoff,
-            windowSize=windowSize, flankLimit=flankLimit, fdrCutoff=fdrCutoff)
+            genes,
+            cob,
+            term,
+            gwasData=gwas_data,
+            nodeCutoff=nodeCutoff,
+            windowSize=windowSize,
+            flankLimit=flankLimit,
+            fdrCutoff=fdrCutoff)
     else:
         # Otherwise just run it without GWAS Data
-        net['nodes'] = getNodes(genes, cob, term, nodeCutoff=nodeCutoff,
-                                windowSize=windowSize, flankLimit=flankLimit, hpo=hpo)
+        net['nodes'] = getNodes(
+            genes,
+            cob,
+            term,
+            nodeCutoff=nodeCutoff,
+            windowSize=windowSize,
+            flankLimit=flankLimit,
+            hpo=hpo)
 
     # Get the edges of the nodes that will be rendered
     render_list = []
@@ -397,8 +515,7 @@ def term_network():
     net['hasGWS'] = hasGWS and (cob._global('parent_refgen') in func_data_db)
 
     # Log Data Point to COB Log
-    cob.log(term + ': Found ' +
-            str(len(net['nodes'])) + ' nodes, ' +
+    cob.log(term + ': Found ' + str(len(net['nodes'])) + ' nodes, ' +
             str(len(net['edges'])) + ' edges')
 
     # Return it as a JSON object
@@ -419,12 +536,12 @@ def custom_network():
     except ValueError:
         visNeighbors = None
     else:
-        visNeighbors = safeOpts(
-            'visNeighbors', int(request.form['visNeighbors']))
+        visNeighbors = safeOpts('visNeighbors',
+                                int(request.form['visNeighbors']))
 
     # Make sure there aren't too many genes
-    geneList = list(filter((lambda x: x != ''),
-                           re.split('\r| |,|;|\t|\n', geneList)))
+    geneList = list(
+        filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
     if len(geneList) < geneLimit['min']:
         abort(400)
     elif len(geneList) > geneLimit['max']:
@@ -453,8 +570,9 @@ def custom_network():
 
         if visNeighbors is not None:
             # Get the neighbors from Camoco
-            nbs = cob.neighbors(gene, names_as_index=False,
-                                names_as_cols=True).sort_values('score')
+            nbs = cob.neighbors(
+                gene, names_as_index=False,
+                names_as_cols=True).sort_values('score')
 
             # Strip everything except the gene IDs and add to the grand neighbor list
             new_genes = list(set(nbs['gene_a']).union(set(nbs['gene_b'])))
@@ -489,13 +607,18 @@ def custom_network():
     genes = list(filter((lambda x: x.id in genes_set), genes))
 
     # If there are no good genes, error out
-    if(len(genes) <= 0):
+    if (len(genes) <= 0):
         abort(400)
 
     # Build up the objects
     net = {}
     net['nodes'] = getNodes(
-        genes, cob, 'custom', primary=primary, render=render, nodeCutoff=nodeCutoff)
+        genes,
+        cob,
+        'custom',
+        primary=primary,
+        render=render,
+        nodeCutoff=nodeCutoff)
     net['rejected'] = list(rejected)
 
     # Get the edges of the nodes that will be rendered
@@ -510,8 +633,7 @@ def custom_network():
     net['hasGWS'] = hasGWS and (cob._global('parent_refgen') in func_data_db)
 
     # Log Data Point to COB Log
-    cob.log('Custom Term: Found ' +
-            str(len(net['nodes'])) + ' nodes, ' +
+    cob.log('Custom Term: Found ' + str(len(net['nodes'])) + ' nodes, ' +
             str(len(net['edges'])) + ' edges')
 
     return jsonify(net)
@@ -524,10 +646,10 @@ def gene_connections():
     edgeCutoff = safeOpts('edgeCutoff', float(request.form['edgeCutoff']))
     allGenes = str(request.form['allGenes'])
     newGenes = str(request.form['newGenes'])
-    allGenes = list(filter((lambda x: x != ''),
-                           re.split('\r| |,|;|\t|\n', allGenes)))
-    newGenes = set(filter((lambda x: x != ''),
-                          re.split('\r| |,|;|\t|\n', newGenes)))
+    allGenes = list(
+        filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', allGenes)))
+    newGenes = set(
+        filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', newGenes)))
 
     # Set the Significant Edge Score
     cob.set_sig_edge_zscore(edgeCutoff)
@@ -536,9 +658,11 @@ def gene_connections():
     edges = getEdges(allGenes, cob)
 
     # Filter the ones that are not attached to the new one
-    if(len(newGenes) > 0):
-        edges = list(filter(
-            lambda x: ((x['data']['source'] in newGenes) or (x['data']['target'] in newGenes)), edges))
+    if (len(newGenes) > 0):
+        edges = list(
+            filter(
+                lambda x: ((x['data']['source'] in newGenes) or (x['data']['target'] in newGenes)),
+                edges))
 
     # Return it as a JSON object
     return jsonify({'edges': edges})
@@ -549,13 +673,13 @@ def gene_word_search():
     cob = networks[str(request.form['network'])]
     pCutoff = safeOpts('pCutoff', float(request.form['pCutoff']))
     geneList = str(request.form['geneList'])
-    geneList = list(filter((lambda x: x != ''),
-                           re.split('\r| |,|;|\t|\n', geneList)))
+    geneList = list(
+        filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
 
     # Run the analysis and return the JSONified results
     if hasGWS and (cob._global('parent_refgen') in func_data_db):
-        results = geneWordSearch(geneList, cob._global(
-            'parent_refgen'), minChance=pCutoff)
+        results = geneWordSearch(
+            geneList, cob._global('parent_refgen'), minChance=pCutoff)
     else:
         abort(405)
     if len(results[0]) == 0:
@@ -573,8 +697,8 @@ def go_enrichment():
     geneList = str(request.form['geneList'])
 
     # Parse the genes
-    geneList = list(filter((lambda x: x != ''),
-                           re.split('\r| |,|;|\t|\n', geneList)))
+    geneList = list(
+        filter((lambda x: x != ''), re.split('\r| |,|;|\t|\n', geneList)))
 
     # Get the things for enrichment
     genes = cob.refgen.from_ids(geneList)
@@ -585,8 +709,11 @@ def go_enrichment():
 
     # Run the enrichment
     cob.log('Running GO Enrichment...')
-    enr = gont.enrichment(genes, pval_cutoff=pCutoff,
-                          min_term_size=minTerm, max_term_size=maxTerm)
+    enr = gont.enrichment(
+        genes,
+        pval_cutoff=pCutoff,
+        min_term_size=minTerm,
+        max_term_size=maxTerm)
     if len(enr) == 0:
         abort(400)
 
@@ -603,6 +730,7 @@ def go_enrichment():
     cob.log('Found {} enriched terms.', str(df.shape[0]))
     return jsonify(df.to_json(orient='index'))
 
+
 # --------------------------------------------
 #     Function to Make Input Safe Again
 # --------------------------------------------
@@ -615,13 +743,23 @@ def safeOpts(name, val):
     val = max(val, opts[name]['min'])
     return val
 
+
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
 
 
-def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(),
-             nodeCutoff=0, windowSize=None, flankLimit=None, fdrCutoff=None, hpo=False):
+def getNodes(genes,
+             cob,
+             term,
+             primary=None,
+             render=None,
+             gwasData=pd.DataFrame(),
+             nodeCutoff=0,
+             windowSize=None,
+             flankLimit=None,
+             fdrCutoff=None,
+             hpo=False):
     # Cache the locality
     locality = cob.locality(genes)
 
@@ -635,8 +773,8 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
 
     # Look for annotations
     if cob._global('parent_refgen') in func_data_db:
-        func_data = func_data_db[cob._global('parent_refgen')].get_annotations([
-            gene.id for gene in genes])
+        func_data = func_data_db[cob._global('parent_refgen')].get_annotations(
+            [gene.id for gene in genes])
     else:
         func_data = {}
 
@@ -681,30 +819,53 @@ def getNodes(genes, cob, term, primary=None, render=None, gwasData=pd.DataFrame(
                 gene.chrom, gene.start, gene.end)
 
         # Build the data object from our data
-        node = {'group': 'nodes', 'data': {
-            'id': gene.id,
-            'type': 'gene',
-            'render': False,
-            'term': term,
-            'snp': gene.attr['parent_locus'].replace('<', '[').replace('>', ']'),
-            'alias': alias,
-            'origin': 'N/A',
-            'chrom': str(gene.chrom),
-            'start': str(gene.start),
-            'end': str(gene.end),
-            'cur_ldegree': str(0),
-            'ldegree': str(ldegree),
-            'gdegree': str(gdegree),
-            'fdr': 'HPO' if hpo else str(fdr),
-            'windowSize': str(windowSize),
-            'flankLimit': str(flankLimit),
-            'numIntervening': numInterv,
-            'rankIntervening': rankIntervening,
-            'numSiblings': numSiblings,
-            # 'parentNumIterations': str(gene.attr['parent_numIterations']),
-            # 'parentAvgEffectSize': str(gene.attr['parent_avgEffectSize']),
-            'annotations': anote,
-        }}
+        node = {
+            'group': 'nodes',
+            'data': {
+                'id':
+                gene.id,
+                'type':
+                'gene',
+                'render':
+                False,
+                'term':
+                term,
+                'snp':
+                gene.attr['parent_locus'].replace('<', '[').replace('>', ']'),
+                'alias':
+                alias,
+                'origin':
+                'N/A',
+                'chrom':
+                str(gene.chrom),
+                'start':
+                str(gene.start),
+                'end':
+                str(gene.end),
+                'cur_ldegree':
+                str(0),
+                'ldegree':
+                str(ldegree),
+                'gdegree':
+                str(gdegree),
+                'fdr':
+                'HPO' if hpo else str(fdr),
+                'windowSize':
+                str(windowSize),
+                'flankLimit':
+                str(flankLimit),
+                'numIntervening':
+                numInterv,
+                'rankIntervening':
+                rankIntervening,
+                'numSiblings':
+                numSiblings,
+                # 'parentNumIterations': str(gene.attr['parent_numIterations']),
+                # 'parentAvgEffectSize': str(gene.attr['parent_avgEffectSize']),
+                'annotations':
+                anote,
+            }
+        }
 
         # Denote the query genes
         if primary:
@@ -733,9 +894,13 @@ def getEdges(geneList, cob):
         names_as_cols=True)
 
     # "Loop" to build the edge objects
-    edges = [{'group': 'edges', 'data': {
-        'source': source,
-        'target': target,
-        'weight': str(weight)
-    }} for source, target, weight, significant, distance in subnet.itertuples(index=False)]
+    edges = [{
+        'group': 'edges',
+        'data': {
+            'source': source,
+            'target': target,
+            'weight': str(weight)
+        }
+    } for source, target, weight, significant, distance in subnet.itertuples(
+        index=False)]
     return edges

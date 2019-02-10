@@ -73,51 +73,38 @@ var refLinks = {};
 /*-----------------------------------------------
               Initialization
 -----------------------------------------------*/
-// Pull all of the code for the general page
-$.getScript($SCRIPT_ROOT + 'static/js/core.js');
-$.getScript($SCRIPT_ROOT + 'static/js/genes.js');
-$.getScript($SCRIPT_ROOT + 'static/js/graph.js');
-$.getScript($SCRIPT_ROOT + 'static/js/polywas-layout.js');
-$.getScript($SCRIPT_ROOT + 'static/js/enrichment.js');
+$.ajax({
+  url: SCRIPT_ROOT + 'defaults',
+  type: 'GET',
+  success: function(data) {
+    // Set the options
+    optVals = data.opts;
+    binOptVals = data.binOpts;
 
-// Execute some setup after loading tools
-$.getScript($SCRIPT_ROOT + 'static/js/tools.js', function() {
-  $.ajax({
-    url: $SCRIPT_ROOT + 'defaults',
-    type: 'GET',
-    success: function(data) {
-      // Set the options
-      optVals = data.opts;
-      binOptVals = data.binOpts;
+    // Reset FDR state variables
+    fdrFilterDefault = data.fdrFilter;
+    fdrFilter = fdrFilterDefault;
 
-      // Reset FDR state variables
-      fdrFilterDefault = data.fdrFilter;
-      fdrFilter = fdrFilterDefault;
+    // Set the refLinks
+    refLinks = data.refLinks;
 
-      // Set the refLinks
-      refLinks = data.refLinks;
-
-      // Set the options
-      restoreDefaults();
-      updateOpts();
-    },
-  });
-  // Setup the info tips
-  infoTips($('.opt-glyph'));
-
-  // Setup the Heads Up Display
-  updateHUD();
+    // Set the options
+    restoreDefaults();
+    updateOpts();
+  },
 });
+// Setup the info tips
+infoTips($('.opt-glyph'));
 
-// Execute some setup after loading tables
-$.getScript($SCRIPT_ROOT + 'static/js/tables.js', function() {
-  // Make sure the table is visible
-  $('#NetworkWait').addClass('hidden');
-  $('#Network').removeClass('hidden');
+// Setup the Heads Up Display
+updateHUD();
 
-  // Build some tables!
-  buildNetworkTable();
-});
+// Make sure the table is visible
+$('#NetworkWait').addClass('hidden');
+$('#Network').removeClass('hidden');
+
+// Build some tables!
+buildNetworkTable();
 
 // Handle hidding the break when the columns aren't stacked
 $(window).ready(function() {

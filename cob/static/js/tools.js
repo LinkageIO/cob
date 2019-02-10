@@ -56,7 +56,7 @@ function infoTips(nodes, my, at) {
 function setupTextComplete(network, selector) {
   // AJAX request to get the data
   $.ajax({
-    url: $SCRIPT_ROOT + 'available_genes/' + network,
+    url: SCRIPT_ROOT + 'available_genes/' + network,
     success: function(data) {
       // Build a sample query
       var query = '';
@@ -153,7 +153,7 @@ function updateFDR() {
 
   // Get the available options from the server
   $.ajax({
-    url: $SCRIPT_ROOT + 'fdr_options/' + curNetwork + '/' + curOntology,
+    url: SCRIPT_ROOT + 'fdr_options/' + curNetwork + '/' + curOntology,
     success: function(data) {
       // Do the thing if there are any results
       if (

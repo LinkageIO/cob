@@ -88,7 +88,7 @@ function enrich(geneList, GOnt) {
 
   // Send the Request!
   $.ajax({
-    url: $SCRIPT_ROOT + address,
+    url: SCRIPT_ROOT + address,
     data: {
       network: curNetwork,
       geneList: geneList,

@@ -5,7 +5,7 @@
 function buildNetworkTable() {
   destroyTable('Network', false);
   $('#NetworkTable').DataTable({
-    ajax: $SCRIPT_ROOT + 'available_networks',
+    ajax: SCRIPT_ROOT + 'available_networks',
     columns: [
       {data: 'name', name: 'name', title: 'Network'},
       {data: 'refgen', name: 'refgen', title: 'RefGen'},
@@ -28,7 +28,7 @@ function buildNetworkTable() {
 function buildOntologyTable(network) {
   destroyTable('Ontology', false);
   $('#OntologyTable').DataTable({
-    ajax: $SCRIPT_ROOT + 'available_ontologies/' + network,
+    ajax: SCRIPT_ROOT + 'available_ontologies/' + network,
     columns: [
       {data: 'name', name: 'name', title: 'Ontology'},
       {data: 'refgen', name: 'refgen', title: 'RefGen'},
@@ -60,7 +60,7 @@ function buildOntologyTable(network) {
 function buildTermTable(network, ontology) {
   destroyTable('Term', false);
   $('#TermTable').DataTable({
-    ajax: $SCRIPT_ROOT + 'available_terms/' + network + '/' + ontology,
+    ajax: SCRIPT_ROOT + 'available_terms/' + network + '/' + ontology,
     columns: [
       {data: 'name', name: 'name', title: 'Name'},
       {data: 'desc', name: 'desc', title: 'Desc'},

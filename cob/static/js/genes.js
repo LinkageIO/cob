@@ -4,7 +4,7 @@
 // Pull the nodes for a specific term
 function termNet(resolve, reject, poly) {
   $.ajax({
-    url: $SCRIPT_ROOT + 'term_network',
+    url: SCRIPT_ROOT + 'term_network',
     data: {
       network: curNetwork,
       ontology: curOntology,
@@ -59,7 +59,7 @@ function customNet(resolve, reject, poly) {
 
   // Run the request!
   $.ajax({
-    url: $SCRIPT_ROOT + 'custom_network',
+    url: SCRIPT_ROOT + 'custom_network',
     data: {
       network: curNetwork,
       hasNeighbors: hasNeighbors,
@@ -132,7 +132,7 @@ function addGenes(newGenes) {
 
   // Run the server query to get the new edges
   $.ajax({
-    url: $SCRIPT_ROOT + 'gene_connections',
+    url: SCRIPT_ROOT + 'gene_connections',
     data: {
       network: curNetwork,
       edgeCutoff: curOpts['edgeCutoff'],

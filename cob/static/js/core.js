@@ -272,7 +272,7 @@ function restoreGraph() {
 
   // Run the server query to get the edges for this set
   $.ajax({
-    url: $SCRIPT_ROOT + 'gene_connections',
+    url: SCRIPT_ROOT + 'gene_connections',
     data: {
       newGenes: '',
       allGenes: allGenes.toString(),
