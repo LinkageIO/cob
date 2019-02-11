@@ -15,7 +15,8 @@ parser.add_argument(
     dest='userConf',
     action='store',
     default=None,
-    help='Provide a YAML formatted configuration file, if not provided, general Camoco config file is used.'
+    help=
+    'Provide a YAML formatted configuration file, if not provided, general Camoco config file is used.'
 )
 parser.add_argument(
     '-d',
@@ -30,7 +31,8 @@ parser.add_argument(
     dest='kill',
     action='store_true',
     default=False,
-    help='Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.'
+    help=
+    'Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.'
 )
 parser.add_argument(
     '-l',
@@ -38,7 +40,8 @@ parser.add_argument(
     dest='list',
     action='store_true',
     default=False,
-    help='Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.'
+    help=
+    'Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.'
 )
 parser.add_argument(
     '-n',
@@ -98,10 +101,12 @@ else:
     opts = {
         'name': 'cob',
         'port': 50000,
+        'host': 'localhost',
         'threads': 4,
         'timeout': 300,
         'networks': [],
         'gwas': [],
+        'dev': False,
         'refLinks': {},
         'defaults': {
             'overlapMethod': 'density',
@@ -166,10 +171,11 @@ else:
     # Run the server!
     print('Starting your server...')
     p = subprocess.Popen(
-        'gunicorn' + ' --bind localhost:' + str(opts['port']) + ' --threads ' +
-        str(opts['threads']) + ' --timeout ' + str(opts['timeout']) +
-        ' --graceful-timeout ' + str(opts['timeout']) + ' ' + daemon +
-        ' --env "COB_CONF=' + yaml.dump(opts) + '"' + ' cob.server:app',
+        'gunicorn' + ' --bind ' + str(opts['host']) + ':' + str(opts['port']) +
+        ' --threads ' + str(opts['threads']) + ' --timeout ' + str(
+            opts['timeout']) + ' --graceful-timeout ' + str(
+                opts['timeout']) + ' ' + daemon + ' --env "COB_CONF=' +
+        yaml.dump(opts) + '"' + ' cob.server:app',
         shell=True)
     try:
         p.wait()
@@ -181,6 +187,6 @@ else:
         p.wait()
 
     if args.daemon:
-        print(
-            'Your server is now loading, when ready you can access it at \'localhost:'
-            + str(opts['port']) + '\'. To kill it, simply run \'cob -k\'.')
+        print('Your server is now loading, when ready you can access it at ' +
+              str(opts['host']) + ':' + str(opts['port']) +
+              '\'. To kill it, simply run \'cob -k\'.')

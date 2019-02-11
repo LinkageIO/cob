@@ -135,6 +135,9 @@ tr.form-group > td {
   margin: 3px;
   left: 0;
 }
+.dataTables_scrollBody {
+  background: white !important;
+}
 .dt-buttons {
   float: right;
   margin: 3px;

@@ -21,7 +21,7 @@ from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 print('Loading Camoco...')
 
 # Take a huge swig from the flask
-app = Flask(__name__)
+app = Flask(__name__,static_folder=None)
 
 # Try Importing GWS
 try:
@@ -152,8 +152,8 @@ binOpts = {
 
 # Enumerate the JS files
 js_files = [
-    'lib/jquery-3.2.1.min.js', 'lib/jquery.textcomplete-1.8.1.min.js',
-    'lib/bootstrap-3.3.7.min.js', 'lib/datatables-1.10.15.min.js',
+    'lib/jquery-3.3.1.min.js', 'lib/jquery.textcomplete-1.8.1.min.js',
+    'lib/bootstrap-3.3.7.min.js', 'lib/datatables-1.10.18.min.js',
     'lib/qtip-3.0.3.min.js', 'lib/download-1.4.5.min.js',
     'lib/cytoscape-3.2.2.min.js', 'lib/cytoscape-qtip-2.7.1.js',
     'lib/cytoscape-graphml-1.0.5.js', 'core.js', 'genes.js', 'graph.js',
@@ -162,7 +162,7 @@ js_files = [
 
 # Enumerate the CSS files
 css_files = [
-    'lib/bootstrap-3.3.7.min.css', 'lib/datatables-1.10.15.min.css',
+    'lib/bootstrap-3.3.7.min.css', 'lib/datatables-1.10.18.min.css',
     'lib/qtip-3.0.3.min.css', 'cob.css'
 ]
 
@@ -174,6 +174,7 @@ def bundle_files(files,type):
                 bundle.write(fd.read())
                 bundle.write('\n')
 
+# Actually bundle them
 bundle_files(js_files,'js')
 bundle_files(css_files,'css')
 
@@ -309,8 +310,8 @@ handler = logging.FileHandler(os.path.join(conf['scratch'], 'COBErrors.log'))
 handler.setLevel(logging.INFO)
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
-print('All Ready!')
 
+print('All Ready!')
 # ---------------------------------------------
 #                 Routes
 # ---------------------------------------------
@@ -338,14 +339,14 @@ def defaults():
 
 @app.route('/static/<path:path>')
 # Sends off the js and such when needed
-def send_js(path):
-    # TODO: Figure out dev mode for this
-    if ('dev' in conf) and conf['dev']:
-        extension = path.split('.')[-1]
-        print(extension)
+def send_static(path):
+    if conf['dev']:
+        extension = path.split('.')[-1].strip()
         if(extension == 'js'):
+            print('Rebundling js files')
             bundle_files(js_files,'js')
         if(extension == 'css'):
+            print('Rebundling css files')
             bundle_files(css_files,'css')
     return send_from_directory('static', path)
 
