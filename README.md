@@ -1,40 +1,47 @@
 ![COB LOGO](https://s3-us-west-2.amazonaws.com/camoco/COBLogo.png)
 
-COB - The Co-expression Browser
-===============================
+# COB - The Co-expression Browser
 
 COB is a complete client/server package built to browse gene co-expression networks
-created by [Camoco](https://github.com/schae234/Camoco). The client is written in 
-javascript, and the server is written in python. 
+created by [Camoco](https://github.com/schae234/Camoco). The client is written in
+javascript, and the server is written in python.
 
-Getting Started
----------------
+## Getting Started
+
 This package is entirely dependent on [Camoco](https://github.com/schae234/Camoco).
 It is is designed such that once the Camoco has been installed, COB can be
 added by, inside the camoco virtual environment, running:
+
 ```
 $ pip install <PYPI NAME>
 ```
+
 Once installed, COB has a convinient command line interface to manage the server.
 To run it with all of the default options, no options are required, just execute
 in the camoco virtual environment:
+
 ```
 $ cob
 ```
-This will start the server in the current terminal window. To see the site, navigate 
-to `http://localhost:50000` in your web browser once the server has finished loading. 
-To terminate the server, press `Ctrl+C` in the same terminal window. To run the 
+
+This will start the server in the current terminal window. To see the site, navigate
+to `http://localhost:50000` in your web browser once the server has finished loading.
+To terminate the server, press `Ctrl+C` in the same terminal window. To run the
 server in the background, add the `-d` flag to the start command. To terminate all
-instances of the COB server, run `cob -k`. To define a specific server to kill, 
+instances of the COB server, run `cob -k`. To define a specific server to kill,
 add the `-n` flag followed by the name of the server as such:
+
 ```
 $ cob -k -n my_server
 ```
+
 To use a specific configuration file for server settings, the file may be defined
 with the `-c` flag:
+
 ```
 $ cob -c my_server.conf
 ```
+
 If no configuration file is defined, COB then checks for a section `web` in the
 main camoco configuration file `~/.camoco.conf`. If there are no settings in that
 file, it will load with default values. The full configuration options are discussed
@@ -42,6 +49,7 @@ in the next section.
 
 This is the full documentation for all `cob` CLI options, which can also be accessed
 by executing `cob -h`:
+
 ```
 usage: cob [-h] [-c USERCONF] [-d] [-k] [-l] [-n NAME]
 
@@ -61,23 +69,24 @@ optional arguments:
   -n NAME, --name NAME  Name of server to start or kill.
 ```
 
-Configuration
--------------
+## Configuration
+
 A powerful configuration engine is provided to both set options for the server
-and also options for the content for the website, such as default option 
+and also options for the content for the website, such as default option
 values. As mentioned above, these can either be provided through a standalone
 YAML configuration file ([`example.conf`](https://github.com/monprin/cob/blob/master/example.conf)
 is included in the repo) or in a section with the same format titled `web` in
-the main camoco configuration file (found at `~/.camoco.conf`). One need not 
-include one at all, this will just be started with the default values (seen 
+the main camoco configuration file (found at `~/.camoco.conf`). One need not
+include one at all, this will just be started with the default values (seen
 below). This will also trigger all available Camoco networks and GWAS datasets
-to be loaded in. To prevent this, one may specify the desired datasets. The 
+to be loaded in. To prevent this, one may specify the desired datasets. The
 following is an annotated version of the default settings, showing all the
 potential configuration options:
 
 ### Server Options
+
 ```
-name: cob                   # The name of this server instance, must be unique for 
+name: cob                   # The name of this server instance, must be unique for
                             #      each instance, can be overridden by '-n' flag
 port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
@@ -85,16 +94,18 @@ timeout: 500                # How long a thread maybe unresponsive before termin
 ```
 
 ### Datasets
+
 ```
 networks:                   # Camoco networks that are to be loaded in the server.
   - My_Network_1            #      If this is not included, all available Camoco
   - My_Network_2            #      networks will be loaded.
 gwas:                       # GWAS datasets that will be loaded in the server. If
-  - My_GWAS_1               #      this is not included, all GWAS datasets that 
+  - My_GWAS_1               #      this is not included, all GWAS datasets that
                             #      correspond to loaded networks will be loaded.
 ```
 
 ### Default Values
+
 ```
 defaults:                   # This is the dictionary containing all of the defaults
                             #      for the options on the web site
@@ -114,16 +125,18 @@ defaults:                   # This is the dictionary containing all of the defau
 ```
 
 ### Reference Links
+
 This section allows for linking directly from genes to an external website for more
-information. This can be configured for each different reference genome (RefGen) used 
+information. This can be configured for each different reference genome (RefGen) used
 to build the included networks. If not included, the option won't appear. To configure
 this,start by writing the name of the RefGen under the `refLinks` option, followed by
-a colon and a space as seen below. Then you must go to the database you wish to use 
+a colon and a space as seen below. Then you must go to the database you wish to use
 for that RefGen, and search any gene. After finding this, copy the URL onto the line
-after the name of the RefGen. Finally replace the name of the gene in the URL with 
-the string `{id}`. This allows the website to find where in the URL the gene name 
+after the name of the RefGen. Finally replace the name of the gene in the URL with
+the string `{id}`. This allows the website to find where in the URL the gene name
 goes, and replace it with any gene for that organism. The following example works for
 maize, soybean, and medicago. Add or subtract species at will.
+
 ```
 refLinks:
   Zm5bFGS: http://www.maizegdb.org/gene_center/gene/{id}
@@ -131,23 +144,24 @@ refLinks:
   Mt_4.0: http://medicago.jcvi.org/cgi-bin/medicago/manatee/shared/ORF_infopage.cgi?db=mta4&user=access&password=access&identifier=locus&orf={id}
 ```
 
-Notes
------
+## Notes
+
 If you care to make this site accessible to the web, you can add a reverse proxy
 to Apache, allowing for access by using a normal URL. An example of how to do
-this is provided here, but for more detailed documentation, see the 
+this is provided here, but for more detailed documentation, see the
 [Apache docs](https://httpd.apache.org/docs/2.4/).
+
 ```
 <VirtualHost *:80>
-       ProxyPass /cob http://127.0.0.1:50002
-       ProxyPassReverse /cob/ http://127.0.0.1:50002
+       ProxyPass /cob http://127.0.0.1:50000
+       ProxyPassReverse /cob/ http://127.0.0.1:5000
 </VirtualHost *:80>
 ```
 
-Annotations
------------
-FDR results are now simply provided by the GWASData class in Camoco, thus to add 
-them to the site, simply initialize them for their respective reference genome 
-or GWAS data set and they will appear. This method will be deprecated pending 
+## Annotations
+
+FDR results are now simply provided by the GWASData class in Camoco, thus to add
+them to the site, simply initialize them for their respective reference genome
+or GWAS data set and they will appear. This method will be deprecated pending
 future direct inclusion of this functionality into the Camoco OverlapAnalysis class.
 Stay tuned for future changes.

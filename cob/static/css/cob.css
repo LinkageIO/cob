@@ -1,0 +1,148 @@
+#cobHead {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  float: left;
+  color: white;
+  background-color: #337ab7;
+  height: 50px;
+  width: 100%;
+  border-radius: 5px;
+  font-size: 2.5em;
+}
+#cy {
+  height: 100vh;
+  z-index: 5;
+}
+#cyTitle {
+  position: absolute;
+  bottom: 0;
+  color: DimGrey;
+  z-index: 1;
+  font-size: 1.5em;
+}
+#backButton {
+  position: absolute;
+  margin: 3px;
+  z-index: 10;
+}
+#graphButtons {
+  position: absolute;
+  margin: 3px;
+  bottom: 0;
+  right: 0;
+  z-index: 10;
+}
+.build-btn-table {
+  width: 100%;
+}
+.build-btn {
+  width: 95%;
+  display: block;
+  margin: auto;
+}
+tr.form-group > td {
+  text-align: right;
+  position: relative;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-left: 10px;
+}
+.opt-label {
+  vertical-align: middle;
+  min-width: 165px;
+}
+.opt-glyph {
+  opacity: 0.3;
+  pointer-events: auto;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+#cob {
+  z-index: 5;
+  height: 100vh;
+  min-width: 475px;
+}
+#colBreak {
+  height: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+#geneList {
+  max-width: 100%;
+  max-height: 10vh;
+}
+#windowSizeInfo,
+#flankLimitInfo {
+  transform: translateY(0%);
+}
+#visEnrich {
+  width: 100%;
+}
+#logSpacingInfo {
+  position: relative;
+  vertical-align: middle;
+  transform: translateY(-75%);
+}
+#visEnrichInfo {
+  position: relative;
+  vertical-align: middle;
+  transform: translateY(0%);
+}
+#nodeSizeGroup {
+  width: 49.5%;
+}
+#nodeSize {
+  min-width: 55px;
+}
+#logSpacing {
+  width: 49.5%;
+}
+#nodeSize {
+  border-radius: 0px 4px 4px 0px;
+}
+#windowSize,
+#flankLimit {
+  border-radius: 0px 0px 0px 0px;
+}
+.graphOptsRow {
+  display: flex;
+  justify-content: space-between;
+}
+.button-glyph {
+  position: relative;
+  vertical-align: middle;
+  transform: translateY(0%);
+}
+.table-glyph {
+  opacity: 0.3;
+  pointer-events: auto;
+  top: 50%;
+  transform: scale(0.75, 0.75) translateY(20%);
+}
+.NetworkTitle,
+.OntologyTitle,
+.TermTitle,
+.GeneTitle,
+.SubnetTitle,
+.EnrichmentTitle {
+  float: left;
+  font-size: 1.75em;
+}
+.dataTables_info {
+  float: left;
+  margin: 3px;
+  left: 0;
+}
+.dataTables_scrollBody {
+  background: white !important;
+}
+.dt-buttons {
+  float: right;
+  margin: 3px;
+  right: 0;
+}
+table {
+  background-color: white;
+}

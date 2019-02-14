@@ -1,7 +1,15 @@
 sensitive/*
-cob.egg-info
+camoco_cob.egg-info
 cob/__pycache__
 *.swp
 *.swo
 build/*
 dist/*
+
+docs/_build/
+docs/_static/
+docs/_templates/
+.vscode
+
+bundle.js
+bundle.css

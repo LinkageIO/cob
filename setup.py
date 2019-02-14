@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 
-from setuptools import setup, find_packages, Extension
-from pip.req import parse_requirements
-from Cython.Distutils import build_ext
 import os
-
 import io
 import re
 import numpy
+from Cython.Distutils import build_ext
+from setuptools import setup, find_packages, Extension
+
+# pip up and changed their API
+try:  # for pip >= 10
+    from pip._internal.req import parse_requirements
+except ImportError:  # for pip <= 9.0.3
+    from pip.req import parse_requirements
+
 
 def read(*names, **kwargs):
     with io.open(
-        os.path.join(os.path.dirname(__file__), *names),
-        encoding=kwargs.get("encoding", "utf8")
-    ) as fp:
+            os.path.join(os.path.dirname(__file__), *names),
+            encoding=kwargs.get("encoding", "utf8")) as fp:
         return fp.read()
+
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
@@ -24,27 +29,27 @@ def find_version(*file_paths):
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
 
-install_reqs = parse_requirements('requirements.txt',session=False)
+
+root = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(root, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
+install_reqs = parse_requirements('requirements.txt', session=False)
 reqs = [str(ir.req) for ir in install_reqs]
 setup(
-    name = 'cob',
-    version = find_version('cob','__init__.py'),
-    packages = find_packages(),
-    scripts = [
-        'cob/cli/cob'
-    ],
-    ext_modules = [],
-    cmdclass = {'build_ext': build_ext},
-
-    package_data = {
-        '':['*.cyx']    
-    },
-    install_requires = reqs,	
+    name='camoco-cob',
+    version=find_version('cob', '__init__.py'),
+    packages=find_packages(),
+    scripts=['cob/cli/cob'],
+    ext_modules=[],
+    cmdclass={'build_ext': build_ext},
+    package_data={'': ['*.cyx']},
+    install_requires=reqs,
     include_package_data=True,
-
-    author = 'Rob Schaefer, Joe Jeffers',
-    author_email = 'schae234@gmail.com',
-    description = 'The Co-expression network browser',
-    license = "MIT",
-    url = 'https://github.com/schae234/camoco'
-)
+    python_requires='>=3',
+    author='Rob Schaefer, Joe Jeffers',
+    author_email='schae234@gmail.com',
+    description='The Co-Expression Network Browser',
+    long_description=long_description,
+    license="MIT",
+    url='https://github.com/LinkageIO/cob')
