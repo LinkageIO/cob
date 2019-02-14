@@ -155,7 +155,7 @@ js_files = [
     'lib/jquery-3.3.1.min.js', 'lib/jquery.textcomplete-1.8.1.min.js',
     'lib/bootstrap-3.3.7.min.js', 'lib/datatables-1.10.18.min.js',
     'lib/qtip-3.0.3.min.js', 'lib/download-1.4.5.min.js',
-    'lib/cytoscape-3.2.2.min.js', 'lib/cytoscape-qtip-2.7.1.js',
+    'lib/cytoscape-3.4.0.min.js', 'lib/cytoscape-qtip-2.7.1.js',
     'lib/cytoscape-graphml-1.0.5.js', 'core.js', 'genes.js', 'graph.js',
     'polywas-layout.js', 'enrichment.js', 'tools.js', 'tables.js', 'cob.js'
 ]

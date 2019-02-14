@@ -93,6 +93,8 @@ function initCyto(nodes, edges, poly) {
     container: $('#cy'),
 
     // Rendering Options
+    minZoom: 0.05,
+    maxZoom: 20,
     pixelRatio: 2.0,
     motionBlur: true,
     boxSelectionEnabled: true,
