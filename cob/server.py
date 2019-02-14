@@ -21,7 +21,7 @@ from flask import Flask, url_for, jsonify, request, send_from_directory, abort
 print('Loading Camoco...')
 
 # Take a huge swig from the flask
-app = Flask(__name__,static_folder=None)
+app = Flask(__name__, static_folder=None)
 
 # Try Importing GWS
 try:
@@ -157,7 +157,7 @@ js_files = [
     'lib/qtip-3.0.3.min.js', 'lib/download-1.4.5.min.js',
     'lib/cytoscape-3.2.2.min.js', 'lib/cytoscape-qtip-2.7.1.js',
     'lib/cytoscape-graphml-1.0.5.js', 'core.js', 'genes.js', 'graph.js',
-    'polywas-layout.js','enrichment.js','tools.js', 'tables.js', 'cob.js'
+    'polywas-layout.js', 'enrichment.js', 'tools.js', 'tables.js', 'cob.js'
 ]
 
 # Enumerate the CSS files
@@ -166,17 +166,21 @@ css_files = [
     'lib/qtip-3.0.3.min.css', 'cob.css'
 ]
 
+
 # Function to handle bundling the files
-def bundle_files(files,type):
-    with open(os.path.join(app.root_path, 'static',type,'bundle.'+type), 'w') as bundle:
+def bundle_files(files, type):
+    with open(
+            os.path.join(app.root_path, 'static', type, 'bundle.' + type),
+            'w') as bundle:
         for fn in files:
             with open(os.path.join(app.root_path, 'static', type, fn)) as fd:
                 bundle.write(fd.read())
                 bundle.write('\n')
 
+
 # Actually bundle them
-bundle_files(js_files,'js')
-bundle_files(css_files,'css')
+bundle_files(js_files, 'js')
+bundle_files(css_files, 'css')
 
 # ----------------------------------------
 #    Load things to memeory to prepare
@@ -301,8 +305,6 @@ for name, ont in onts.items():
                     term.effective_loci(window_size=50000)))
         })
 
-
-
 # ---------------------------------------------
 #              Final Setup
 # ---------------------------------------------
@@ -342,12 +344,12 @@ def defaults():
 def send_static(path):
     if conf['dev']:
         extension = path.split('.')[-1].strip()
-        if(extension == 'js'):
+        if (extension == 'js'):
             print('Rebundling js files')
-            bundle_files(js_files,'js')
-        if(extension == 'css'):
+            bundle_files(js_files, 'js')
+        if (extension == 'css'):
             print('Rebundling css files')
-            bundle_files(css_files,'css')
+            bundle_files(css_files, 'css')
     return send_from_directory('static', path)
 
 
@@ -779,6 +781,11 @@ def getNodes(genes,
     else:
         func_data = {}
 
+    # Pre cache a list of the contained genes
+    gwasDataGenes = set()
+    if not gwasData.empty:
+        gwasDataGenes = set(gwasData['gene'])
+
     for gene in genes:
         # Catch for translating the way camoco works to the way We need for COB
         try:
@@ -806,8 +813,8 @@ def getNodes(genes,
 
         # Fetch the FDR if we can
         fdr = np.nan
-        if gene.id in gwasData.index:
-            fdr = gwasData.loc[gene.id]['fdr'].min()
+        if gene.id in gwasDataGenes:
+            fdr = gwasData[gwasData['gene'] == gene.id]['fdr'].min()
 
         # Pull any annotations from our databases
         anote = ''
