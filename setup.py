@@ -4,7 +4,6 @@ import os
 import io
 import re
 import numpy
-from Cython.Distutils import build_ext
 from setuptools import setup, find_packages, Extension
 
 # pip up and changed their API
@@ -42,7 +41,6 @@ setup(
     packages=find_packages(),
     scripts=['cob/cli/cob'],
     ext_modules=[],
-    cmdclass={'build_ext': build_ext},
     package_data={'': ['*.cyx']},
     install_requires=reqs,
     include_package_data=True,
