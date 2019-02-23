@@ -6,12 +6,6 @@ import re
 import numpy
 from setuptools import setup, find_packages, Extension
 
-# pip up and changed their API
-try:  # for pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:  # for pip <= 9.0.3
-    from pip.req import parse_requirements
-
 
 def read(*names, **kwargs):
     with io.open(
@@ -20,6 +14,7 @@ def read(*names, **kwargs):
         return fp.read()
 
 
+# Get the version form the init file
 def find_version(*file_paths):
     version_file = read(*file_paths)
     version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
@@ -29,12 +24,11 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
+# Add the README as the long description
 root = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(root, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
-install_reqs = parse_requirements('requirements.txt', session=False)
-reqs = [str(ir.req) for ir in install_reqs]
 setup(
     name='camoco-cob',
     version=find_version('cob', '__init__.py'),
@@ -42,12 +36,13 @@ setup(
     scripts=['cob/cli/cob'],
     ext_modules=[],
     package_data={'': ['*.cyx']},
-    install_requires=reqs,
+    install_requires=['flask>=1.0.2', 'gunicorn>=19.9.0', 'camoco==0.6.2'],
     include_package_data=True,
     python_requires='>=3',
     author='Rob Schaefer, Joe Jeffers',
     author_email='schae234@gmail.com',
     description='The Co-Expression Network Browser',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     license="MIT",
     url='https://github.com/LinkageIO/cob')
