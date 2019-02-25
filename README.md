@@ -3,17 +3,23 @@
 # COB - The Co-expression Browser
 
 COB is a complete client/server package built to browse gene co-expression networks
-created by [Camoco](https://github.com/schae234/Camoco). The client is written in
+created by [Camoco](https://github.com/LinkageIO/Camoco). The client is written in
 javascript, and the server is written in python.
+
+## Demo Version
+
+For your convenience, a demonstration version of COB is available to run as a Docker image with sample data. The data and scripts used to build this image are available as a <LINK>repository<LINK> as an example. The built image is also available on <LINK>Docker Hub<LINK>.
+
+This image can be seen running at [http://lovelace.cs.umn.edu/cob](http://lovelace.cs.umn.edu/cob). This demonstration server is provided as-is, and is not guaranteed to be maintained indefinitely. The Docker image is the preferred method to use this demo version.
 
 ## Getting Started
 
-This package is entirely dependent on [Camoco](https://github.com/schae234/Camoco).
+This package is entirely dependent on [Camoco](https://github.com/LinkageIO/Camoco).
 It is is designed such that once the Camoco has been installed, COB can be
 added by, inside the camoco virtual environment, running:
 
 ```
-$ pip install <PYPI NAME>
+$ pip install camoco-cob
 ```
 
 Once installed, COB has a convinient command line interface to manage the server.
@@ -74,7 +80,7 @@ optional arguments:
 A powerful configuration engine is provided to both set options for the server
 and also options for the content for the website, such as default option
 values. As mentioned above, these can either be provided through a standalone
-YAML configuration file ([`example.conf`](https://github.com/monprin/cob/blob/master/example.conf)
+YAML configuration file ([`example.conf`](https://github.com/LinkageIO/cob/blob/master/example.conf)
 is included in the repo) or in a section with the same format titled `web` in
 the main camoco configuration file (found at `~/.camoco.conf`). One need not
 include one at all, this will just be started with the default values (seen
@@ -91,6 +97,8 @@ name: cob                   # The name of this server instance, must be unique f
 port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
 timeout: 500                # How long a thread maybe unresponsive before termination
+dev: False                  # Forces JS and CSS to be recompiled on every request
+                            # Normally done only on server restart
 ```
 
 ### Datasets
@@ -158,10 +166,4 @@ this is provided here, but for more detailed documentation, see the
 </VirtualHost *:80>
 ```
 
-## Annotations
-
-FDR results are now simply provided by the GWASData class in Camoco, thus to add
-them to the site, simply initialize them for their respective reference genome
-or GWAS data set and they will appear. This method will be deprecated pending
-future direct inclusion of this functionality into the Camoco OverlapAnalysis class.
-Stay tuned for future changes.
+The equivalent can be done in NGINX using the `proxy_pass` directive.
