@@ -98,6 +98,7 @@ port: 50000                 # Port to which the server will be attached
 threads: 8                  # How many individual threads the sever process may use
 timeout: 500                # How long a thread maybe unresponsive before termination
 dev: False                  # Forces JS and CSS to be recompiled on every request
+                            # Normally done only on server restart
 ```
 
 ### Datasets

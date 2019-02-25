@@ -45,6 +45,10 @@ os.makedirs(conf['scratch'], exist_ok=True)
 if hasGWS:
     os.environ['GWS_STORE'] = conf['scratch']
 
+# Folder for bundle files
+static_bundle_dir = os.path.join(conf['scratch'], 'static')
+os.makedirs(static_bundle_dir, exist_ok=True)
+
 # Max number of genes for custom queries
 geneLimit = {'min': 1, 'max': 150}
 
@@ -168,10 +172,10 @@ css_files = [
 
 
 # Function to handle bundling the files
-def bundle_files(files, type):
-    with open(
-            os.path.join(app.root_path, 'static', type, 'bundle.' + type),
-            'w') as bundle:
+def bundle_files(files, type, static_bundle_dir=static_bundle_dir):
+    os.makedirs(os.path.join(static_bundle_dir, type), exist_ok=True)
+    with open(os.path.join(static_bundle_dir, type, 'bundle.' + type),
+              'w') as bundle:
         for fn in files:
             with open(os.path.join(app.root_path, 'static', type, fn)) as fd:
                 bundle.write(fd.read())
@@ -342,15 +346,19 @@ def defaults():
 @app.route('/static/<path:path>')
 # Sends off the js and such when needed
 def send_static(path):
-    if conf['dev']:
-        extension = path.split('.')[-1].strip()
-        if (extension == 'js'):
+    extension = path.split('.')[-1].strip()
+    if (extension == 'js'):
+        if conf['dev']:
             print('Rebundling js files')
             bundle_files(js_files, 'js')
-        if (extension == 'css'):
+        return send_from_directory(static_bundle_dir, path)
+    elif (extension == 'css'):
+        if conf['dev']:
             print('Rebundling css files')
             bundle_files(css_files, 'css')
-    return send_from_directory('static', path)
+        return send_from_directory(static_bundle_dir, path)
+    else:
+        return send_from_directory('static', path)
 
 
 @app.route("/available_datasets/<path:type>")
