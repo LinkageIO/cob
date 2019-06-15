@@ -61,7 +61,7 @@ def killServers(pids):
 
 
 # Pull the camoco conf file to find the base dir
-camocoConf = yaml.load(open(os.path.expanduser('~/.camoco.conf'), 'r'))
+camocoConf = yaml.safe_load(open(os.path.expanduser('~/.camoco.conf'), 'r'))
 
 # Location of scratch folder
 base = os.path.join(
@@ -130,7 +130,7 @@ else:
 
     # If there is a config file, use it
     if args.userConf:
-        conf = yaml.load(open(args.userConf, 'r'))
+        conf = yaml.safe_load(open(args.userConf, 'r'))
     elif 'web' in camocoConf:
         conf = camocoConf['web']
     else:
