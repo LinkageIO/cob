@@ -160,9 +160,34 @@ If you care to make this site accessible to the web, you can add a reverse proxy
 
 ```xml
 <VirtualHost *:80>
-       ProxyPass /cob http://127.0.0.1:50000
-       ProxyPassReverse /cob/ http://127.0.0.1:50000
+    ProxyPass /cob http://127.0.0.1:50000
+    ProxyPassReverse /cob/ http://127.0.0.1:50000
 </VirtualHost *:80>
 ```
 
 The equivalent can be done in NGINX using the `proxy_pass` directive.
+
+## Development
+
+This package works with the standard `python3 setup.py develop` command for purposes of development in a given environment, no special configuration is necessary.
+
+To build and push a new version the package, update the version in the `cob/__init__.py` file, install twine, and then do the following:
+
+```bash
+python setup.py sdist
+twine upload dist/*
+```
+
+It will ask for authentication, but should handle everything else.
+
+## Paper
+
+There is a publication for this updated version of cob in process. More information will be added to this doc when it's available.
+
+## Acknowledgements
+
+I would like to thank all members of the Myers Lab for their extensive and patient mentorship. I would also like to thank Max Franz, for all of his work on [Cytoscape.js](http://js.cytoscape.org/), and assistance in getting it integrated optimally. Finally I would like to thank the open source web development community in general. This project was only possible because of the robust ecosystem of packages available for use by everyone.
+
+## Funding
+
+J.J., R.S., and J.M. were partially supported by a Biomedical Informatics and Computational Biology (BICB) Fellowship. This work was supported by a grant from the National Science Foundation to N.M.S. (DBI-1237931) and by US Department of Agriculture Hatch funds to N.M.S. and C.L.M. R.S., R.B. and C.L.M. were partially supported by grants from the National Science Foundation (IOS 1126950 and DBI 0953881). C.L.M. is supported by the CIFAR Genetic Networks Program. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
