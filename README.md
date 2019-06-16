@@ -36,7 +36,7 @@ docker run -it --rm --name cob \
     linkageio/camoco-cob
 ```
 
-This will start cob based on the configuration and data provided on localhost port 50000. To enter the container, just add `bash` to the end of the command, or enter a running container using exec with `bash`.
+This will start cob based on the configuration and data provided on localhost port 50000. When doing this, it is important that you change the `host` configuration value in the cob config to `0.0.0.0`, If you wish to restrict access by IP, do so using docker arguments instead. To enter the container, just add `bash` to the end of the command, or enter a running container using exec with `bash`.
 
 #### Mounts
 
@@ -105,6 +105,9 @@ A powerful configuration engine is provided to both set options for the server a
 name: cob # The name of this server instance, must be unique for
 #      each instance, can be overridden by '-n' flag
 port: 50000 # Port to which the server will be attached
+host:
+  localhost # The allowed hosts that can communicate with this server
+  # (must be 0.0.0.0 with docker or to allow external connections)
 threads: 8 # How many individual threads the sever process may use
 timeout: 500 # How long a thread maybe unresponsive before termination
 dev:
