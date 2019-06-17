@@ -7,6 +7,9 @@
 .. _overview:
 .. currentmodule:: cob
 
+.. image:: _static/header.png
+
+
 COB - The Co-expression Browser
 ###############################
 
