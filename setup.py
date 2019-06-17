@@ -39,16 +39,18 @@ setup(
     setup_requires = [
         # Setuptools 18.0 properly handles Cython extensions.
         'setuptools>=18.0',
-        #'numpy==1.14.5',
+        'numpy>=1.9.2',
         'cython',  
     ],
     install_requires=[
         'flask>=1.0.2', 
         'gunicorn>=19.9.0', 
+        'numpy>=1.9.2',
         'camoco==0.6.2'
     ],
     extras_require={
         'docs' : [
+            'numpy>=1.9.2',
             'ipython>=6.5.0',
             'matplotlib>=2.2.3',
             'numpydoc',
