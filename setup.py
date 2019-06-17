@@ -33,9 +33,14 @@ setup(
     name='camoco-cob',
     version=find_version('cob', '__init__.py'),
     packages=find_packages(),
-    scripts=['cob/cli/cob'],
+    scripts=[
+        'cob/cli/cob'
+    ],
     ext_modules=[],
-    package_data={'': ['*.cyx']},
+    package_data={
+        '': ['*.cyx']
+    },
+    python_requires='>=3.6',
     setup_requires = [
         # Setuptools 18.0 properly handles Cython extensions.
         'setuptools>=18.0',
@@ -59,7 +64,6 @@ setup(
         ]
     },
     include_package_data=True,
-    python_requires='>=3',
     author='Rob Schaefer, Joe Jeffers',
     author_email='schae234@gmail.com',
     description='The Co-Expression Network Browser',
