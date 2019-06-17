@@ -1,5 +1,7 @@
-
 .. _deploying:
+
+Deploying
+#########
 
 If you care to make this site accessible to the web, you can add a reverse
 proxy to Apache, allowing for access by using a normal URL. An example of how
