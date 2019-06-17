@@ -5,6 +5,7 @@ cob/__pycache__
 *.swo
 build/*
 dist/*
+*.egg-info
 
 docs/_build/
 docs/_static/

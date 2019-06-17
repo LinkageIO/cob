@@ -37,7 +37,7 @@ except ImportError:
 #   Parse configuration from environment
 # ----------------------------------------
 # Get the config object
-conf = yaml.load(os.getenv('COB_CONF'))
+conf = yaml.safe_load(os.getenv('COB_CONF'))
 dflt = conf['defaults']
 
 # Folder with annotation files
