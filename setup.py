@@ -36,7 +36,26 @@ setup(
     scripts=['cob/cli/cob'],
     ext_modules=[],
     package_data={'': ['*.cyx']},
-    install_requires=['flask>=1.0.2', 'gunicorn>=19.9.0', 'camoco==0.6.2'],
+    setup_requires = [
+        # Setuptools 18.0 properly handles Cython extensions.
+        'setuptools>=18.0',
+        #'numpy==1.14.5',
+        'cython',  
+    ],
+    install_requires=[
+        'flask>=1.0.2', 
+        'gunicorn>=19.9.0', 
+        'camoco==0.6.2'
+    ],
+    extras_require={
+        'docs' : [
+            'ipython>=6.5.0',
+            'matplotlib>=2.2.3',
+            'numpydoc',
+            'sphinx_materialdesign_theme',
+            'sphinxcontrib-programoutput'
+        ]
+    },
     include_package_data=True,
     python_requires='>=3',
     author='Rob Schaefer, Joe Jeffers',
@@ -45,4 +64,5 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     license="MIT",
-    url='https://github.com/LinkageIO/cob')
+    url='https://github.com/LinkageIO/cob'
+)
