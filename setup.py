@@ -51,7 +51,7 @@ setup(
         'flask>=1.0.2', 
         'gunicorn>=19.9.0', 
         'numpy>=1.9.2',
-        'camoco==0.6.2'
+        'camoco==0.6.3'
     ],
     extras_require={
         'docs' : [
