@@ -12,3 +12,10 @@ is written in javascript, and the server is written in python.
 ## Documentation
 Documentation on how to install/run/configure COB can be found
 [here](https://linkageio-cob.readthedocs.io/en/latest/).
+
+## Want to get involved and contribute?
+We have a project [RoadMap](https://github.com/LinkageIO/cob/issues/85) that outlines where the development of 
+COB is headed. If you are interesting in contributing to our project, we have a [CONTRIBUTING.md](https://github.com/LinkageIO/cob/blob/master/CONTRIBUTING.md) document that outlines the process for getting your changes into the main COB 
+repository (and get due credit!). Finally, we are committed to providing a dev space that is inclusive and accessible. 
+Read more about about our [code of conduct](https://github.com/LinkageIO/cob/blob/master/CODE_OF_CONDUCT.md) for more information!
+
