@@ -7,15 +7,23 @@ and idea on our short and long term vision for the project.
 
 ## COB Home Base
 COB's [home base](https://github.com/LinkageIO/cob) is its github page, all of the "official" development will always 
-ultimately make its way back to github. We follow a Fork/PR developement cycle. To contribute bug fixes, code changes,
-new features, follow this example basic workflow which will add your name to the [contributors.md](https://github.com/schae234/cob/blob/master/Contributors.md) list!
+ultimately make its way back to github. We follow a Fork/PR developement cycle for bug fixes, code changes,
+and new features.
 
-### Basic Fork/PR Workflow Exercise
+If you are new to using GitHub or want a refresher, follow this example basic workflow which will add your name to 
+the [contributors.md](https://github.com/schae234/cob/blob/master/Contributors.md) list!
+
+**Note:** this exercise is just a toy example, GitHub stats are used to officially track contributorship.
+
+### Basic Fork/PR Workflow Mini Tutorial
 1. Fork the main github repo
 ![](https://i.imgur.com/PU9vlD5.png)
 2. Clone **your** github fork onto your computer
 ![](https://i.imgur.com/5UwZY86.png)
-Navigate to your forked version of the repo and copy to URL to clone a local repo:
+Navigate to your forked version of the repo and copy to URL to clone a local repo. Copy the code below
+into your terminal to get the code onto your computer.
+
+**Note:** make sure to update the commands to point to your own github page.
 ```
 # The $ sign indicates a shell (bash) command
 # Make sure its YOUR USERNAME!
@@ -36,17 +44,17 @@ CONTRIBUTING.md     docs             LICENSE.md           requirements.txt
 3. Commit and update changes to **your** local version
 ```
 # Add YOUR NAME! to the contributors file
-$ echo "Rob Schaefer" >> Contributors.md
+$ echo "<YOUR NAME>" >> Contributors.md
 # stage the changed file with git add
 $ git add Contributors.md
-# Commit your chnages!
+# Commit your changes! The -m flag is a commit message that summarized changes
 $ git commit -m "Rob added his name"
 [master e95e939] Rob added his name
  1 file changed, 1 insertion(+), 1 deletion(-)
 ```
-4. Push your changes to your github fork
+4. Push your changes to **your** github fork
 ```
-# Push your changes 
+# Push your changes (origin master is the default github branch created by your fork)
 $ git push origin master
 Counting objects: 3, done.
 Delta compression using up to 4 threads.
@@ -66,8 +74,6 @@ Github will detect any changes between your repo and the main COB repo. Double c
 **Note:** You may need to resolve and differences that have been committed to the main COB repo that may have occurred during 
 the time you were hacking.
 
-
-
 ## Continuous Integration
 COB uses [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration) (CI) to manage all of it's assets.
 CI tools are great because they monitor the main github page and update resources whenever the repository is 
@@ -78,3 +84,91 @@ lives in the GitHub repository, however whenever there is a change to the repo, 
 and the live documentation is automatically updated. This means that the docs and the github repor are *always insync!*. 
 Somtimes changes to the repo will result in an error in a CI (perhaps an unknown bug was introduced), these should be resolved
 before a PR is accepted.
+
+## Setting up a development environment
+The source code that runs COB needs to be built before it can be run and tested. This is partially since COB has several
+code dependencies that are not included in the source code and need to be set up before COB will run. We use [setuptools](https://github.com/pypa/setuptools) to handle software dependencies and [pip](https://pip.pypa.io/en/stable/installing/) 
+to handle package installations.
+
+As COB was written in Python and Javascript, which dont need to be compiled, there is nice tooling to allow you to build a
+development environment where you can run code changes live. This section will help you set up a developer friendly coding
+environment.
+
+### Setting up a conda python environment
+COB has dependencies that require specific versions of python libraries. You can view all the dependencies in `setup.py`.
+Often these dependencies will conflict with versions you have installed on your system or other python packages. One
+way to avoid this is by using python virtual environments. Virtual environments allow you to install dependencies into
+project specific namespaces so they do not conflict with any other installed packages. Install miniconda [here](https://docs.conda.io/en/latest/miniconda.html) and execute the following command to create a virtual env for COB.
+
+```
+$ conda create -n cob python=3.6
+Collecting package metadata: done
+Solving environment: done
+
+## Package Plan ##
+
+  environment location: /home/schae234/.conda/envs/cob
+
+  added / updated specs:
+    - python=3.6
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    ca-certificates-2019.5.15  |                0         133 KB
+    certifi-2019.3.9           |           py36_0         155 KB
+    libgcc-ng-9.1.0            |       hdf63c60_0         8.1 MB
+    libstdcxx-ng-9.1.0         |       hdf63c60_0         4.0 MB
+    openssl-1.1.1c             |       h7b6447c_1         3.8 MB
+    pip-19.1.1                 |           py36_0         1.9 MB
+    python-3.6.8               |       h0371630_0        34.4 MB
+    setuptools-41.0.1          |           py36_0         656 KB
+    sqlite-3.28.0              |       h7b6447c_0         1.9 MB
+    wheel-0.33.4               |           py36_0          40 KB
+    ------------------------------------------------------------
+                                           Total:        55.1 MB
+
+[ .... TRUNCATED......] 
+```
+Activate your virtual environment to create a project space for COB:
+```
+$ source activate cob
+(cob) $ 
+```
+The `(cob)` in your prompt indicates that you are in a python virtual environment. You can also double check
+everything is correct by looking at the path of your Python executable. If you are within a python environment
+you should see your python binary is somewhere within your home directory (designated by a `~`).
+```
+(cob) $ which python
+~/.conda/envs/cob/bin/python
+```
+
+### Installing dependencies and and editable COB package
+If you do not have pip installed, follow the instructions [here](https://pip.pypa.io/en/stable/installing/). Pip reads 
+data files in the COB repository and installs all he necessary packages to get COB working. The first thing that needs
+to be installed is `numpy` which is necessary in order install COB with `pip`. Make sure you are in your python virtual environment (you should have a `(cob)` in your shell prompt!)
+```
+(cob) $ pip install numpy
+Collecting numpy
+  Downloading https://files.pythonhosted.org/packages/87/2d/e4656149cbadd3a8a0369fcd1a9c7d61cc7b87b3903b85389c70c989a696/numpy-1.16.4-cp36-cp36m-manylinux1_x86_64.whl (17.3MB)
+     |████████████████████████████████| 17.3MB 27.2MB/s 
+Installing collected packages: numpy
+Successfully installed numpy-1.16.4
+```
+Now you can install COB with pip!
+```
+# ensure you are in the COB src directory
+$ pwd
+/home/rob/Codes/cob
+$ pip install -e .
+```
+
+`Pip` reads the `setup.py` file and fetches all the appropriate packages and installs them for you (there are quite a few!)
+The `-e` flag tells `pip` that you want to install COB in 
+["editable mode"](https://pip.pypa.io/en/stable/reference/pip_install/#install-editable). This means that if you edit any of the 
+source files, they will be automagically updated in the installed COB
+package! 
+
+
