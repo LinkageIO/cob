@@ -8,11 +8,20 @@ and idea on our short and long term vision for the project.
 ## COB Home Base
 COB's [home base](https://github.com/LinkageIO/cob) is its github page, all of the "official" development will always 
 ultimately make its way back to github. We follow a Fork/PR developement cycle. To contribute bug fixes, code changes,
-new features, follow this basic workflow:
+new features, follow this example basic workflow which will add your name to the [contributors.md](https://github.com/schae234/cob/blob/master/Contributors.md) list!
 
-### Basic Fork/PR Workflow
+### Basic Fork/PR Workflow Exercise
 1. Fork the main github repo
+![](https://i.imgur.com/PU9vlD5.png)
 2. Clone **your** github fork onto your computer
+![](https://i.imgur.com/5UwZY86.png)
+Navigate to your forked version of the repo and copy to URL to clone a local repo:
+```
+# The $ sign indicates a shell (bash) command
+# Make sure its YOUR USERNAME!
+$ git clone git@github.com:schae234/cob.git
+```
+
 3. Commit and update changes to **your** local version
 4. Push your changes to your github fork
 5. Open a Pull Request (PR) to get your changes back into the main COB repo
