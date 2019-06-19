@@ -1,6 +1,6 @@
 # Contributing
 First of all, if you are reading this .... YOU ARE AWESOME! Thank you for considering contributing to
-this project!! 🎉🎉🎉
+this project!! 🎉🎉
 
 If you have not already checked our [roadmap](https://github.com/LinkageIO/cob/issues/85), it should give you
 and idea on our short and long term vision for the project. 
