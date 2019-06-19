@@ -202,5 +202,31 @@ worlds because you can edit the source code, and all your changes get integrated
 freely edit the source code and not have to recompile or re-install anything. Its the best of both worlds!
 
 
+## Getting data into COB
+COB is meant to be used as an interface to browse output from Camoco. This means that if we don't have any data
+from camoco, COB is pretty useless. Luckily, we have a way to easily install some published datasets into camoco
+that will make COB useable. The data lives in a separate directory so we need to set that up.
 
-
+### Another git repo
+```
+# Move out of the `cob/` source code directory:
+$ cd ..
+# Clone the data repo
+$ git clone https://github.umn.edu/csbio/camoco-cob-maize-demo.git
+# Change into the data dir
+$ cd camoco-cob-maize-demo/data/maize
+```
+The first script we run creates all the camoco gene co-expression networks and GWAS datasets. **Warning** This step may take
+10-15 minutes to run so go grab a coffee!
+```
+$ python MaizeBuildCommands.py
+```
+The second script is cool hack that imports in some camoco "overlap" results (see our roadmap for some background). 
+The overlap command is very computationally intensive and even on high spec machines would take ~24 hours to run. Luckily
+the data repo contains the output from the heavy lifting part of camoco and the overlap command is smart enough to 
+cache these output files which acts like a cache. The result of this is that the overlap data just gets imported into
+camoco and you don't need to wait around!
+```
+# NOTICE its a shell script!
+$ sh runMaizeOverlap.sh
+``` 
