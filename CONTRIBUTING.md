@@ -183,9 +183,63 @@ The `-e` flag tells `pip` that you want to install COB in
 ["editable mode"](https://pip.pypa.io/en/stable/reference/pip_install/#install-editable). This means that if you edit any of the 
 source files, they will be automagically updated in the installed COB package! 
 
-What is great about this is that you will have everything set up in the same wat that someone who would have COB
-installed would have, including links to cob scripts and executables. For example, you should have access to the `cob`
-command:
+What is great about this is that you will have everything set up in the same way that someone who would have COB
+installed would have, including links to cob scripts and executables. Prior to running the `cob` command, a `.camoco.conf` file needs to be generated as:
+
+```
+$ camoco
+usage: camoco [-h] [--version] [--debug] [--interactive] [--force]
+              Available Commands ...
+
+      ___           ___           ___           ___           ___           ___      
+     /  /\         /  /\         /__/\         /  /\         /  /\         /  /\     
+    /  /:/        /  /::\       |  |::\       /  /::\       /  /:/        /  /::\    
+   /  /:/        /  /:/\:\      |  |:|:\     /  /:/\:\     /  /:/        /  /:/\:\   
+  /  /:/  ___   /  /:/~/::\   __|__|:|\:\   /  /:/  \:\   /  /:/  ___   /  /:/  \:\  
+ /__/:/  /  /\ /__/:/ /:/\:\ /__/::::| \:\ /__/:/ \__\:\ /__/:/  /  /\ /__/:/ \__\:\ 
+ \  \:\ /  /:/ \  \:\/:/__\/ \  \:\~~\__\/ \  \:\ /  /:/ \  \:\ /  /:/ \  \:\ /  /:/ 
+  \  \:\  /:/   \  \::/       \  \:\        \  \:\  /:/   \  \:\  /:/   \  \:\  /:/  
+   \  \:\/:/     \  \:\        \  \:\        \  \:\/:/     \  \:\/:/     \  \:\/:/   
+    \  \::/       \  \:\        \  \:\        \  \::/       \  \::/       \  \::/    
+     \__\/         \__\/         \__\/         \__\/         \__\/         \__\/ 
+
+Camoco (Co-analysis of Molecular Components) inter-relates and co-analyzes different 
+levels of genomic data. Namely it integrates genes present near and around GWAS loci
+using unbiased, functional information derived from co-expression networks.
+
+optional arguments:
+  -h, --help          show this help message and exit
+  --version           print the software version
+  --debug             Drop into ipdb when something bad happens.
+  --interactive       Initiate an ipdb session right before exiting.
+  --force             Overwrite output files from previous analyses.
+
+Camoco CLI program:
+  Use --help with each command for more info
+
+  Available Commands
+    help              Prints this help message
+    build-gwas        build a GWAS dataset
+    build-go          Build a Gene Ontology (GO)
+    build-refgen      Build a Reference Genome.
+    build-cob         Build a Co-expression network.
+    list (ls)         List camoco datasets.
+    rm                Remove camoco dataset.
+    overlap           Calculate network overlap among GWAS results. See
+                      --method for details.
+    health            Generate network health statistics
+    snp2gene          Generate candidate genes and accompanying information
+                      from GWAS SNPs
+    neighbors         Generate significant gene neighbors from largest to
+                      smallest Z-score
+
+version: 0.6.3
+src:/home/<USERNAME>/.conda/envs/cob/lib/python3.6/site-packages/camoco/__init__.py
+Cache. Money. Corn.
+
+```
+
+Now you should have access to the `cob` command:
 
 ```
 $ cob
