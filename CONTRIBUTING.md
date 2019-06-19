@@ -72,11 +72,11 @@ remote: Resolving deltas: 100% (1/1), completed with 1 local object.
 To github.com:schae234/cob.git
    0bdf078..e95e939  master -> master
 ```
-5. Open a Pull Request (PR) to get your changes back into the main COB repo
+5. Open a Pull Request (PR) to get your changes back into the main COB repo.
 Navigate to your GitHub page to open a PR
-[Imgur](https://i.imgur.com/9VUcS4u.png)
+![](https://i.imgur.com/9VUcS4u.png)
 Github will detect any changes between your repo and the main COB repo. Double check that the changes make sense:
-[Imgur](https://i.imgur.com/Wp6wXZ7.png)
+![](https://i.imgur.com/Wp6wXZ7.png)
 
 **Note:** You may need to resolve and differences that have been committed to the main COB repo that may have occurred during 
 the time you were hacking.
@@ -266,14 +266,14 @@ that will make COB useable. The data lives in a separate directory so we need to
 # Move out of the `cob/` source code directory:
 $ cd ..
 # Clone the data repo
-$ git clone https://github.umn.edu/csbio/camoco-cob-maize-demo.git
+$ git clone https://github.com/csbio/camoco-cob-maize-demo.git
 # Change into the data dir
 $ cd camoco-cob-maize-demo/data/maize
 ```
-The first script we run creates all the camoco gene co-expression networks and GWAS datasets. **Warning** This step may take
+The first script we run creates all the camoco gene co-expression networks and GWAS datasets (NOTE: make sure the cob virtual environment is active). **Warning** This step may take
 10-15 minutes to run so go grab a coffee!
 ```
-$ python MaizeBuildCommands.py
+(cob) $ python MaizeBuildCommands.py
 ```
 The second script is cool hack that imports in some camoco "overlap" results (see our roadmap for some background). 
 The overlap command is very computationally intensive and even on high spec machines would take ~24 hours to run. Luckily
