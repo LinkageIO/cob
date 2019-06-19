@@ -24,8 +24,15 @@ Navigate to your forked version of the repo and copy to URL to clone a local rep
 into your terminal to get the code onto your computer.
 
 **Note:** make sure to update the commands to point to your own github page.
+
 ```
+# Lines starting with '#' are comments!
 # The $ sign indicates a shell (bash) command
+# e.g.
+$ whoami
+```
+Clone the COB repo into your current directory. This can be wherever is convenient for you on your computer.
+```
 # Make sure its YOUR USERNAME!
 $ git clone git@github.com:schae234/cob.git
 Cloning into 'cob'...
@@ -157,9 +164,15 @@ Collecting numpy
 Installing collected packages: numpy
 Successfully installed numpy-1.16.4
 ```
-Now you can install COB with pip!
+Now you can install COB with pip! If you have not already, clone the COB repo onto your computer:
+```
+# Make sure its YOUR GitHub username
+$ git clone git@github.com:<USERNAME>/cob.git
+```
+Change into the cob source code directory
 ```
 # ensure you are in the COB src directory
+$ cd cob/
 $ pwd
 /home/rob/Codes/cob
 $ pip install -e .
@@ -168,7 +181,26 @@ $ pip install -e .
 `Pip` reads the `setup.py` file and fetches all the appropriate packages and installs them for you (there are quite a few!)
 The `-e` flag tells `pip` that you want to install COB in 
 ["editable mode"](https://pip.pypa.io/en/stable/reference/pip_install/#install-editable). This means that if you edit any of the 
-source files, they will be automagically updated in the installed COB
-package! 
+source files, they will be automagically updated in the installed COB package! 
+
+What is great about this is that you will have everything set up in the same wat that someone who would have COB
+installed would have, including links to cob scripts and executables. For example, you should have access to the `cob`
+command:
+
+```
+$ cob
+Starting your server...
+[2019-06-19 07:03:57 -0500] [25721] [INFO] Starting gunicorn 19.9.0
+[2019-06-19 07:03:57 -0500] [25721] [INFO] Listening at: http://127.0.0.1:50000 (25721)
+[2019-06-19 07:03:57 -0500] [25721] [INFO] Using worker: threads
+[2019-06-19 07:03:57 -0500] [25724] [INFO] Booting worker with pid: 25724
+[  ... TRUNCATED ...]
+
+```
+Pip set up the package so that the executables are pointing at the code in the `cob/` directory. Its the best of both
+worlds because you can edit the source code, and all your changes get integrated into your current COB build. You can 
+freely edit the source code and not have to recompile or re-install anything. Its the best of both worlds!
+
+
 
 
