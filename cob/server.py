@@ -419,7 +419,7 @@ def fdr_options(network, ontology):
     # Return it in JSON
     return jsonify(ans)
 
-@app.route("/term_network_stats",methods=['POST']
+@app.route("/term_network_stats",methods=['POST'])
 def term_network_stats():
     '''
     Mimics the term_network method and returns 
