@@ -8,7 +8,8 @@ import subprocess
 
 # Provide some config options
 parser = argparse.ArgumentParser(
-    description='Manage instances of the COB server.')
+    description='Manage instances of the COB server.'
+)
 parser.add_argument(
     '-c',
     '--config',
