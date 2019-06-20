@@ -42,7 +42,7 @@ parser.add_argument(
     action='store_true',
     default=False,
     help=
-    'Kill running server. Use \'-n\' to define specific server to kill otherwise all will be.'
+    'List running servers.'
 )
 parser.add_argument(
     '-n',
