@@ -339,6 +339,41 @@ $('#pngButton').click(function() {
   download(png, name + '.png', 'image/png');
 });
 
+$('#GetNetworkStatsButton').click(function(){
+     $.ajax({
+    url: SCRIPT_ROOT + 'term_network',
+    data: {
+      network: curNetwork,
+      ontology: curOntology,
+      term: curTerm,
+      nodeCutoff: curOpts['nodeCutoff'],
+      edgeCutoff: curOpts['edgeCutoff'],
+      windowSize: curOpts['windowSize'],
+      flankLimit: curOpts['flankLimit'],
+      fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
+      hpo: getOpt('hpo'),
+      overlapSNPs: getOpt('overlapSNPs'),
+      overlapMethod: getOpt('overlapMethod'),
+    },
+    type: 'POST',
+    statusCode: {
+      400: function() {
+        reject(
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+      500: function() {
+        reject(
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+    },
+    success: function(data){
+        console.log(data)
+    }
+    })
+})
+
 // GraphML Button is pressed
 $('#graphMLButton').click(function() {
   if (cy === null) {
