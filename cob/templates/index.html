@@ -182,6 +182,18 @@
                         >Custom Gene List</a
                       >
                     </li>
+
+                    <li role="presentation">
+                      <a
+                        aria-controls="TermUploadTab"
+                        href="#TermUploadTab"
+                        role="tab"
+                        data-toggle="tab"
+                        >Upload Ontology</a
+                      >
+                    </li>
+
+
                   </ul>
                   <div class="tab-content">
                     <div
@@ -236,6 +248,43 @@
                         </tr>
                       </table>
                     </div>
+
+                    <div role="tabpanel" class="tab-pane" id="TermUploadTab">
+                      <br />
+                      <div id="TermUpload">
+                        <label for="geneList">Enter term name:</label>
+                        <input
+                         type="text"
+                         class="form-control"
+                         id="termname"
+                         placeholder="TermX"
+                        ></input>
+                        <label for="geneList">Enter query genes:</label>
+                        <textarea
+                          type="text"
+                          class="form-control"
+                          rows="20"
+                          id="geneList"
+                          placeholder="GRMZM2G159456,GRMZM2G152135,GRMZM2G010044,rad51a"
+                        ></textarea>
+                      </div>
+                      <br />
+                      <table class="build-btn-table">
+                        <tr>
+                          <td style="width:100%">
+                            <input
+                              type="button"
+                              class="btn btn-primary build-btn"
+                              id="UploadTermButton"
+                              value="Upload Term"
+                            />
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+
+
                   </div>
                 </div>
               </div>
