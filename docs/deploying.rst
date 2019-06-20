@@ -13,7 +13,7 @@ to do this is provided here, but for more detailed documentation, see the
     <VirtualHost *:80>
         ProxyPass /cob http://127.0.0.1:50000
         ProxyPassReverse /cob/ http://127.0.0.1:50000
-    </VirtualHost *:80>
+    </VirtualHost>
 
 The equivalent can be done in NGINX using the `proxy_pass` directive.
 
