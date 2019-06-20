@@ -419,6 +419,69 @@ def fdr_options(network, ontology):
     # Return it in JSON
     return jsonify(ans)
 
+@app.route("/term_network_stats",methods=['POST']
+def term_network_stats():
+    '''
+    Mimics the term_network method and returns 
+    subnetwork stats as calculated by networkx
+    '''
+    # Get data from the form and derive some stuff
+    cob = networks[str(request.form['network'])]
+    ontology = onts[str(request.form['ontology'])]
+    term = str(request.form['term'])
+    nodeCutoff = safeOpts('nodeCutoff', request.form['nodeCutoff'])
+    edgeCutoff = safeOpts('edgeCutoff', request.form['edgeCutoff'])
+    windowSize = safeOpts('windowSize', request.form['windowSize'])
+    flankLimit = safeOpts('flankLimit', request.form['flankLimit'])
+    hpo = (request.form['hpo'].lower().strip() == 'true')
+    strongestSNPs = (
+        request.form['overlapSNPs'].lower().strip() == 'strongest')
+    overlapDensity = (
+        request.form['overlapMethod'].lower().strip() == 'density')
+
+    # Detrmine if there is a FDR cutoff or not
+    try:
+        float(request.form['fdrCutoff'])
+    except ValueError:
+        fdrCutoff = None
+    else:
+        fdrCutoff = safeOpts('fdrCutoff', float(request.form['fdrCutoff']))
+
+    # Get the candidates
+    cob.set_sig_edge_zscore(edgeCutoff)
+    # Check to see if Genes are HPO
+    if hpo:
+        genes = cob.refgen[gwas_data_db[
+            ontology.name].high_priority_candidates().query(
+                'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
+                    cob.name, ontology.name, term)).gene.unique()]
+    else:
+        # Get candidates based on options
+        if (strongestSNPs):
+            try:
+                loci = ontology[term].strongest_loci(
+                    window_size=windowSize,
+                    attr=ontology.get_strongest_attr(),
+                    lowest=ontology.get_strongest_higher())
+            except KeyError:
+                loci = ontology[term].effective_loci(window_size=windowSize)
+        else:
+            loci = ontology[term].effective_loci(window_size=windowSize)
+
+        # Find the genes
+        genes = cob.refgen.candidate_genes(
+            loci,
+            window_size=windowSize,
+            flank_limit=flankLimit,
+            chain=True,
+            include_parent_locus=True,
+            #include_parent_attrs=['numIterations', 'avgEffectSize'],
+            include_num_intervening=True,
+            include_rank_intervening=True,
+            include_num_siblings=True
+        )
+    edges = cob.subnetwork(genes).reset_index()
+
 
 @app.route("/term_network", methods=['POST'])
 # Route for sending the CoEx Network Data for graphing from prebuilt term
@@ -476,7 +539,10 @@ def term_network():
             #include_parent_attrs=['numIterations', 'avgEffectSize'],
             include_num_intervening=True,
             include_rank_intervening=True,
-            include_num_siblings=True)
+            include_num_siblings=True
+        )
+    # always have genes
+    genes
     cob.log('Found {} candidate genes', len(genes))
     # Base of the result dict
     net = {}
@@ -501,7 +567,8 @@ def term_network():
             nodeCutoff=nodeCutoff,
             windowSize=windowSize,
             flankLimit=flankLimit,
-            fdrCutoff=fdrCutoff)
+            fdrCutoff=fdrCutoff
+        )
     else:
         # Otherwise just run it without GWAS Data
         net['nodes'] = getNodes(
