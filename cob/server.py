@@ -528,9 +528,11 @@ def term_network():
     # Log Data Point to COB Log
     cob.log(term + ': Found ' + str(len(net['nodes'])) + ' nodes, ' +
             str(len(net['edges'])) + ' edges')
-
+    #for k, v in net["edges"].items():
+    nx_obj=nx.readwrite.json_graph(jsonify(net))
+    return nx_obj
     # Return it as a JSON object
-    return jsonify(net)
+    #return jsonify(net)
 
 #this is the same as the function above, but just not decorated ("naked")
 def term_stats():
