@@ -143,6 +143,15 @@ $('#wNeighborsButton,#woNeighborsButton').click(function(evt) {
   }
 });
 
+$('#UploadTermButton').click(function(evt) {
+    if ($('#termgenelist').val().length > 1 && $('#termname').val().length > 1){
+        window.alert('woo')
+    } else {
+        window.alert('Please enter term genes')
+    }
+
+});
+
 /*------------------------------------------
      Parameter Update Event Listeners
 ------------------------------------------*/
