@@ -64,7 +64,7 @@ tr.form-group > td {
   z-index: 5;
   height: 100vh;
   //min-width: 475px;
-  min-width: 689px;
+  //min-width: 689px;
 }
 #colBreak {
   height: 0;
