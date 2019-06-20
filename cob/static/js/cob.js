@@ -340,8 +340,8 @@ $('#pngButton').click(function() {
 });
 
 $('#GetNetworkStatsButton').click(function(){
-     $.ajax({
-    url: SCRIPT_ROOT + 'term_network',
+  $.ajax({
+    url: SCRIPT_ROOT + 'term_network_stats',
     data: {
       network: curNetwork,
       ontology: curOntology,

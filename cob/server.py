@@ -481,6 +481,7 @@ def term_network_stats():
             include_num_siblings=True
         )
     edges = cob.subnetwork(genes).reset_index()
+    return jsonify({'foo':'bar'})
 
 
 @app.route("/term_network", methods=['POST'])
