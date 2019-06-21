@@ -427,7 +427,7 @@ def term_network_stats():
     '''
     import time 
     start = time.time()
-# Get data from the form and derive some stuff
+    # Get data from the form and derive some stuff
     cob = networks[str(request.form['network'])]
     ontology = onts[str(request.form['ontology'])]
     term = str(request.form['term'])
@@ -483,6 +483,7 @@ def term_network_stats():
             include_num_siblings=True
         )
     edges = cob.subnetwork(genes).reset_index()
+
     def df_to_list(df):
         edgelist = []
         for k,v in df.iterrows():
@@ -498,19 +499,20 @@ def term_network_stats():
     x=nx.pagerank(edge_graph)
     #sort pageranks
     sorted_x = sorted(x.items(), key=operator.itemgetter(1))
-#Get avg node connectivity 
+    #Get avg node connectivity 
     node_conn=pd.DataFrame(pd.Series(nx.average_node_connectivity(edge_graph), index=["avg_node_connectivity",]))    
     print(node_conn)
-#get top ten
+    #get top ten
     Sub_Net_stats = pd.DataFrame([i[1] for i in sorted_x[-10:]], index=[j[0] for j in sorted_x[-10:]])
     print(Sub_Net_stats)   
-#Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
+    #Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
     #return jsonify({"AvgConnectivity":str(nx.average_node_connectivity(edge_graph))})
     datatbl = {"node_conn":node_conn.to_json(), "pageranks:":Sub_Net_stats.to_json()}
     print(datatbl)
     print(time.time() - start)
     import json
     return json.dumps(datatbl)
+
 
 @app.route("/term_network", methods=['POST'])
 # Route for sending the CoEx Network Data for graphing from prebuilt term
