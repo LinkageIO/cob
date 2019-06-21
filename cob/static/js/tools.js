@@ -110,13 +110,13 @@ function updateHUD() {
   var msg = '';
   // If there is no graph, throw up the help message
   if (cy === null) {
-    msg += 'Please follow the instructions in the left pane to build a graph.';
+    msg += 'Please follow the instructions in the left pane to build a network.';
   } else {
     // Otherwise, build the message
     // Add the gene count, edge count, and network name
     msg += cy.nodes(':visible[type="gene"]').size() + ' genes | ';
     msg += cy.edges(':visible').size() + ' interactions<br>';
-    msg += curNetwork + ' > ';
+    msg += curRefGen + ' > ' +  curNetwork + ' > ';
 
     // If it's a polywas graph, add term details
     if (isTerm) {
