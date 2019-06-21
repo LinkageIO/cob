@@ -83,18 +83,42 @@
                   href="#NetworkTab"
                   role="tab"
                   data-toggle="tab"
-                  >Load Data</a
+                  >Load</a
                 >
               </li>
-              <li role="presentation" class="active">
-                <a
-                  aria-controls="SummaryTab"
-                  href="#SummeryTab"
-                  role="tab"
-                  data-toggle="tab"
-                  >Network Info</a
-                >
+
+              <li class="dropdown">
+                <a class="dropdown-toggle"
+                   data-toggle="dropdown"
+                   href="#">
+                   Network
+                   <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+
+                    <li role="presentation">
+                        <a
+                        aria-controls="GeneTab"
+                        href="#GeneTab"
+                        role="tab"
+                        data-toggle="tab"
+                        >Term Genes</a
+                        >
+                    </li>
+
+                    <li role="presentation">
+                        <a
+                        aria-controls="SubnetTab"
+                        href="#SubnetTab"
+                        role="tab"
+                        data-toggle="tab"
+                        >Selected Genes</a
+                        >
+                    </li>
+
+                </ul>
               </li>
+
               <li role="presentation">
                 <a
                   aria-controls="opts"
@@ -104,24 +128,11 @@
                   >Options</a
                 >
               </li>
-              <li role="presentation">
-                <a
-                  aria-controls="GeneTab"
-                  href="#GeneTab"
-                  role="tab"
-                  data-toggle="tab"
-                  >Genes</a
-                >
-              </li>
-              <li role="presentation">
-                <a
-                  aria-controls="SubnetTab"
-                  href="#SubnetTab"
-                  role="tab"
-                  data-toggle="tab"
-                  >Subnetwork</a
-                >
-              </li>
+
+
+
+
+
               <li role="presentation">
                 <a
                   aria-controls="EnrichmentTab"
@@ -131,6 +142,7 @@
                   >Enrichment</a
                 >
               </li>
+
               <li role="presentation">
                 <a
                   aria-controls="AboutTab"
