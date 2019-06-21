@@ -481,6 +481,17 @@ def term_network_stats():
             include_num_siblings=True
         )
     edges = cob.subnetwork(genes).reset_index()
+    def df_to_list(df):
+        edgelist = []
+        for k,v in df.iterrows():
+            str_rep = v['gene_a'] + ' ' + v['gene_b'] + "{'score':" + str(v['score']) + "}"
+            edgelist.append(str_rep)
+        return edgelist
+    import networkx as nx
+    edgelist = df_to_list(edges)
+    edge_graph = nx.parse_edgelist(edgelist)
+    print("I'm Running")
+    return jsonify({"NumNodes":str(edge_graph.number_of_nodes())})
 
 
 @app.route("/term_network", methods=['POST'])
