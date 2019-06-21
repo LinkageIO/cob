@@ -425,6 +425,8 @@ def term_network_stats():
     Mimics the term_network method and returns 
     subnetwork stats as calculated by networkx
     '''
+    import time 
+    start = time.time()
     # Get data from the form and derive some stuff
     cob = networks[str(request.form['network'])]
     ontology = onts[str(request.form['ontology'])]
@@ -481,7 +483,41 @@ def term_network_stats():
             include_num_siblings=True
         )
     edges = cob.subnetwork(genes).reset_index()
-    return jsonify({'foo':'bar'})
+
+    def df_to_list(df):
+        edgelist = []
+        for k,v in df.iterrows():
+            str_rep = v['gene_a'] + ' ' + v['gene_b'] + "{'score':" + str(v['score']) + "}"
+            edgelist.append(str_rep)
+        return edgelist
+    import networkx as nx
+    edgelist = df_to_list(edges)
+    edge_graph = nx.parse_edgelist(edgelist)
+    print("I'm Running")
+    print(nx.info(edge_graph))
+    components = nx.connected_components(edge_graph)
+    triadic_closure = nx.transitivity(edge_graph)
+    print("Triadic closure: (transensitivity)", triadic_closure)
+    print(str("largest Compoent: "), max(components, key=len))
+    import operator
+    #g is nx graph object
+    x=nx.pagerank(edge_graph, weight='score')
+    #sort pageranks
+    sorted_x = sorted(x.items(), key=operator.itemgetter(1))
+    #Get avg node connectivity 
+    node_conn=pd.DataFrame(pd.Series(nx.average_node_connectivity(edge_graph), index=["avg_node_connectivity",]))    
+    print(node_conn)
+    #get top ten
+    Sub_Net_stats = pd.DataFrame([i[1] for i in sorted_x[-10:]], index=[j[0] for j in sorted_x[-10:]])
+    print(str("Page Rank:") + str(Sub_Net_stats))   
+    #Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
+    #return jsonify({"AvgConnectivity":str(nx.average_node_connectivity(edge_graph))})
+    datatbl = {"node_conn":node_conn.to_json(), "pageranks:":Sub_Net_stats.to_json()}
+    print(datatbl)
+    print(time.time() - start)
+    print(str("Done with Stats for Now!"))
+    import json
+    return json.dumps(datatbl)
 
 
 @app.route("/term_network", methods=['POST'])
@@ -595,10 +631,129 @@ def term_network():
     # Log Data Point to COB Log
     cob.log(term + ': Found ' + str(len(net['nodes'])) + ' nodes, ' +
             str(len(net['edges'])) + ' edges')
+    #for k, v in net["edges"].items():
+    nx_obj=nx.readwrite.json_graph(jsonify(net))
+    return nx_obj
+    # Return it as a JSON object
+    #return jsonify(net)
+
+#this is the same as the function above, but just not decorated ("naked")
+def term_stats():
+    # Get data from the form and derive some stuff
+    cob = networks[str(request.form['network'])]
+    ontology = onts[str(request.form['ontology'])]
+    term = str(request.form['term'])
+    nodeCutoff = safeOpts('nodeCutoff', request.form['nodeCutoff'])
+    edgeCutoff = safeOpts('edgeCutoff', request.form['edgeCutoff'])
+    windowSize = safeOpts('windowSize', request.form['windowSize'])
+    flankLimit = safeOpts('flankLimit', request.form['flankLimit'])
+    hpo = (request.form['hpo'].lower().strip() == 'true')
+    strongestSNPs = (
+        request.form['overlapSNPs'].lower().strip() == 'strongest')
+    overlapDensity = (
+        request.form['overlapMethod'].lower().strip() == 'density')
+
+    # Detrmine if there is a FDR cutoff or not
+    try:
+        float(request.form['fdrCutoff'])
+    except ValueError:
+        fdrCutoff = None
+    else:
+        fdrCutoff = safeOpts('fdrCutoff', float(request.form['fdrCutoff']))
+
+    # Get the candidates
+    cob.set_sig_edge_zscore(edgeCutoff)
+    # Check to see if Genes are HPO
+    if hpo:
+        genes = cob.refgen[gwas_data_db[
+            ontology.name].high_priority_candidates().query(
+                'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
+                    cob.name, ontology.name, term)).gene.unique()]
+    else:
+        # Get candidates based on options
+        if (strongestSNPs):
+            try:
+                loci = ontology[term].strongest_loci(
+                    window_size=windowSize,
+                    attr=ontology.get_strongest_attr(),
+                    lowest=ontology.get_strongest_higher())
+            except KeyError:
+                loci = ontology[term].effective_loci(window_size=windowSize)
+        else:
+            loci = ontology[term].effective_loci(window_size=windowSize)
+
+        # Find the genes
+        genes = cob.refgen.candidate_genes(
+            loci,
+            window_size=windowSize,
+            flank_limit=flankLimit,
+            chain=True,
+            include_parent_locus=True,
+            #include_parent_attrs=['numIterations', 'avgEffectSize'],
+            include_num_intervening=True,
+            include_rank_intervening=True,
+            include_num_siblings=True)
+    cob.log('Found {} candidate genes', len(genes))
+    # Base of the result dict
+    net = {}
+
+    # If there are GWAS results, and a FDR Cutoff
+    if fdrCutoff and ontology.name in gwas_data_db and not (hpo):
+        cob.log('Fetching genes with FDR < {}', fdrCutoff)
+        gwas_data = gwas_data_db[ontology.name].results
+        gwas_data = gwas_data[gwas_data['COB'] == cob.name]
+        gwas_data = gwas_data[gwas_data['Term'] == term]
+        gwas_data = gwas_data[gwas_data['WindowSize'] == windowSize]
+        gwas_data = gwas_data[gwas_data['FlankLimit'] == flankLimit]
+        gwas_data = gwas_data[gwas_data['SNP2Gene'] == (
+            'strongest' if strongestSNPs else 'effective')]
+        gwas_data = gwas_data[gwas_data['Method'] == (
+            'density' if overlapDensity else 'locality')]
+        net['nodes'] = getNodes(
+            genes,
+            cob,
+            term,
+            gwasData=gwas_data,
+            nodeCutoff=nodeCutoff,
+            windowSize=windowSize,
+            flankLimit=flankLimit,
+            fdrCutoff=fdrCutoff)
+    else:
+        # Otherwise just run it without GWAS Data
+        net['nodes'] = getNodes(
+            genes,
+            cob,
+            term,
+            nodeCutoff=nodeCutoff,
+            windowSize=windowSize,
+            flankLimit=flankLimit,
+            hpo=hpo)
+
+    # Get the edges of the nodes that will be rendered
+    render_list = []
+    for node in net['nodes'].values():
+        if node['data']['render']:
+            render_list.append(node['data']['id'])
+    net['edges'] = getEdges(render_list, cob)
+
+    # Tell what enrichment options are available
+    net['hasGO'] = cob._global('parent_refgen') in GOnt_db
+    net['hasGWS'] = hasGWS and (cob._global('parent_refgen') in func_data_db)
+
+    # Log Data Point to COB Log
+    cob.log(term + ': Found ' + str(len(net['nodes'])) + ' nodes, ' +
+            str(len(net['edges'])) + ' edges')
 
     # Return it as a JSON object
     return jsonify(net)
 
+
+@app.route("/term_network", methods=['POST'])
+def gen_nx():
+    return term_stats()
+    #call term_network get json
+    #uo = nx.readwrite.json_graph(term_network())
+    #return jsonify({"lisa":"orange"})#term_network()
 
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
@@ -715,6 +870,7 @@ def custom_network():
             str(len(net['edges'])) + ' edges')
 
     return jsonify(net)
+
 
 
 @app.route("/gene_connections", methods=['POST'])
