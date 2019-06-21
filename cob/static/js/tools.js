@@ -110,7 +110,7 @@ function updateHUD() {
   var msg = '';
   // If there is no graph, throw up the help message
   if (cy === null) {
-    msg += 'Please follow the instructions in the left pane to build a graph.';
+    msg += 'Please follow the instructions in the left pane to build a network.';
   } else {
     // Otherwise, build the message
     // Add the gene count, edge count, and network name
