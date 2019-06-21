@@ -2,6 +2,7 @@
       General State Variables
 ------------------------------ */
 // Shortcuts to current graph parameters
+var curRefGen = '';
 var curNetwork = '';
 var curOntology = '';
 var curTerm = '';
@@ -144,7 +145,8 @@ $('#wNeighborsButton,#woNeighborsButton').click(function(evt) {
 });
 
 $('#UploadTermButton').click(function(evt) {
-    if ($('#termgenelist').val().length > 1 && $('#termname').val().length > 1){
+    if ($('#termgenelist').val().length > 1 
+         && $('#termname').val().length > 1){
         window.alert('woo')
     } else {
         window.alert('Please enter term genes')
