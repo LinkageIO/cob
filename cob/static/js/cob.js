@@ -147,12 +147,32 @@ $('#wNeighborsButton,#woNeighborsButton').click(function(evt) {
 $('#UploadTermButton').click(function(evt) {
     if ($('#termgenelist').val().length > 1 
          && $('#termname').val().length > 1){
-        window.alert('woo')
+        $.ajax({
+          url: SCRIPT_ROOT + 'add_term' ,
+          type: 'POST',
+          data: {
+              ontology: curOntology,
+              termName: $('#termname').val(),
+              termgenelist: $('#termgenelist').val()
+          }
+        })
+
     } else {
         window.alert('Please enter term genes')
     }
 
 });
+
+
+$('#fullscreenButton').click(function(evt){
+    cobdiv = $('#cob')[0]
+    if (cobdiv.className == 'col-md-4'){
+        cobdiv.className = 'col-md-12' 
+    }
+    else{
+        cobdiv.className = 'col-md-4' 
+    }
+})
 
 /*------------------------------------------
      Parameter Update Event Listeners
