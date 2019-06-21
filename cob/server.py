@@ -494,9 +494,14 @@ def term_network_stats():
     edgelist = df_to_list(edges)
     edge_graph = nx.parse_edgelist(edgelist)
     print("I'm Running")
+    print(nx.info(edge_graph))
+    components = nx.connected_components(edge_graph)
+    triadic_closure = nx.transitivity(edge_graph)
+    print("Triadic closure: (transensitivity)", triadic_closure)
+    print(str("largest Compoent: "), max(components, key=len))
     import operator
     #g is nx graph object
-    x=nx.pagerank(edge_graph)
+    x=nx.pagerank(edge_graph, weight='score')
     #sort pageranks
     sorted_x = sorted(x.items(), key=operator.itemgetter(1))
     #Get avg node connectivity 
@@ -504,12 +509,13 @@ def term_network_stats():
     print(node_conn)
     #get top ten
     Sub_Net_stats = pd.DataFrame([i[1] for i in sorted_x[-10:]], index=[j[0] for j in sorted_x[-10:]])
-    print(Sub_Net_stats)   
+    print(str("Page Rank:") + str(Sub_Net_stats))   
     #Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
     #return jsonify({"AvgConnectivity":str(nx.average_node_connectivity(edge_graph))})
     datatbl = {"node_conn":node_conn.to_json(), "pageranks:":Sub_Net_stats.to_json()}
     print(datatbl)
     print(time.time() - start)
+    print(str("Done with Stats for Now!"))
     import json
     return json.dumps(datatbl)
 
