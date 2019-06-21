@@ -380,18 +380,19 @@ $('#GetNetworkStatsButton').click(function(){
     type: 'POST',
     statusCode: {
       400: function() {
-        reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        console.log(
+          'Getting the network stats went wrong somehow. Try refreshing and starting again.',
         );
       },
       500: function() {
-        reject(
-          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        console.log(
+          'Getting the network stats went wrong somehow. Try refreshing and starting again.',
         );
       },
     },
     success: function(data){
-        console.log(data)},
+        tab = $('#NetworkStatsTab')[0].innerHTML = data
+    },
     timeout:0
     })
 })
