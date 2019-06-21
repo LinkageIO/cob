@@ -51,7 +51,7 @@
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h4 class="modal-title"><b>The graph is being built!</b></h4>
+            <h4 class="modal-title"><b>The network is being built!</b></h4>
           </div>
           <div class="modal-body" id="geneStatus">
             <p>
@@ -72,7 +72,14 @@
     <div class="container-fluid">
       <div id="theRow" class="row">
         <div id="cob" class="col-md-4">
-          <div id="cobHead" class="container">CoExpression Browser</div>
+          <div id="cobHead" class="container">
+              <span>CoExpression Browser</span>
+              <button
+                  class="glyphicon glyphicon-resize-full"
+                  id="fullscreenButton"
+              />
+          
+          </div>
 
           <div>
             <!-- Tab List -->
@@ -121,6 +128,18 @@
 
               <li role="presentation">
                 <a
+                  aria-controls="EnrichmentTab"
+                  href="#EnrichmentTab"
+                  role="tab"
+                  data-toggle="tab"
+                  >Enrichment</a
+                >
+              </li>
+
+ 
+
+              <li role="presentation">
+                <a
                   aria-controls="opts"
                   href="#OptsTab"
                   role="tab"
@@ -133,17 +152,7 @@
 
 
 
-              <li role="presentation">
-                <a
-                  aria-controls="EnrichmentTab"
-                  href="#EnrichmentTab"
-                  role="tab"
-                  data-toggle="tab"
-                  >Enrichment</a
-                >
-              </li>
-
-              <li role="presentation">
+             <li role="presentation">
                 <a
                   aria-controls="AboutTab"
                   href="#AboutTab"
@@ -182,7 +191,7 @@
                         href="#TermTableTab"
                         role="tab"
                         data-toggle="tab"
-                        >Predefined Terms</a
+                        >Predefined Ontologies</a
                       >
                     </li>
                     <li role="presentation">
@@ -204,10 +213,13 @@
                         >Upload Ontology</a
                       >
                     </li>
-
-
                   </ul>
+                  <!-- Panel -->
                   <div class="tab-content">
+                    <ul class='nav nav-tabs' role='tablist' id='TermSelectTab'>
+                        
+                    </ul>
+
                     <div
                       role="tabpanel"
                       class="tab-pane active"
@@ -368,7 +380,7 @@
                           class="opt-label btn btn-default active"
                           data-toggle="button"
                         >
-                          <b>FDR Filter (Term)</b>
+                          <b>HPO Filter (FDR)</b>
                         </button>
                       </td>
                       <td class="has-feedback">
