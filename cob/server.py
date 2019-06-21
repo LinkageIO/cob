@@ -808,12 +808,15 @@ def go_enrichment():
     cob.log('Found {} enriched terms.', str(df.shape[0]))
     return jsonify(df.to_json(orient='index'))
 
+@app.route("/add_term",methods=['POST'])
+def add_term():
+    import ipdb; ipdb.set_trace()
+    ontology = onts[str(request.form['ontology'])]
+
 
 # --------------------------------------------
 #     Function to Make Input Safe Again
 # --------------------------------------------
-
-
 def safeOpts(name, val):
     # Get the parameters into range
     val = int(val) if opts[name]['int'] else float(val)
@@ -821,12 +824,9 @@ def safeOpts(name, val):
     val = max(val, opts[name]['min'])
     return val
 
-
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-
-
 def getNodes(genes,
              cob,
              term,
