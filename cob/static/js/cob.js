@@ -369,7 +369,8 @@ $('#GetNetworkStatsButton').click(function(){
       },
     },
     success: function(data){
-        console.log(data), timeout=600000}
+        console.log(data)},
+    timeout:0
     })
 })
 
