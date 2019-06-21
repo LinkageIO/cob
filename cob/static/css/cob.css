@@ -16,7 +16,7 @@
 }
 #cyTitle {
   position: absolute;
-  bottom: 0;
+  top: 0;
   color: DimGrey;
   z-index: 1;
   font-size: 1.5em;
