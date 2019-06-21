@@ -143,6 +143,15 @@ $('#wNeighborsButton,#woNeighborsButton').click(function(evt) {
   }
 });
 
+$('#UploadTermButton').click(function(evt) {
+    if ($('#termgenelist').val().length > 1 && $('#termname').val().length > 1){
+        window.alert('woo')
+    } else {
+        window.alert('Please enter term genes')
+    }
+
+});
+
 /*------------------------------------------
      Parameter Update Event Listeners
 ------------------------------------------*/
@@ -329,6 +338,41 @@ $('#pngButton').click(function() {
   // Run the Download
   download(png, name + '.png', 'image/png');
 });
+
+$('#GetNetworkStatsButton').click(function(){
+  $.ajax({
+    url: SCRIPT_ROOT + 'term_network_stats',
+    data: {
+      network: curNetwork,
+      ontology: curOntology,
+      term: curTerm,
+      nodeCutoff: curOpts['nodeCutoff'],
+      edgeCutoff: curOpts['edgeCutoff'],
+      windowSize: curOpts['windowSize'],
+      flankLimit: curOpts['flankLimit'],
+      fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
+      hpo: getOpt('hpo'),
+      overlapSNPs: getOpt('overlapSNPs'),
+      overlapMethod: getOpt('overlapMethod'),
+    },
+    type: 'POST',
+    statusCode: {
+      400: function() {
+        reject(
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+      500: function() {
+        reject(
+          'Getting the term network went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+    },
+    success: function(data){
+        console.log(data)},
+    timeout:0
+    })
+})
 
 // GraphML Button is pressed
 $('#graphMLButton').click(function() {
