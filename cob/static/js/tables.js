@@ -478,6 +478,10 @@ function networkListner() {
   curNetwork = $('td', this)
     .eq(0)
     .text();
+ 
+  curRefGen = $('td',this)
+    .eq(1)
+    .text();
 
   // Clear obsolete graph
   clearResults();
