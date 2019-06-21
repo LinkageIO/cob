@@ -491,8 +491,16 @@ def term_network_stats():
     edgelist = df_to_list(edges)
     edge_graph = nx.parse_edgelist(edgelist)
     print("I'm Running")
-    return jsonify({"NumNodes":str(edge_graph.number_of_nodes())})
-
+    import operator
+    #g is nx graph object
+    x=nx.pagerank(edge_graph)
+    #sort pageranks
+    sorted_x = sorted(x.items(), key=operator.itemgetter(1))
+    #get top ten
+    Sub_Net_stats = pd.DataFrame([i[1] for i in sorted_x[-10:]], index=[j[0] for j in sorted_x[-10:]])
+    #Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
+    #return jsonify({"AvgConnectivity":str(nx.average_node_connectivity(edge_graph))})
+    return Sub_Net_stats.to_json()
 
 @app.route("/term_network", methods=['POST'])
 # Route for sending the CoEx Network Data for graphing from prebuilt term
