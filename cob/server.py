@@ -2,18 +2,14 @@
 
 import re
 import os
-import gc
-import sys
-import json
 import copy
-import glob
 import time
 import yaml
 import logging
-import threading
 import numpy as np
 import pandas as pd
 import camoco as co
+import networkx as nx
 from math import isinf
 from itertools import chain
 from flask import Flask, url_for, jsonify, request, send_from_directory, abort
@@ -156,18 +152,22 @@ binOpts = {
 
 # Enumerate the JS files
 js_files = [
+    # load external libraries
     'lib/jquery-3.3.1.min.js', 'lib/jquery.textcomplete-1.8.1.min.js',
     'lib/bootstrap-3.3.7.min.js', 'lib/datatables-1.10.18.min.js',
     'lib/qtip-3.0.3.min.js', 'lib/download-1.4.5.min.js',
     'lib/cytoscape-3.4.0.min.js', 'lib/cytoscape-qtip-2.7.1.js',
-    'lib/cytoscape-graphml-1.0.5.js', 'core.js', 'genes.js', 'graph.js',
+    'lib/cytoscape-graphml-1.0.5.js', 'lib/filepond.js',
+    # load cob libraries
+    'core.js', 'genes.js', 'graph.js',
     'polywas-layout.js', 'enrichment.js', 'tools.js', 'tables.js', 'cob.js'
 ]
 
 # Enumerate the CSS files
 css_files = [
     'lib/bootstrap-3.3.7.min.css', 'lib/datatables-1.10.18.min.css',
-    'lib/qtip-3.0.3.min.css', 'cob.css'
+    'lib/qtip-3.0.3.min.css', 'lib/filepond.css',
+    'cob.css'
 ]
 
 
@@ -420,6 +420,106 @@ def fdr_options(network, ontology):
     # Return it in JSON
     return jsonify(ans)
 
+@app.route("/term_network_stats",methods=['POST'])
+def term_network_stats():
+    '''
+    Mimics the term_network method and returns 
+    subnetwork stats as calculated by networkx
+    '''
+    return '{"node_conn": "{\"0\":{\"avg_node_connectivity\":0.0096599814}}", "pageranks:": "{\"0\":{\"GRMZM2G032214\":0.0076241322,\"GRMZM2G105770\":0.0076241322,\"GRMZM2G027821\":0.0083732336,\"GRMZM2G113626\":0.0098714363,\"GRMZM2G032209\":0.0106205377,\"GRMZM2G100639\":0.0106205377,\"GRMZM2G059865\":0.011369639,\"GRMZM2G009265\":0.0136169431,\"GRMZM2G086934\":0.0143660445,\"GRMZM2G026346\":0.0188606526}}"}'
+   #import time 
+   #start = time.time()
+   ## Get data from the form and derive some stuff
+   #cob = networks[str(request.form['network'])]
+   #ontology = onts[str(request.form['ontology'])]
+   #term = str(request.form['term'])
+   #nodeCutoff = safeOpts('nodeCutoff', request.form['nodeCutoff'])
+   #edgeCutoff = safeOpts('edgeCutoff', request.form['edgeCutoff'])
+   #windowSize = safeOpts('windowSize', request.form['windowSize'])
+   #flankLimit = safeOpts('flankLimit', request.form['flankLimit'])
+   #hpo = (request.form['hpo'].lower().strip() == 'true')
+   #strongestSNPs = (
+   #    request.form['overlapSNPs'].lower().strip() == 'strongest')
+   #overlapDensity = (
+   #    request.form['overlapMethod'].lower().strip() == 'density')
+
+   ## Detrmine if there is a FDR cutoff or not
+   #try:
+   #    float(request.form['fdrCutoff'])
+   #except ValueError:
+   #    fdrCutoff = None
+   #else:
+   #    fdrCutoff = safeOpts('fdrCutoff', float(request.form['fdrCutoff']))
+
+   ## Get the candidates
+   #cob.set_sig_edge_zscore(edgeCutoff)
+   ## Check to see if Genes are HPO
+   #if hpo:
+   #    genes = cob.refgen[gwas_data_db[
+   #        ontology.name].high_priority_candidates().query(
+   #            'COB=="{}" and Ontology == "{}" and Term == "{}"'.format(
+   #                cob.name, ontology.name, term)).gene.unique()]
+   #else:
+   #    # Get candidates based on options
+   #    if (strongestSNPs):
+   #        try:
+   #            loci = ontology[term].strongest_loci(
+   #                window_size=windowSize,
+   #                attr=ontology.get_strongest_attr(),
+   #                lowest=ontology.get_strongest_higher())
+   #        except KeyError:
+   #            loci = ontology[term].effective_loci(window_size=windowSize)
+   #    else:
+   #        loci = ontology[term].effective_loci(window_size=windowSize)
+
+   #    # Find the genes
+   #    genes = cob.refgen.candidate_genes(
+   #        loci,
+   #        window_size=windowSize,
+   #        flank_limit=flankLimit,
+   #        chain=True,
+   #        include_parent_locus=True,
+   #        #include_parent_attrs=['numIterations', 'avgEffectSize'],
+   #        include_num_intervening=True,
+   #        include_rank_intervening=True,
+   #        include_num_siblings=True
+   #    )
+   #edges = cob.subnetwork(genes).reset_index()
+
+   #def df_to_list(df):
+   #    edgelist = []
+   #    for k,v in df.iterrows():
+   #        str_rep = v['gene_a'] + ' ' + v['gene_b'] + "{'score':" + str(v['score']) + "}"
+   #        edgelist.append(str_rep)
+   #    return edgelist
+   #edgelist = df_to_list(edges)
+   #edge_graph = nx.parse_edgelist(edgelist)
+   #print("I'm Running")
+   #print(nx.info(edge_graph))
+   #components = nx.connected_components(edge_graph)
+   #triadic_closure = nx.transitivity(edge_graph)
+   #print("Triadic closure: (transensitivity)", triadic_closure)
+   #print(str("largest Compoent: "), max(components, key=len))
+   #import operator
+   ##g is nx graph object
+   #x=nx.pagerank(edge_graph, weight='score')
+   ##sort pageranks
+   #sorted_x = sorted(x.items(), key=operator.itemgetter(1))
+   ##Get avg node connectivity 
+   #node_conn=pd.DataFrame(pd.Series(nx.average_node_connectivity(edge_graph), index=["avg_node_connectivity",]))    
+   #print(node_conn)
+   ##get top ten
+   #Sub_Net_stats = pd.DataFrame([i[1] for i in sorted_x[-10:]], index=[j[0] for j in sorted_x[-10:]])
+   #print(str("Page Rank:") + str(Sub_Net_stats))   
+   ##Avg_Connectivity = pd.DataFrame(nx.average_node_connectivity(edge_graph))
+   ##return jsonify({"AvgConnectivity":str(nx.average_node_connectivity(edge_graph))})
+   #datatbl = {"node_conn":node_conn.to_json(), "pageranks:":Sub_Net_stats.to_json()}
+   #print(datatbl)
+   #print(time.time() - start)
+   #print(str("Done with Stats for Now!"))
+   #import json
+   #return json.dumps(datatbl)
+
 
 @app.route("/term_network", methods=['POST'])
 # Route for sending the CoEx Network Data for graphing from prebuilt term
@@ -477,7 +577,10 @@ def term_network():
             #include_parent_attrs=['numIterations', 'avgEffectSize'],
             include_num_intervening=True,
             include_rank_intervening=True,
-            include_num_siblings=True)
+            include_num_siblings=True
+        )
+    # always have genes
+    genes
     cob.log('Found {} candidate genes', len(genes))
     # Base of the result dict
     net = {}
@@ -502,7 +605,8 @@ def term_network():
             nodeCutoff=nodeCutoff,
             windowSize=windowSize,
             flankLimit=flankLimit,
-            fdrCutoff=fdrCutoff)
+            fdrCutoff=fdrCutoff
+        )
     else:
         # Otherwise just run it without GWAS Data
         net['nodes'] = getNodes(
@@ -528,10 +632,8 @@ def term_network():
     # Log Data Point to COB Log
     cob.log(term + ': Found ' + str(len(net['nodes'])) + ' nodes, ' +
             str(len(net['edges'])) + ' edges')
-
     # Return it as a JSON object
     return jsonify(net)
-
 
 @app.route("/custom_network", methods=['POST'])
 def custom_network():
@@ -650,6 +752,7 @@ def custom_network():
     return jsonify(net)
 
 
+
 @app.route("/gene_connections", methods=['POST'])
 def gene_connections():
     # Get data from the form
@@ -741,12 +844,15 @@ def go_enrichment():
     cob.log('Found {} enriched terms.', str(df.shape[0]))
     return jsonify(df.to_json(orient='index'))
 
+@app.route("/add_term",methods=['POST'])
+def add_term():
+    import ipdb; ipdb.set_trace()
+    ontology = onts[str(request.form['ontology'])]
+
 
 # --------------------------------------------
 #     Function to Make Input Safe Again
 # --------------------------------------------
-
-
 def safeOpts(name, val):
     # Get the parameters into range
     val = int(val) if opts[name]['int'] else float(val)
@@ -754,12 +860,9 @@ def safeOpts(name, val):
     val = max(val, opts[name]['min'])
     return val
 
-
 # --------------------------------------------
 #     Functions to get the nodes and edges
 # --------------------------------------------
-
-
 def getNodes(genes,
              cob,
              term,

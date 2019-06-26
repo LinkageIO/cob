@@ -72,11 +72,11 @@ remote: Resolving deltas: 100% (1/1), completed with 1 local object.
 To github.com:schae234/cob.git
    0bdf078..e95e939  master -> master
 ```
-5. Open a Pull Request (PR) to get your changes back into the main COB repo
+5. Open a Pull Request (PR) to get your changes back into the main COB repo.
 Navigate to your GitHub page to open a PR
-[Imgur](https://i.imgur.com/9VUcS4u.png)
+![](https://i.imgur.com/9VUcS4u.png)
 Github will detect any changes between your repo and the main COB repo. Double check that the changes make sense:
-[Imgur](https://i.imgur.com/Wp6wXZ7.png)
+![](https://i.imgur.com/Wp6wXZ7.png)
 
 **Note:** You may need to resolve and differences that have been committed to the main COB repo that may have occurred during 
 the time you were hacking.
@@ -183,9 +183,63 @@ The `-e` flag tells `pip` that you want to install COB in
 ["editable mode"](https://pip.pypa.io/en/stable/reference/pip_install/#install-editable). This means that if you edit any of the 
 source files, they will be automagically updated in the installed COB package! 
 
-What is great about this is that you will have everything set up in the same wat that someone who would have COB
-installed would have, including links to cob scripts and executables. For example, you should have access to the `cob`
-command:
+What is great about this is that you will have everything set up in the same way that someone who would have COB
+installed would have, including links to cob scripts and executables. Prior to running the `cob` command, a `.camoco.conf` file needs to be generated as:
+
+```
+$ camoco
+usage: camoco [-h] [--version] [--debug] [--interactive] [--force]
+              Available Commands ...
+
+      ___           ___           ___           ___           ___           ___      
+     /  /\         /  /\         /__/\         /  /\         /  /\         /  /\     
+    /  /:/        /  /::\       |  |::\       /  /::\       /  /:/        /  /::\    
+   /  /:/        /  /:/\:\      |  |:|:\     /  /:/\:\     /  /:/        /  /:/\:\   
+  /  /:/  ___   /  /:/~/::\   __|__|:|\:\   /  /:/  \:\   /  /:/  ___   /  /:/  \:\  
+ /__/:/  /  /\ /__/:/ /:/\:\ /__/::::| \:\ /__/:/ \__\:\ /__/:/  /  /\ /__/:/ \__\:\ 
+ \  \:\ /  /:/ \  \:\/:/__\/ \  \:\~~\__\/ \  \:\ /  /:/ \  \:\ /  /:/ \  \:\ /  /:/ 
+  \  \:\  /:/   \  \::/       \  \:\        \  \:\  /:/   \  \:\  /:/   \  \:\  /:/  
+   \  \:\/:/     \  \:\        \  \:\        \  \:\/:/     \  \:\/:/     \  \:\/:/   
+    \  \::/       \  \:\        \  \:\        \  \::/       \  \::/       \  \::/    
+     \__\/         \__\/         \__\/         \__\/         \__\/         \__\/ 
+
+Camoco (Co-analysis of Molecular Components) inter-relates and co-analyzes different 
+levels of genomic data. Namely it integrates genes present near and around GWAS loci
+using unbiased, functional information derived from co-expression networks.
+
+optional arguments:
+  -h, --help          show this help message and exit
+  --version           print the software version
+  --debug             Drop into ipdb when something bad happens.
+  --interactive       Initiate an ipdb session right before exiting.
+  --force             Overwrite output files from previous analyses.
+
+Camoco CLI program:
+  Use --help with each command for more info
+
+  Available Commands
+    help              Prints this help message
+    build-gwas        build a GWAS dataset
+    build-go          Build a Gene Ontology (GO)
+    build-refgen      Build a Reference Genome.
+    build-cob         Build a Co-expression network.
+    list (ls)         List camoco datasets.
+    rm                Remove camoco dataset.
+    overlap           Calculate network overlap among GWAS results. See
+                      --method for details.
+    health            Generate network health statistics
+    snp2gene          Generate candidate genes and accompanying information
+                      from GWAS SNPs
+    neighbors         Generate significant gene neighbors from largest to
+                      smallest Z-score
+
+version: 0.6.3
+src:/home/<USERNAME>/.conda/envs/cob/lib/python3.6/site-packages/camoco/__init__.py
+Cache. Money. Corn.
+
+```
+
+Now you should have access to the `cob` command:
 
 ```
 $ cob
@@ -212,14 +266,14 @@ that will make COB useable. The data lives in a separate directory so we need to
 # Move out of the `cob/` source code directory:
 $ cd ..
 # Clone the data repo
-$ git clone https://github.umn.edu/csbio/camoco-cob-maize-demo.git
+$ git clone https://github.com/csbio/camoco-cob-maize-demo.git
 # Change into the data dir
 $ cd camoco-cob-maize-demo/data/maize
 ```
-The first script we run creates all the camoco gene co-expression networks and GWAS datasets. **Warning** This step may take
+The first script we run creates all the camoco gene co-expression networks and GWAS datasets (NOTE: make sure the cob virtual environment is active). **Warning** This step may take
 10-15 minutes to run so go grab a coffee!
 ```
-$ python MaizeBuildCommands.py
+(cob) $ python MaizeBuildCommands.py
 ```
 The second script is cool hack that imports in some camoco "overlap" results (see our roadmap for some background). 
 The overlap command is very computationally intensive and even on high spec machines would take ~24 hours to run. Luckily

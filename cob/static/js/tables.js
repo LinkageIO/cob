@@ -232,7 +232,7 @@ function buildGeneTables() {
   // Set button information messages
   var csvTitle = 'Export all genes in this table to a CSV file';
   var gsTitle =
-    'Build a new graph that includes only the currently selected genes and their neighbors, but you will be able to return to the current graph from the new graph';
+    'Build a new network that includes only the currently selected genes and their neighbors, but you will be able to return to the current network from the new network';
   var gwsTitle =
     'Run a GeneWordSearch enrichment analysis on the genes in this table';
   if (hasGO) {
@@ -477,6 +477,10 @@ function networkListner() {
   // Save the selected row
   curNetwork = $('td', this)
     .eq(0)
+    .text();
+ 
+  curRefGen = $('td',this)
+    .eq(1)
     .text();
 
   // Clear obsolete graph

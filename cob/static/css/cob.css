@@ -16,7 +16,7 @@
 }
 #cyTitle {
   position: absolute;
-  bottom: 0;
+  top: 0;
   color: DimGrey;
   z-index: 1;
   font-size: 1.5em;
@@ -63,7 +63,7 @@ tr.form-group > td {
 #cob {
   z-index: 5;
   height: 100vh;
-  min-width: 475px;
+  border-right: 2px solid lightgray;
 }
 #colBreak {
   height: 0;
@@ -146,3 +146,10 @@ tr.form-group > td {
 table {
   background-color: white;
 }
+
+#NetworkStatsTab {
+    overflow: scroll;
+}
+
+
+

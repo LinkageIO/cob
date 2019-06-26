@@ -2,6 +2,7 @@
       General State Variables
 ------------------------------ */
 // Shortcuts to current graph parameters
+var curRefGen = '';
 var curNetwork = '';
 var curOntology = '';
 var curTerm = '';
@@ -142,6 +143,36 @@ $('#wNeighborsButton,#woNeighborsButton').click(function(evt) {
     window.alert('You need to enter at least one gene.');
   }
 });
+
+$('#UploadTermButton').click(function(evt) {
+    if ($('#termgenelist').val().length > 1 
+         && $('#termname').val().length > 1){
+        $.ajax({
+          url: SCRIPT_ROOT + 'add_term' ,
+          type: 'POST',
+          data: {
+              ontology: curOntology,
+              termName: $('#termname').val(),
+              termgenelist: $('#termgenelist').val()
+          }
+        })
+
+    } else {
+        window.alert('Please enter term genes')
+    }
+
+});
+
+
+$('#fullscreenButton').click(function(evt){
+    cobdiv = $('#cob')[0]
+    if (cobdiv.className == 'col-md-4'){
+        cobdiv.className = 'col-md-12' 
+    }
+    else{
+        cobdiv.className = 'col-md-4' 
+    }
+})
 
 /*------------------------------------------
      Parameter Update Event Listeners
@@ -329,6 +360,42 @@ $('#pngButton').click(function() {
   // Run the Download
   download(png, name + '.png', 'image/png');
 });
+
+$('#GetNetworkStatsButton').click(function(){
+  $.ajax({
+    url: SCRIPT_ROOT + 'term_network_stats',
+    data: {
+      network: curNetwork,
+      ontology: curOntology,
+      term: curTerm,
+      nodeCutoff: curOpts['nodeCutoff'],
+      edgeCutoff: curOpts['edgeCutoff'],
+      windowSize: curOpts['windowSize'],
+      flankLimit: curOpts['flankLimit'],
+      fdrCutoff: fdrFilter ? curOpts['fdrCutoff'] : 'None',
+      hpo: getOpt('hpo'),
+      overlapSNPs: getOpt('overlapSNPs'),
+      overlapMethod: getOpt('overlapMethod'),
+    },
+    type: 'POST',
+    statusCode: {
+      400: function() {
+        console.log(
+          'Getting the network stats went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+      500: function() {
+        console.log(
+          'Getting the network stats went wrong somehow. Try refreshing and starting again.',
+        );
+      },
+    },
+    success: function(data){
+        tab = $('#NetworkStatsTab')[0].innerHTML = data
+    },
+    timeout:0
+    })
+})
 
 // GraphML Button is pressed
 $('#graphMLButton').click(function() {
