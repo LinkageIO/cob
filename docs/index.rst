@@ -44,22 +44,15 @@ information will be added to this doc when it's available.
 Acknowledgements
 ================
 
-I would like to thank all members of the Myers Lab for their extensive and
-patient mentorship. I would also like to thank Max Franz, for all of his work
-on `Cytoscape.js <http://js.cytoscape.org/>`_, and assistance in getting it
-integrated optimally. Finally I would like to thank the open source web
-development community in general. This project was only possible because of the
-robust ecosystem of packages available for use by everyone.
+We would like to thank Dr. Chad Myers and all members of the Myers Lab for
+their extensive feedback and input on this project. We also would also like to
+thank Max Franz, for his assistance on getting PolyWas integrated with
+Cytoscape.js. Finally, we would like to thank the participants of the 2019
+Rocky Mountain Genomics HackCon for their feedback on this project.
 
 Funding
 =======
-
-J.J., R.S., and J.M. were partially supported by a Biomedical Informatics and
-Computational Biology (BICB) Fellowship. This work was supported by a grant
-from the National Science Foundation to N.M.S. (DBI-1237931) and by US
-Department of Agriculture Hatch funds to N.M.S. and C.L.M. R.S., R.B. and
-C.L.M. were partially supported by grants from the National Science Foundation
-(IOS 1126950 and DBI 0953881). C.L.M. is supported by the CIFAR Genetic
-Networks Program. The funders had no role in study design, data collection and
-analysis, decision to publish, or preparation of the manuscript.
-
+This work was supported by funding from the National Science Foundation
+(IOS-1126950, IOS-1444503, and IOS-1450341), the USDA Agricultural Research
+Service (5070-21000-039-00D), and the USDA National Institute for Food and
+Agriculture (2016-67012-24841).
