@@ -51,10 +51,12 @@ setup(
         'flask>=1.0.2', 
         'gunicorn>=19.9.0', 
         'numpy>=1.9.2',
-        'camoco==0.6.3'
+        'camoco==0.6.4'
     ],
     extras_require={
         'docs' : [
+            'recommonmark>=0.8.1',
+            'sphinx_rtd_theme>=0.4.3',
             'numpy>=1.9.2',
             'ipython>=6.5.0',
             'matplotlib>=2.2.3',
