@@ -9,6 +9,8 @@ COB is a browser based interface built to browse gene co-expression
 networks created by [Camoco](https://github.com/LinkageIO/Camoco). The client
 is written in javascript, and the server is written in python.
 
+A demo for COB is running at http://lovelace.cs.umn.edu/cob.
+
 ## Documentation
 Documentation on how to install/run/configure COB can be found
 [here](https://linkageio-cob.readthedocs.io/en/latest/).
